@@ -73,7 +73,7 @@ class FashionRuleEngine:
             if "female" in gender_lower or "woman" in gender_lower:
                 candidate_garments = ["Banarasi Silk Saree", "Lehenga Choli", "Anarkali Suit", "Sharara Set", "Indo-Western Gown", "Silk Kurta Set with Dupatta"]
             elif "male" in gender_lower or "man" in gender_lower:
-                candidate_garments = ["Silk Sherwani", "Silk Modi Jacket with Kurta", "Bandhgala Suit", "Pathani Suit", "Indo-Western Achkan", "Dhoti Kurta Set"]
+                candidate_garments = ["Silk Sherwani", "Silk Modi Jacket with Kurta", "Bandhgala Suit", "Panche / Veshti & Angavastram with Silk Shirt", "Indo-Western Achkan", "Dhoti Kurta Set"]
             else:
                 candidate_garments = ["Gender-Neutral Embroidered Kurta Set", "Draped Indo-Western Jacket Set"]
 
@@ -82,25 +82,25 @@ class FashionRuleEngine:
             if "female" in gender_lower or "woman" in gender_lower:
                 candidate_garments = ["Banarasi Silk Saree", "Lehenga Choli", "Anarkali Suit", "Sharara Set", "Indo-Western Gown", "Evening Gown"]
             elif "male" in gender_lower or "man" in gender_lower:
-                candidate_garments = ["Silk Sherwani", "Silk Modi Jacket with Kurta", "Bandhgala Suit", "Black Tie Tuxedo", "Jodhpuri Suit", "Indo-Western Achkan"]
+                candidate_garments = ["Silk Sherwani", "Panche / Veshti & Angavastram with Silk Shirt", "Three-Piece Vest Suit", "Two-Piece Tailored Suit", "Bandhgala Suit", "Black Tie Tuxedo", "Jodhpuri Suit"]
             else:
                 candidate_garments = ["Gender-Neutral Embroidered Kurta Set", "Draped Indo-Western Jacket Set"]
 
         # C) Business Meeting / Corporate: Exclude heavy festive/wedding wear (Sherwanis, Lehengas)
         elif "business" in occ_lower or "meeting" in occ_lower or "corporate" in occ_lower:
             if "female" in gender_lower or "woman" in gender_lower:
-                candidate_garments = ["Tailored Pant Suit", "Blazer with Trousers", "Formal Silk Kurta Set with Trousers", "Contemporary Solid Saree"]
+                candidate_garments = ["Tailored Women's Pant Suit", "Women's Skirt Suit", "Blazer with Formal Trousers", "Formal Silk Kurta Set with Trousers", "Contemporary Solid Saree"]
             elif "male" in gender_lower or "man" in gender_lower:
-                candidate_garments = ["Two-Piece Tailored Suit", "Bandhgala Suit", "Tuxedo", "Blazer with Chinos", "Crisp Nehru Jacket with Trousers"]
+                candidate_garments = ["Two-Piece Tailored Suit", "Three-Piece Vest Suit", "Bandhgala Suit", "Tuxedo", "Crisp Nehru Jacket with Trousers"]
             else:
                 candidate_garments = ["Tailored Unisex Business Suit", "Blazer with Structured Trousers"]
 
-        # D) Casual / College
+        # D) Casual / College (Excluding blazers for female & male casual, excluding Pathani suit for male casual)
         elif "casual" in occ_lower or "college" in occ_lower:
             if "female" in gender_lower or "woman" in gender_lower:
-                candidate_garments = ["Cotton Kurta with Trousers", "Casual Shirt Dress", "Midi Wrap Dress", "Co-ord Set"]
+                candidate_garments = ["Casual Shirt Dress", "Midi Wrap Dress", "Cotton Kurta with Trousers", "Casual Co-ord Set", "A-line Summer Dress", "Maxi Dress"]
             elif "male" in gender_lower or "man" in gender_lower:
-                candidate_garments = ["Linen-Cotton Shirt with Chinos", "Short Kurta with Denim", "Smart Polo with Trousers", "Blazer with Chinos"]
+                candidate_garments = ["Linen-Cotton Button-Down Shirt with Chinos", "Smart Polo Shirt with Trousers", "Henley Shirt with Slim Denim", "Casual Cotton Kurta with Jeans", "Casual Linen Co-ord Set"]
             else:
                 candidate_garments = ["Smart Casual Co-ord Set", "Linen Shirt with Trousers"]
         else:

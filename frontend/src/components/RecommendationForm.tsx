@@ -25,24 +25,36 @@ interface GarmentChip {
 }
 
 const ALL_GARMENT_CHIPS: GarmentChip[] = [
+  { label: '3-Piece Vest Suit', emoji: '🤵' },
+  { label: '2-Piece Suit', emoji: '👔' },
   { label: 'Tuxedo', emoji: '🤵' },
-  { label: 'Modi Jacket / Nehru Vest', emoji: '🧥' },
-  { label: 'Bandhgala Suit', emoji: '👔' },
+  { label: 'Panche / Veshti & Angavastram', emoji: '🥻' },
   { label: 'Sherwani', emoji: '👑' },
+  { label: 'Bandhgala Suit', emoji: '👔' },
+  { label: 'Modi Jacket / Nehru Vest', emoji: '🧥' },
   { label: 'Banarasi Silk Saree', emoji: '🥻' },
   { label: 'Lehenga Choli', emoji: '👗' },
-  { label: 'Blazer with Trousers', emoji: '💼' },
+  { label: 'Tailored Pant Suit / Skirt Suit', emoji: '💼' },
   { label: 'Anarkali Suit', emoji: '💃' },
-  { label: 'Pathani Suit', emoji: '👕' },
+  { label: 'Shirt & Chinos / Denim', emoji: '👕' },
+  { label: 'Polo & Chinos', emoji: '👕' },
+  { label: 'Casual Dress / Shirt Dress', emoji: '👗' },
   { label: 'Sharara Set', emoji: '✨' },
   { label: 'Co-ord Set', emoji: '👚' }
 ];
 
-// Gender-specific garment filters (Strictly separate Male vs Female)
+// Gender-specific garment filters
 const GENDER_GARMENT_MAP: Record<GenderOption, string[]> = {
-  Male: ['Tuxedo', 'Modi Jacket / Nehru Vest', 'Bandhgala Suit', 'Sherwani', 'Blazer with Trousers', 'Pathani Suit', 'Co-ord Set'],
-  Female: ['Banarasi Silk Saree', 'Lehenga Choli', 'Anarkali Suit', 'Sharara Set', 'Blazer with Trousers', 'Co-ord Set'],
-  Other: ['Modi Jacket / Nehru Vest', 'Bandhgala Suit', 'Co-ord Set', 'Blazer with Trousers', 'Pathani Suit']
+  Male: [
+    '3-Piece Vest Suit', '2-Piece Suit', 'Tuxedo', 'Panche / Veshti & Angavastram',
+    'Sherwani', 'Bandhgala Suit', 'Modi Jacket / Nehru Vest', 'Shirt & Chinos / Denim',
+    'Polo & Chinos', 'Co-ord Set'
+  ],
+  Female: [
+    'Banarasi Silk Saree', 'Lehenga Choli', 'Anarkali Suit', 'Sharara Set',
+    'Tailored Pant Suit / Skirt Suit', 'Casual Dress / Shirt Dress', 'Co-ord Set'
+  ],
+  Other: ['Bandhgala Suit', 'Modi Jacket / Nehru Vest', 'Co-ord Set', '2-Piece Suit', 'Shirt & Chinos / Denim']
 };
 
 const ALL_CULTURES: CultureOption[] = [
@@ -61,13 +73,13 @@ const OCCASION_CULTURE_MAP: Record<string, CultureOption[]> = {
 
 // Occasion-specific garment chip filters
 const OCCASION_GARMENT_MAP: Record<string, string[]> = {
-  diwali: ['Banarasi Silk Saree', 'Lehenga Choli', 'Sherwani', 'Modi Jacket / Nehru Vest', 'Bandhgala Suit', 'Anarkali Suit', 'Sharara Set', 'Pathani Suit'],
-  festival: ['Banarasi Silk Saree', 'Lehenga Choli', 'Sherwani', 'Modi Jacket / Nehru Vest', 'Anarkali Suit', 'Sharara Set', 'Pathani Suit'],
-  wedding: ['Banarasi Silk Saree', 'Lehenga Choli', 'Sherwani', 'Modi Jacket / Nehru Vest', 'Bandhgala Suit', 'Anarkali Suit', 'Tuxedo', 'Sharara Set'],
-  'business meeting': ['Tuxedo', 'Blazer with Trousers', 'Bandhgala Suit', 'Modi Jacket / Nehru Vest', 'Co-ord Set'],
-  casual: ['Co-ord Set', 'Pathani Suit', 'Blazer with Trousers'],
-  college: ['Co-ord Set', 'Pathani Suit'],
-  'cocktail party': ['Tuxedo', 'Blazer with Trousers', 'Co-ord Set', 'Anarkali Suit', 'Bandhgala Suit']
+  diwali: ['Banarasi Silk Saree', 'Lehenga Choli', 'Sherwani', 'Panche / Veshti & Angavastram', 'Bandhgala Suit', 'Anarkali Suit', 'Sharara Set', 'Modi Jacket / Nehru Vest'],
+  festival: ['Banarasi Silk Saree', 'Lehenga Choli', 'Sherwani', 'Panche / Veshti & Angavastram', 'Anarkali Suit', 'Sharara Set', 'Modi Jacket / Nehru Vest'],
+  wedding: ['Banarasi Silk Saree', 'Lehenga Choli', 'Sherwani', 'Panche / Veshti & Angavastram', '3-Piece Vest Suit', '2-Piece Suit', 'Bandhgala Suit', 'Anarkali Suit', 'Tuxedo', 'Sharara Set'],
+  'business meeting': ['Tailored Pant Suit / Skirt Suit', '3-Piece Vest Suit', '2-Piece Suit', 'Tuxedo', 'Bandhgala Suit', 'Co-ord Set'],
+  casual: ['Shirt & Chinos / Denim', 'Polo & Chinos', 'Casual Dress / Shirt Dress', 'Co-ord Set'],
+  college: ['Shirt & Chinos / Denim', 'Polo & Chinos', 'Casual Dress / Shirt Dress', 'Co-ord Set'],
+  'cocktail party': ['Tuxedo', '3-Piece Vest Suit', '2-Piece Suit', 'Casual Dress / Shirt Dress', 'Co-ord Set', 'Anarkali Suit', 'Bandhgala Suit']
 };
 
 const BUDGETS: BudgetOption[] = ['Low', 'Medium', 'High'];
@@ -122,9 +134,9 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
 
   // Dynamic placeholder text matching target gender
   const getGarmentPlaceholder = (gender: GenderOption) => {
-    if (gender === 'Female') return 'e.g. Banarasi Silk Saree, Lehenga Choli, Anarkali Suit, Blazer Suit, Co-ord Set';
-    if (gender === 'Male') return 'e.g. Tuxedo, Bandhgala Suit, Sherwani, Modi Jacket, Pathani Suit';
-    return 'e.g. Bandhgala Suit, Modi Jacket, Blazer Suit, Co-ord Set';
+    if (gender === 'Female') return 'e.g. Banarasi Silk Saree, Lehenga Choli, Tailored Pant Suit, Shirt Dress';
+    if (gender === 'Male') return 'e.g. Panche / Veshti & Angavastram, 3-Piece Vest Suit, Sherwani, Tuxedo';
+    return 'e.g. Bandhgala Suit, 2-Piece Suit, Co-ord Set';
   };
 
   // Auto-adjust selections if current desired_garment or culture is invalid for current gender/occasion
