@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { RecommendationFormData, GenderOption, CultureOption, BudgetOption, SeasonOption } from '../types';
-import { Sparkles, Calendar, Globe, DollarSign, Sun, Palette, FileText, User } from 'lucide-react';
+import { Sparkles, Calendar, Globe, DollarSign, Sun, Palette, FileText, User, Info } from 'lucide-react';
 
 interface FormProps {
   onSubmit: (data: RecommendationFormData) => void;
@@ -19,7 +19,7 @@ const OCCASION_CHIPS = [
   'Formal Event'
 ];
 
-const CULTURES: CultureOption[] = [
+const ALL_CULTURES: CultureOption[] = [
   'South Asian',
   'Western',
   'Indo-Western',
@@ -28,10 +28,13 @@ const CULTURES: CultureOption[] = [
   'African'
 ];
 
+// Occasion-specific culture constraints
+const OCCASION_CULTURE_MAP: Record<string, CultureOption[]> = {
+  diwali: ['South Asian', 'Indo-Western']
+};
+
 const BUDGETS: BudgetOption[] = ['Low', 'Medium', 'High'];
-
 const SEASONS: SeasonOption[] = ['Summer', 'Winter', 'Monsoon', 'Mild'];
-
 const PREFERENCE_TAGS = ['Jewel tones', 'Pastels', 'Minimalist', 'Regal', 'Streetwear', 'Earthy tones'];
 
 export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading }) => {
@@ -47,6 +50,26 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
 
   const [error, setError] = useState<string | null>(null);
 
+  // Compute available cultures based on occasion
+  const getAvailableCultures = (occ: string): CultureOption[] => {
+    const key = occ ? occ.trim().toLowerCase() : '';
+    for (const [mappedOcc, validCultures] of Object.entries(OCCASION_CULTURE_MAP)) {
+      if (key.includes(mappedOcc)) {
+        return validCultures;
+      }
+    }
+    return ALL_CULTURES;
+  };
+
+  const availableCultures = getAvailableCultures(formData.occasion);
+
+  // Auto-adjust culture if current selected culture is invalid for selected occasion
+  useEffect(() => {
+    if (!availableCultures.includes(formData.culture)) {
+      setFormData(prev => ({ ...prev, culture: availableCultures[0] }));
+    }
+  }, [formData.occasion]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.occasion.trim()) {
@@ -57,8 +80,13 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
     onSubmit(formData);
   };
 
-  const handleChipClick = (occasion: string) => {
-    setFormData(prev => ({ ...prev, occasion }));
+  const handleChipClick = (occ: string) => {
+    const valid = getAvailableCultures(occ);
+    setFormData(prev => ({
+      ...prev,
+      occasion: occ,
+      culture: valid.includes(prev.culture) ? prev.culture : valid[0]
+    }));
   };
 
   const handleTagClick = (tag: string) => {
@@ -147,12 +175,21 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
 
         {/* 3. Culture & Heritage */}
         <div>
-          <label className="block text-sm font-semibold text-gray-300 mb-3 flex items-center space-x-2">
-            <Globe className="w-4 h-4 text-amber-400" />
-            <span>Cultural Context & Styling Aesthetics</span>
-          </label>
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-sm font-semibold text-gray-300 flex items-center space-x-2">
+              <Globe className="w-4 h-4 text-amber-400" />
+              <span>Cultural Context & Styling Aesthetics</span>
+            </label>
+            {availableCultures.length < ALL_CULTURES.length && (
+              <span className="text-xs text-amber-300/80 flex items-center space-x-1 font-medium">
+                <Info className="w-3.5 h-3.5" />
+                <span>Filtered for {formData.occasion}</span>
+              </span>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {CULTURES.map(c => (
+            {availableCultures.map(c => (
               <button
                 key={c}
                 type="button"

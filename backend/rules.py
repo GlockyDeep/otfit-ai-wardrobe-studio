@@ -25,6 +25,8 @@ class FashionRuleEngine:
         Processes user inputs through the fashion knowledge base rules
         and generates a structured fashion context for AI recommendation.
         """
+        occ_lower = (occasion or "").lower()
+
         # 1. Match Occasion
         matched_occasion = self._find_best_match(occasion, self.kb.get("occasions", {}))
         occasion_data = self.kb.get("occasions", {}).get(matched_occasion, {
@@ -36,8 +38,16 @@ class FashionRuleEngine:
             "styling_tip": "Focus on well-fitted silhouette and complementary accessories."
         })
 
-        # 2. Match Culture
-        matched_culture = self._find_best_match(culture, self.kb.get("cultures", {}))
+        # 2. Match Culture with occasion-specific boundary enforcement
+        # e.g., Diwali is a South Asian / Indo-Western festival
+        if "diwali" in occ_lower:
+            if "indo" in culture.lower() or "fusion" in culture.lower():
+                matched_culture = "Indo-Western"
+            else:
+                matched_culture = "South Asian"
+        else:
+            matched_culture = self._find_best_match(culture, self.kb.get("cultures", {}))
+
         culture_data = self.kb.get("cultures", {}).get(matched_culture, {
             "key_garments_female": ["Contemporary Dress", "Tailored Suit", "Indo-Western Set"],
             "key_garments_male": ["Tailored Suit", "Smart Blazer with Trousers", "Nehru Jacket Set"],
@@ -57,7 +67,6 @@ class FashionRuleEngine:
             raw_garments = culture_data.get("key_garments_other", culture_data.get("key_garments_female", []))
 
         # Formality Filtering: Ensure business meetings don't get sherwanis or heavy wedding lehengas
-        occ_lower = (occasion or "").lower()
         if "business" in occ_lower or "meeting" in occ_lower or "corporate" in occ_lower:
             # Strictly professional garments
             if "female" in gender_lower or "woman" in gender_lower:
