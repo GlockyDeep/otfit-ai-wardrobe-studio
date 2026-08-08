@@ -19,7 +19,12 @@ const OCCASION_CHIPS = [
   'Formal Event'
 ];
 
-const GARMENT_CHIPS = [
+interface GarmentChip {
+  label: string;
+  emoji: string;
+}
+
+const ALL_GARMENT_CHIPS: GarmentChip[] = [
   { label: 'Tuxedo', emoji: '🤵' },
   { label: 'Modi Jacket / Nehru Vest', emoji: '🧥' },
   { label: 'Bandhgala Suit', emoji: '👔' },
@@ -45,6 +50,17 @@ const ALL_CULTURES: CultureOption[] = [
 // Occasion-specific culture constraints
 const OCCASION_CULTURE_MAP: Record<string, CultureOption[]> = {
   diwali: ['South Asian', 'Indo-Western']
+};
+
+// Occasion-specific garment chip filters
+const OCCASION_GARMENT_MAP: Record<string, string[]> = {
+  diwali: ['Banarasi Silk Saree', 'Lehenga Choli', 'Sherwani', 'Modi Jacket / Nehru Vest', 'Bandhgala Suit', 'Anarkali Suit', 'Sharara Set', 'Pathani Suit'],
+  festival: ['Banarasi Silk Saree', 'Lehenga Choli', 'Sherwani', 'Modi Jacket / Nehru Vest', 'Anarkali Suit', 'Sharara Set', 'Pathani Suit'],
+  wedding: ['Banarasi Silk Saree', 'Lehenga Choli', 'Sherwani', 'Modi Jacket / Nehru Vest', 'Bandhgala Suit', 'Anarkali Suit', 'Tuxedo', 'Sharara Set'],
+  'business meeting': ['Tuxedo', 'Blazer with Trousers', 'Bandhgala Suit', 'Modi Jacket / Nehru Vest', 'Co-ord Set'],
+  casual: ['Co-ord Set', 'Pathani Suit', 'Blazer with Trousers'],
+  college: ['Co-ord Set', 'Pathani Suit'],
+  'cocktail party': ['Tuxedo', 'Blazer with Trousers', 'Co-ord Set', 'Anarkali Suit', 'Bandhgala Suit']
 };
 
 const BUDGETS: BudgetOption[] = ['Low', 'Medium', 'High'];
@@ -76,12 +92,30 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
     return ALL_CULTURES;
   };
 
-  const availableCultures = getAvailableCultures(formData.occasion);
+  // Compute available garment choices based on occasion
+  const getAvailableGarmentChips = (occ: string): GarmentChip[] => {
+    const key = occ ? occ.trim().toLowerCase() : '';
+    for (const [mappedOcc, validLabels] of Object.entries(OCCASION_GARMENT_MAP)) {
+      if (key.includes(mappedOcc)) {
+        return ALL_GARMENT_CHIPS.filter(chip => validLabels.includes(chip.label));
+      }
+    }
+    return ALL_GARMENT_CHIPS;
+  };
 
-  // Auto-adjust culture if current selected culture is invalid for selected occasion
+  const availableCultures = getAvailableCultures(formData.occasion);
+  const availableGarments = getAvailableGarmentChips(formData.occasion);
+
+  // Auto-adjust culture and garment if current selections are invalid for selected occasion
   useEffect(() => {
     if (!availableCultures.includes(formData.culture)) {
       setFormData(prev => ({ ...prev, culture: availableCultures[0] }));
+    }
+    if (formData.desired_garment) {
+      const validLabels = availableGarments.map(g => g.label);
+      if (!validLabels.includes(formData.desired_garment)) {
+        setFormData(prev => ({ ...prev, desired_garment: '' }));
+      }
     }
   }, [formData.occasion]);
 
@@ -96,16 +130,23 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
   };
 
   const handleChipClick = (occ: string) => {
-    const valid = getAvailableCultures(occ);
+    const validCultures = getAvailableCultures(occ);
+    const validGarmentChips = getAvailableGarmentChips(occ);
+    const validGarmentLabels = validGarmentChips.map(g => g.label);
+
     setFormData(prev => ({
       ...prev,
       occasion: occ,
-      culture: valid.includes(prev.culture) ? prev.culture : valid[0]
+      culture: validCultures.includes(prev.culture) ? prev.culture : validCultures[0],
+      desired_garment: prev.desired_garment && validGarmentLabels.includes(prev.desired_garment) ? prev.desired_garment : ''
     }));
   };
 
   const handleGarmentClick = (garmentLabel: string) => {
-    setFormData(prev => ({ ...prev, desired_garment: garmentLabel }));
+    setFormData(prev => ({
+      ...prev,
+      desired_garment: prev.desired_garment === garmentLabel ? '' : garmentLabel
+    }));
   };
 
   const handleTagClick = (tag: string) => {
@@ -194,27 +235,36 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
 
         {/* 3. Preferred Clothing Type / Garment */}
         <div>
-          <label className="block text-sm font-semibold text-gray-300 mb-2 flex items-center space-x-2">
-            <Shirt className="w-4 h-4 text-rose-400" />
-            <span>Preferred Clothing Type / Garment (Optional)</span>
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-sm font-semibold text-gray-300 flex items-center space-x-2">
+              <Shirt className="w-4 h-4 text-rose-400" />
+              <span>Preferred Clothing Type / Garment (Optional)</span>
+            </label>
+            {availableGarments.length < ALL_GARMENT_CHIPS.length && (
+              <span className="text-xs text-rose-300/80 flex items-center space-x-1 font-medium">
+                <Info className="w-3.5 h-3.5" />
+                <span>Filtered for {formData.occasion}</span>
+              </span>
+            )}
+          </div>
+
           <input
             type="text"
             value={formData.desired_garment || ''}
             onChange={e => setFormData(prev => ({ ...prev, desired_garment: e.target.value }))}
-            placeholder="e.g. Tuxedo, Modi Jacket, Bandhgala Suit, Saree, Lehenga, Sherwani"
+            placeholder="e.g. Modi Jacket, Bandhgala Suit, Saree, Lehenga, Sherwani"
             className="w-full bg-gray-900/80 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition"
           />
           <div className="mt-3 flex flex-wrap gap-2">
             <span className="text-xs text-gray-500 self-center mr-1">Garment Choices:</span>
-            {GARMENT_CHIPS.map(({ label, emoji }) => (
+            {availableGarments.map(({ label, emoji }) => (
               <button
                 key={label}
                 type="button"
                 onClick={() => handleGarmentClick(label)}
                 className={`text-xs px-3 py-1.5 rounded-lg border transition cursor-pointer flex items-center space-x-1.5 ${
                   formData.desired_garment === label
-                    ? 'bg-rose-500/20 border-rose-400 text-rose-300'
+                    ? 'bg-rose-500/20 border-rose-400 text-rose-300 font-semibold'
                     : 'bg-gray-900/40 border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300'
                 }`}
               >

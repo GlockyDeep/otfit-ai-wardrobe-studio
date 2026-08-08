@@ -67,15 +67,26 @@ class FashionRuleEngine:
         else:
             raw_garments = culture_data.get("key_garments_other", culture_data.get("key_garments_female", []))
 
-        # Formality Filtering: Ensure business meetings don't get sherwanis or heavy wedding lehengas
-        if "business" in occ_lower or "meeting" in occ_lower or "corporate" in occ_lower:
-            # Strictly professional garments
+        # Formality & Occasion Filtering:
+        # A) Diwali / Festive: Exclude corporate/western business suits (Tuxedos, Blazer suits)
+        if "diwali" in occ_lower or "festival" in occ_lower:
+            if "female" in gender_lower or "woman" in gender_lower:
+                candidate_garments = ["Banarasi Silk Saree", "Lehenga Choli", "Anarkali Suit", "Sharara Set", "Indo-Western Gown", "Silk Kurta Set with Dupatta"]
+            elif "male" in gender_lower or "man" in gender_lower:
+                candidate_garments = ["Silk Sherwani", "Silk Modi Jacket with Kurta", "Bandhgala Suit", "Pathani Suit", "Indo-Western Achkan", "Dhoti Kurta Set"]
+            else:
+                candidate_garments = ["Gender-Neutral Embroidered Kurta Set", "Draped Indo-Western Jacket Set"]
+
+        # B) Business Meeting / Corporate: Exclude heavy festive/wedding wear (Sherwanis, Lehengas)
+        elif "business" in occ_lower or "meeting" in occ_lower or "corporate" in occ_lower:
             if "female" in gender_lower or "woman" in gender_lower:
                 candidate_garments = ["Tailored Pant Suit", "Blazer with Trousers", "Formal Silk Kurta Set with Trousers", "Contemporary Solid Saree"]
             elif "male" in gender_lower or "man" in gender_lower:
                 candidate_garments = ["Two-Piece Tailored Suit", "Bandhgala Suit", "Tuxedo", "Blazer with Chinos", "Crisp Nehru Jacket with Trousers"]
             else:
                 candidate_garments = ["Tailored Unisex Business Suit", "Blazer with Structured Trousers"]
+
+        # C) Casual / College
         elif "casual" in occ_lower or "college" in occ_lower:
             if "female" in gender_lower or "woman" in gender_lower:
                 candidate_garments = ["Cotton Kurta with Trousers", "Casual Shirt Dress", "Midi Wrap Dress", "Co-ord Set"]
