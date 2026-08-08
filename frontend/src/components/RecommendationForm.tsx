@@ -38,6 +38,13 @@ const ALL_GARMENT_CHIPS: GarmentChip[] = [
   { label: 'Co-ord Set', emoji: '👚' }
 ];
 
+// Gender-specific garment filters
+const GENDER_GARMENT_MAP: Record<GenderOption, string[]> = {
+  Male: ['Tuxedo', 'Modi Jacket / Nehru Vest', 'Bandhgala Suit', 'Sherwani', 'Blazer with Trousers', 'Pathani Suit', 'Co-ord Set'],
+  Female: ['Banarasi Silk Saree', 'Lehenga Choli', 'Anarkali Suit', 'Sharara Set', 'Blazer with Trousers', 'Co-ord Set', 'Modi Jacket / Nehru Vest'],
+  Other: ['Modi Jacket / Nehru Vest', 'Bandhgala Suit', 'Co-ord Set', 'Blazer with Trousers', 'Pathani Suit']
+};
+
 const ALL_CULTURES: CultureOption[] = [
   'South Asian',
   'Western',
@@ -92,21 +99,28 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
     return ALL_CULTURES;
   };
 
-  // Compute available garment choices based on occasion
-  const getAvailableGarmentChips = (occ: string): GarmentChip[] => {
+  // Compute available garment choices based on Gender AND Occasion
+  const getAvailableGarmentChips = (occ: string, gender: GenderOption): GarmentChip[] => {
+    const allowedForGender = GENDER_GARMENT_MAP[gender] || ALL_GARMENT_CHIPS.map(g => g.label);
     const key = occ ? occ.trim().toLowerCase() : '';
+    
+    let allowedForOccasion = ALL_GARMENT_CHIPS.map(g => g.label);
     for (const [mappedOcc, validLabels] of Object.entries(OCCASION_GARMENT_MAP)) {
       if (key.includes(mappedOcc)) {
-        return ALL_GARMENT_CHIPS.filter(chip => validLabels.includes(chip.label));
+        allowedForOccasion = validLabels;
+        break;
       }
     }
-    return ALL_GARMENT_CHIPS;
+
+    return ALL_GARMENT_CHIPS.filter(
+      chip => allowedForGender.includes(chip.label) && allowedForOccasion.includes(chip.label)
+    );
   };
 
   const availableCultures = getAvailableCultures(formData.occasion);
-  const availableGarments = getAvailableGarmentChips(formData.occasion);
+  const availableGarments = getAvailableGarmentChips(formData.occasion, formData.gender);
 
-  // Auto-adjust culture and garment if current selections are invalid for selected occasion
+  // Auto-adjust selections if current desired_garment or culture is invalid for current gender/occasion
   useEffect(() => {
     if (!availableCultures.includes(formData.culture)) {
       setFormData(prev => ({ ...prev, culture: availableCultures[0] }));
@@ -117,7 +131,7 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
         setFormData(prev => ({ ...prev, desired_garment: '' }));
       }
     }
-  }, [formData.occasion]);
+  }, [formData.occasion, formData.gender]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,7 +145,7 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
 
   const handleChipClick = (occ: string) => {
     const validCultures = getAvailableCultures(occ);
-    const validGarmentChips = getAvailableGarmentChips(occ);
+    const validGarmentChips = getAvailableGarmentChips(occ, formData.gender);
     const validGarmentLabels = validGarmentChips.map(g => g.label);
 
     setFormData(prev => ({
@@ -240,19 +254,17 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
               <Shirt className="w-4 h-4 text-rose-400" />
               <span>Preferred Clothing Type / Garment (Optional)</span>
             </label>
-            {availableGarments.length < ALL_GARMENT_CHIPS.length && (
-              <span className="text-xs text-rose-300/80 flex items-center space-x-1 font-medium">
-                <Info className="w-3.5 h-3.5" />
-                <span>Filtered for {formData.occasion}</span>
-              </span>
-            )}
+            <span className="text-xs text-rose-300/80 flex items-center space-x-1 font-medium">
+              <Info className="w-3.5 h-3.5" />
+              <span>Filtered for {formData.gender} &bull; {formData.occasion}</span>
+            </span>
           </div>
 
           <input
             type="text"
             value={formData.desired_garment || ''}
             onChange={e => setFormData(prev => ({ ...prev, desired_garment: e.target.value }))}
-            placeholder="e.g. Modi Jacket, Bandhgala Suit, Saree, Lehenga, Sherwani"
+            placeholder="e.g. Modi Jacket, Bandhgala Suit, Sherwani, Tuxedo"
             className="w-full bg-gray-900/80 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition"
           />
           <div className="mt-3 flex flex-wrap gap-2">

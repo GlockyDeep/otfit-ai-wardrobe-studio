@@ -77,7 +77,16 @@ class FashionRuleEngine:
             else:
                 candidate_garments = ["Gender-Neutral Embroidered Kurta Set", "Draped Indo-Western Jacket Set"]
 
-        # B) Business Meeting / Corporate: Exclude heavy festive/wedding wear (Sherwanis, Lehengas)
+        # B) Wedding / Formal Event: Strictly gender-appropriate formal attire
+        elif "wedding" in occ_lower or "gala" in occ_lower:
+            if "female" in gender_lower or "woman" in gender_lower:
+                candidate_garments = ["Banarasi Silk Saree", "Lehenga Choli", "Anarkali Suit", "Sharara Set", "Indo-Western Gown", "Evening Gown"]
+            elif "male" in gender_lower or "man" in gender_lower:
+                candidate_garments = ["Silk Sherwani", "Silk Modi Jacket with Kurta", "Bandhgala Suit", "Black Tie Tuxedo", "Jodhpuri Suit", "Indo-Western Achkan"]
+            else:
+                candidate_garments = ["Gender-Neutral Embroidered Kurta Set", "Draped Indo-Western Jacket Set"]
+
+        # C) Business Meeting / Corporate: Exclude heavy festive/wedding wear (Sherwanis, Lehengas)
         elif "business" in occ_lower or "meeting" in occ_lower or "corporate" in occ_lower:
             if "female" in gender_lower or "woman" in gender_lower:
                 candidate_garments = ["Tailored Pant Suit", "Blazer with Trousers", "Formal Silk Kurta Set with Trousers", "Contemporary Solid Saree"]
@@ -86,7 +95,7 @@ class FashionRuleEngine:
             else:
                 candidate_garments = ["Tailored Unisex Business Suit", "Blazer with Structured Trousers"]
 
-        # C) Casual / College
+        # D) Casual / College
         elif "casual" in occ_lower or "college" in occ_lower:
             if "female" in gender_lower or "woman" in gender_lower:
                 candidate_garments = ["Cotton Kurta with Trousers", "Casual Shirt Dress", "Midi Wrap Dress", "Co-ord Set"]
