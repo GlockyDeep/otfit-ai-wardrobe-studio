@@ -38,10 +38,10 @@ const ALL_GARMENT_CHIPS: GarmentChip[] = [
   { label: 'Co-ord Set', emoji: '👚' }
 ];
 
-// Gender-specific garment filters
+// Gender-specific garment filters (Strictly separate Male vs Female)
 const GENDER_GARMENT_MAP: Record<GenderOption, string[]> = {
   Male: ['Tuxedo', 'Modi Jacket / Nehru Vest', 'Bandhgala Suit', 'Sherwani', 'Blazer with Trousers', 'Pathani Suit', 'Co-ord Set'],
-  Female: ['Banarasi Silk Saree', 'Lehenga Choli', 'Anarkali Suit', 'Sharara Set', 'Blazer with Trousers', 'Co-ord Set', 'Modi Jacket / Nehru Vest'],
+  Female: ['Banarasi Silk Saree', 'Lehenga Choli', 'Anarkali Suit', 'Sharara Set', 'Blazer with Trousers', 'Co-ord Set'],
   Other: ['Modi Jacket / Nehru Vest', 'Bandhgala Suit', 'Co-ord Set', 'Blazer with Trousers', 'Pathani Suit']
 };
 
@@ -119,6 +119,13 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
 
   const availableCultures = getAvailableCultures(formData.occasion);
   const availableGarments = getAvailableGarmentChips(formData.occasion, formData.gender);
+
+  // Dynamic placeholder text matching target gender
+  const getGarmentPlaceholder = (gender: GenderOption) => {
+    if (gender === 'Female') return 'e.g. Banarasi Silk Saree, Lehenga Choli, Anarkali Suit, Blazer Suit, Co-ord Set';
+    if (gender === 'Male') return 'e.g. Tuxedo, Bandhgala Suit, Sherwani, Modi Jacket, Pathani Suit';
+    return 'e.g. Bandhgala Suit, Modi Jacket, Blazer Suit, Co-ord Set';
+  };
 
   // Auto-adjust selections if current desired_garment or culture is invalid for current gender/occasion
   useEffect(() => {
@@ -264,7 +271,7 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
             type="text"
             value={formData.desired_garment || ''}
             onChange={e => setFormData(prev => ({ ...prev, desired_garment: e.target.value }))}
-            placeholder="e.g. Modi Jacket, Bandhgala Suit, Sherwani, Tuxedo"
+            placeholder={getGarmentPlaceholder(formData.gender)}
             className="w-full bg-gray-900/80 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition"
           />
           <div className="mt-3 flex flex-wrap gap-2">
