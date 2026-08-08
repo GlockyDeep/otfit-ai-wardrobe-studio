@@ -1,0 +1,199 @@
+{
+  "occasions": {
+    "Wedding": {
+      "formality": "High",
+      "recommended_styles": ["Royal", "Festive", "Elegant", "Opulent"],
+      "recommended_fabrics": ["Silk", "Banarasi", "Brocade", "Velvet", "Organza", "Satin"],
+      "color_guidance": "Rich jewel tones, gold accents, deep reds, royal blue, emerald green, champagne",
+      "embroidery_level": "Intricate",
+      "styling_tip": "Focus on high-contrast embellishments, statement jewelry or lapel accessories, and structured traditional or black-tie footwear."
+    },
+    "Diwali": {
+      "formality": "High-Festive",
+      "recommended_styles": ["Traditional", "Festive", "Indo-Western", "Vibrant"],
+      "recommended_fabrics": ["Silk", "Chiffon", "Georgette", "Organza", "Cotton Silk", "Brocade"],
+      "color_guidance": "Bright festive colors, marigold yellow, mustard, fuschia, royal blue, emerald, ruby red",
+      "embroidery_level": "Medium to High",
+      "styling_tip": "Pair bright festive attire with traditional motifs, metallic accessories, and comfortable festive footwear."
+    },
+    "Business Meeting": {
+      "formality": "Formal",
+      "recommended_styles": ["Structured", "Minimalist", "Professional", "Crisp"],
+      "recommended_fabrics": ["Wool", "Cotton", "Linen blend", "Tweed", "Crepe", "Fine Silk"],
+      "color_guidance": "Restrained neutrals, navy, charcoal, slate gray, ivory, beige, muted wine",
+      "embroidery_level": "None to Minimal",
+      "styling_tip": "Prioritize sharp tailoring, clean lines, polished oxfords or closed-toe heels, and minimalist accessories."
+    },
+    "Casual": {
+      "formality": "Low",
+      "recommended_styles": ["Relaxed", "Comfortable", "Contemporary", "Effortless"],
+      "recommended_fabrics": ["Cotton", "Linen", "Denim", "Jersey", "Rayon"],
+      "color_guidance": "Earthy tones, soft neutrals, pastels, muted primaries",
+      "embroidery_level": "None or Minimal threadwork",
+      "styling_tip": "Combine comfortable breathable separates with clean sneakers, loafers, or flat sandals."
+    },
+    "Cocktail Party": {
+      "formality": "Semi-Formal",
+      "recommended_styles": ["Glamorous", "Sleek", "Modern", "Sophisticated"],
+      "recommended_fabrics": ["Satin", "Silk", "Crepe", "Velvet", "Chiffon", "Sequin accent"],
+      "color_guidance": "Midnight black, emerald green, deep burgundy, metallic silver, champagne gold",
+      "embroidery_level": "Subtle sequin or crystal accents",
+      "styling_tip": "Incorporate clean silhouette cuts, bold statement accessories, and sleek footwear."
+    },
+    "College": {
+      "formality": "Low",
+      "recommended_styles": ["Streetwear", "Smart Casual", "Trendy", "Layered"],
+      "recommended_fabrics": ["Cotton", "Denim", "Canvas", "Linen blend"],
+      "color_guidance": "Pastels, denims, monochrome, vibrant graphic hues",
+      "embroidery_level": "None",
+      "styling_tip": "Focus on versatile layering, durable fabrics, ergonomic footwear, and minimal functional accessories."
+    },
+    "Date Night": {
+      "formality": "Semi-Formal",
+      "recommended_styles": ["Romantic", "Chic", "Sleek", "Subtly Festive"],
+      "recommended_fabrics": ["Silk", "Satin", "Soft Knit", "Chiffon", "Georgette"],
+      "color_guidance": "Blush pink, wine, deep navy, terracotta, classic black, warm ivory",
+      "embroidery_level": "Minimal to Delicate",
+      "styling_tip": "Balance soft draped textures with key statement pieces and complementary footwear."
+    },
+    "Festival": {
+      "formality": "Medium-High",
+      "recommended_styles": ["Ethnic", "Vibrant", "Boho-Chic", "Festive"],
+      "recommended_fabrics": ["Cotton Silk", "Chiffon", "Georgette", "Linen", "Bandhani"],
+      "color_guidance": "Vibrant primary & secondary colors, coral, turquoise, saffron yellow, magenta",
+      "embroidery_level": "Medium mirror work, Chikankari, or printed motifs",
+      "styling_tip": "Opt for movement-friendly silhouettes, expressive patterns, and hand-crafted accents."
+    },
+    "Formal Event": {
+      "formality": "High",
+      "recommended_styles": ["Regal", "Black Tie", "Sophisticated", "Tailored"],
+      "recommended_fabrics": ["Raw Silk", "Velvet", "Tuxedo Wool", "Brocade", "Crepe"],
+      "color_guidance": "Classic black, navy blue, gold, silver, emerald, maroon",
+      "embroidery_level": "Refined or tailored details",
+      "styling_tip": "Ensure precision fit, dark polished accessories, and timeless styling details."
+    }
+  },
+  "cultures": {
+    "South Asian": {
+      "key_garments_female": ["Saree", "Lehenga Choli", "Anarkali Suit", "Kurta Set with Dupatta", "Indo-Western Gown", "Sharara Set"],
+      "key_garments_male": ["Sherwani", "Bandhgala Suit", "Kurta Pyjama with Nehru Jacket", "Dhoti Kurta Set", "Indo-Western Achkan"],
+      "key_garments_other": ["Gender-Neutral Embroidered Kurta Set", "Draped Indo-Western Jacket Set"],
+      "signature_motifs": ["Paisley", "Floral Jal", "Zardozi", "Gota Patti", "Chikankari", "Banarasi Weave"],
+      "traditional_accessories": ["Jhumkas", "Maang Tikka", "Kundan Necklace", "Pocket Square", "Brooch", "Mojris / Juttis"],
+      "footwear": ["Mojris", "Embroidered Juttis", "Block Heel Sandals", "Kolhapuri Chappals"]
+    },
+    "Western": {
+      "key_garments_female": ["Cocktail Dress", "Evening Gown", "Tailored Pant Suit", "Blazer & Trousers", "Midi Wrap Dress", "Co-ord Suit"],
+      "key_garments_male": ["Two-Piece Suit", "Tuxedo", "Blazer with Chinos", "Oxford Shirt & Trousers", "Smart Leather Jacket Set"],
+      "key_garments_other": ["Tailored Unisex Suit", "Minimalist Structured Set"],
+      "signature_motifs": ["Houndstooth", "Pinstripes", "Plaid", "Monochrome Solid", "Minimal Floral"],
+      "traditional_accessories": ["Leather Belt", "Cufflinks", "Silk Tie", "Minimal Pendant", "Clutch Bag"],
+      "footwear": ["Oxfords", "Derbies", "Loafers", "Stilettos", "Ankle Boots", "Clean Leather Sneakers"]
+    },
+    "Indo-Western": {
+      "key_garments_female": ["Crop Top with Draped Saree", "Indo-Western Co-ord Set", "Jacket Lehenga", "Draped Dhoti Pants with Cape", "Kurta with Trousers"],
+      "key_garments_male": ["Asymmetric Kurta with Trouser", "Bandhgala with Chinos", "Indo-Western Trench Jacket", "Short Kurta with Blazer"],
+      "key_garments_other": ["Asymmetric Draped Jacket Set", "Fusion Co-ord"],
+      "signature_motifs": ["Geometric Fusion", "Contemporary Threadwork", "Minimalist Metallic Foil"],
+      "traditional_accessories": ["Statement Earrings", "Modern Cuff", "Lapel Pin", "Designer Clutch"],
+      "footwear": ["Monk Straps", "Embroidered Loafers", "Heeled Mule", "Stylish Leather Sandals"]
+    },
+    "Middle Eastern": {
+      "key_garments_female": ["Embroidered Abaya", "Kaftan Gown", "Modest Satin Dress", "Layered Tunic Set"],
+      "key_garments_male": ["Thobe with Tailored Bisht", "Smart Blazer with Tunic", "Tailored Crisp Shirt & Trousers"],
+      "key_garments_other": ["Draped Flowing Kaftan", "Modest Layered Set"],
+      "signature_motifs": ["Arabesque", "Islamic Geometric Lattice", "Gold Thread Embroidery", "Calligraphic Motifs"],
+      "traditional_accessories": ["Silk Hijab / Headscarf", "Gold Bangles", "Oud Perfume Accent", "Signet Ring"],
+      "footwear": ["Embellished Mules", "Pointed Leather Slides", "Formal Loafers"]
+    },
+    "East Asian": {
+      "key_garments_female": ["Modern Cheongsam / Qipao", "Modern Hanfu Gown", "Wrap Silk Dress", "Structured Kimono Jacket Set"],
+      "key_garments_male": ["Tang Suit Jacket", "Mandarin Collar Suit", "Minimalist Wrap Shirt Set"],
+      "key_garments_other": ["Mandarin Collar Tunic Set", "Minimalist Flowing Silk Wrap"],
+      "signature_motifs": ["Bamboo", "Cherry Blossom", "Cloud Patterns", "Dragon / Phoenix Weave", "Minimalist Ink Wash"],
+      "traditional_accessories": ["Jade Pendant", "Silk Hairpin", "Minimalist Folding Fan motif", "Clean Leather Belt"],
+      "footwear": ["Minimalist Mules", "Silk Slippers", "Clean Oxford Shoes", "Sleek Ankle Boots"]
+    },
+    "African": {
+      "key_garments_female": ["Ankara Print Gown", "Kente Pattern Maxi Dress", "Tailored Peplum Top & Skirt", "Gele Headwrap Set"],
+      "key_garments_male": ["Agbada Set", "Dashiki Suit", "Kaftan Shirt & Trousers", "Tailored Ankara Accent Suit"],
+      "key_garments_other": ["Vibrant Ankara Co-ord", "Gender-Neutral Dashiki Set"],
+      "signature_motifs": ["Kente Weave", "Ankara Wax Print", "Tribal Geometric Patterns", "Cowrie Shell Accents"],
+      "traditional_accessories": ["Beaded Necklace", "Gele Headwrap", "Statement Wooden Bangle", "Leather Crossbody"],
+      "footwear": ["Handcrafted Leather Sandals", "Woven Loafers", "Strappy Heel Sandals"]
+    }
+  },
+  "color_palettes": {
+    "Jewel Tones": ["Emerald Green", "Royal Blue", "Ruby Red", "Amethyst Purple", "Deep Magenta"],
+    "Pastels": ["Blush Pink", "Mint Green", "Lavender", "Powder Blue", "Peach", "Soft Ivory"],
+    "Earthy Tones": ["Terracotta", "Olive Green", "Mustard Ochre", "Rust Brown", "Warm Beige", "Khaki"],
+    "Monochromatic": ["Jet Black", "Charcoal Gray", "Slate", "Crisp White", "Off-White"],
+    "Bright Festive": ["Marigold Yellow", "Crimson Red", "Fuschia Pink", "Turquoise", "Saffron"],
+    "Metallics": ["Champagne Gold", "Antique Copper", "Rose Gold", "Metallic Silver"]
+  },
+  "fabrics": {
+    "Silk": {"weight": "Medium", "feel": "Lustrous & Smooth", "best_for_seasons": ["Winter", "Mild"]},
+    "Cotton": {"weight": "Light", "feel": "Breathable & Soft", "best_for_seasons": ["Summer", "Monsoon", "Mild"]},
+    "Linen": {"weight": "Light", "feel": "Textured & Cool", "best_for_seasons": ["Summer"]},
+    "Velvet": {"weight": "Heavy", "feel": "Plush & Warm", "best_for_seasons": ["Winter"]},
+    "Brocade": {"weight": "Heavy", "feel": "Rich & Structured", "best_for_seasons": ["Winter", "Mild"]},
+    "Chiffon": {"weight": "Ultra-Light", "feel": "Sheer & Flowing", "best_for_seasons": ["Summer", "Mild"]},
+    "Organza": {"weight": "Light", "feel": "Crisp & Sheer", "best_for_seasons": ["Summer", "Mild"]},
+    "Georgette": {"weight": "Light-Medium", "feel": "Bouncy & Fluid", "best_for_seasons": ["Summer", "Monsoon", "Mild"]},
+    "Wool": {"weight": "Heavy", "feel": "Insulating & Structured", "best_for_seasons": ["Winter"]},
+    "Satin": {"weight": "Medium", "feel": "Glossy & Draped", "best_for_seasons": ["Mild", "Winter"]}
+  },
+  "embroidery_and_motifs": {
+    "Zardozi": "Heavy metallic gold/silver threadwork with pearls and beads; suitable for weddings and formal royalty.",
+    "Chikankari": "Delicate white shadow threadwork on light fabrics; ideal for summer, casual, and festive daytime events.",
+    "Gota Patti": "Applique ribbon embroidery native to Rajasthan; vibrant for festive and wedding occasions.",
+    "Kantha": "Traditional running stitch work with artistic folk motifs; suitable for casual and semi-formal wear.",
+    "Threadwork": "Refined colorful thread stitching forming floral or geometric patterns.",
+    "Pinstripes": "Parallel clean lines ideal for corporate and formal western tailoring.",
+    "Houndstooth": "Dual-tone geometric weave pattern for classic outerwear and suits.",
+    "Minimalist Stitching": "Subtle tonal edge stitching for modern clean aesthetic."
+  },
+  "season_rules": {
+    "Summer": {
+      "preferred_fabrics": ["Cotton", "Linen", "Chiffon", "Organza", "Georgette"],
+      "avoid_fabrics": ["Velvet", "Heavy Wool", "Heavy Brocade"],
+      "color_recommendations": ["Pastels", "Earthy Tones", "Crisp White", "Light Metallics"],
+      "styling_focus": "Breathability, movement, light layering, UV protection."
+    },
+    "Winter": {
+      "preferred_fabrics": ["Velvet", "Brocade", "Wool", "Silk", "Satin"],
+      "avoid_fabrics": ["Ultra-light chiffon", "Ultra-thin linen"],
+      "color_recommendations": ["Jewel Tones", "Monochromatic Dark", "Deep Burgundy", "Gold"],
+      "styling_focus": "Thermal layering, structured silhouettes, rich textures."
+    },
+    "Monsoon": {
+      "preferred_fabrics": ["Georgette", "Cotton-Synthetic blend", "Lightweight Silk", "Quick-drying crepe"],
+      "avoid_fabrics": ["Heavy Velvet", "Floor-sweeping silk lehengas", "Uncoated Suede"],
+      "color_recommendations": ["Vibrant Festive", "Darker Hues (mud-safe)", "Jewel Tones"],
+      "styling_focus": "Ankle-length or mid-length hems, water-resilient accessories, anti-frizz hairstyles."
+    },
+    "Mild": {
+      "preferred_fabrics": ["Raw Silk", "Satin", "Georgette", "Light Wool", "Cotton Silk"],
+      "avoid_fabrics": [],
+      "color_recommendations": ["All palettes applicable depending on occasion"],
+      "styling_focus": "Versatile transitional layering (jackets, capes, dupattas)."
+    }
+  },
+  "budget_rules": {
+    "Low": {
+      "fabric_guidance": "High-quality Cotton, Rayon, Linen blends, Crepe, Georgette.",
+      "embroidery_guidance": "Printed motifs, subtle machine threadwork, minimal lace trim.",
+      "styling_focus": "Focus on high-impact color pairing, sharp fitting, and smart accessorizing over heavy embellished garments."
+    },
+    "Medium": {
+      "fabric_guidance": "Raw Silk, Organza, Fine Wool, Satin, Cotton-Silk, Chiffon.",
+      "embroidery_guidance": "Intricate Chikankari, Gota Patti accents, refined threadwork, neat lapel construction.",
+      "styling_focus": "Invest in a statement central piece (e.g., designer Dupatta, structured Blazer, or Silk Saree)."
+    },
+    "High": {
+      "fabric_guidance": "Pure Banarasi Silk, Handloom Kanjivaram, Heavy Velvet, Italian Tuxedo Wool, Brocade.",
+      "embroidery_guidance": "Handcrafted Zardozi, real zari embroidery, custom bespoke motifs, crystal embellishments.",
+      "styling_focus": "Bespoke tailoring, heirlooms, designer accessories, high jewellery, premium footwear."
+    }
+  }
+}

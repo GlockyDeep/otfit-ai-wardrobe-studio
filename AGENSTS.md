@@ -386,3 +386,62 @@ At completion, report:
 * Required environment variables
 * What was actually tested
 * Any limitations that could not be tested without external credentials
+
+
+# Git Checkpoints
+
+After successfully completing and verifying each major phase,
+create a Git commit when Git is available.
+
+Use descriptive messages such as:
+
+- feat: implement backend foundation
+- feat: add fashion knowledge base
+- feat: implement hybrid rule engine
+- feat: integrate AI providers
+- feat: build recommendation UI
+- feat: complete frontend backend integration
+- fix: resolve integration issues
+- docs: complete project documentation
+
+Never commit environment files containing secrets.
+
+# 32-Hour MVP Scope Lock
+
+This project is being developed under a strict time constraint.
+
+Do not implement optional features until all core requirements pass.
+
+Forbidden before Definition of Done:
+
+- authentication
+- database
+- vector database
+- RAG
+- image generation
+- outfit image visualization
+- deployment automation
+- Docker
+- admin dashboard
+- recommendation history
+- user profiles
+- complex animations
+- automated trend scraping
+- unnecessary refactors
+
+
+# Permission to downgrade complexity
+If there is a choice between a sophisticated architecture and a
+simple reliable implementation, choose the simple reliable implementation.
+
+
+If a selected library or implementation creates substantial integration
+problems and is not essential to the project goal, replace it with a
+simpler implementation rather than spending excessive effort debugging it.
+
+Examples:
+
+shadcn issue → use Tailwind components
+complex state library → React state
+provider SDK issue → direct compatible HTTP/client approach
+advanced abstraction → straightforward module

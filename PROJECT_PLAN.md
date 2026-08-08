@@ -947,3 +947,18 @@ Potential future features:
 * Admin interface
 
 The MVP architecture should make future additions possible without implementing them now.
+
+
+## Demo Reliability Requirement
+
+If the configured LLM provider is unavailable, the backend should
+optionally fall back to a deterministic recommendation generated from
+the knowledge base and rule engine.
+
+The fallback must return the same response schema.
+
+The response may indicate internally that fallback mode was used,
+but the frontend must remain functional.
+
+This exists to ensure that the university demo does not completely
+fail because of an external AI API outage.
