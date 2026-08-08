@@ -30,9 +30,10 @@ Your goal is to create bespoke fashion design recommendations tailored to a clie
 CRITICAL INSTRUCTIONS:
 1. You must act as a creative fashion designer, NOT an e-commerce product recommender. Do NOT mention store links, brand names, or shopping prices. Focus on design aesthetics, garment cuts, fabric drape, color harmonies, and styling rationale.
 2. Incorporate the provided Fashion Knowledge Context (rules, candidate garments, recommended fabrics, color guidance, and embroidery levels).
-3. Produce EXACTLY ONE primary outfit and EXACTLY TWO meaningfully different alternative outfits.
-4. Each outfit MUST include: clothing_type, silhouette, colors (array of strings), fabric, embroidery_or_pattern, accessories (array of strings), footwear, hairstyle, makeup, styling_tips (array of strings), and rationale.
-5. Your response MUST be valid JSON adhering precisely to the specified schema.
+3. Ensure garments strictly match event formality: Business Meetings REQUIRE formal suits, blazers, bandhgalas, or tailored kurtas (NEVER sherwanis, heavy lehengas, or wedding attire). Weddings/Diwali require festive attire. Casual requires relaxed, comfortable clothing.
+4. Produce EXACTLY ONE primary outfit and EXACTLY TWO meaningfully different alternative outfits.
+5. Each outfit MUST include: clothing_type, silhouette, colors (array of strings), fabric, embroidery_or_pattern, accessories (array of strings), footwear, hairstyle, makeup, styling_tips (array of strings), and rationale.
+6. Your response MUST be valid JSON adhering precisely to the specified schema.
 """
 
 def build_user_prompt(context: Dict[str, Any]) -> str:
@@ -128,7 +129,6 @@ def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationRespons
             if len(validated.alternatives) > 2:
                 validated.alternatives = validated.alternatives[:2]
             elif len(validated.alternatives) < 2:
-                # Add mock fallback if LLM returned fewer than 2 alternatives
                 fallback_alt = generate_mock_fallback(context).alternatives[0]
                 while len(validated.alternatives) < 2:
                     validated.alternatives.append(fallback_alt)
@@ -143,246 +143,328 @@ def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationRespons
 def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
     """
     Rule-engine powered deterministic fashion generator when offline or API key is not present.
-    Guarantees reliable, highly accurate responses matching all prompt requirements.
+    Strictly aligns garment choices with occasion formality, culture, gender, season, and budget.
     """
     gender = context.get("gender", "Female")
-    occasion = context.get("occasion", "Special Event")
+    occasion = context.get("occasion", "Business Meeting")
     culture = context.get("culture", "South Asian")
     budget = context.get("budget", "Medium")
     season = context.get("season", "Mild")
     prefs = context.get("user_preferences", "")
     
-    garments = context.get("candidate_garments", ["Custom Outfit"])
-    fabrics = context.get("recommended_fabrics", ["Fine Fabric"])
-    motifs = context.get("signature_motifs", ["Minimal Motif"])
-    accessories = context.get("accessories", ["Accessory"])
-    footwear_list = context.get("footwear_options", ["Dress Shoes"])
-    color_guide = context.get("color_guidance", "Harmonious palette")
-
+    occ_lower = occasion.lower()
     is_female = "female" in gender.lower() or "woman" in gender.lower()
     is_male = "male" in gender.lower() or "man" in gender.lower()
 
-    if "south asian" in culture.lower():
-        if "diwali" in occasion.lower() or "wedding" in occasion.lower() or "festive" in occasion.lower():
-            if is_female:
-                primary = OutfitDetail(
-                    clothing_type="Banarasi Silk Lehenga Choli with Zardozi Embroidered Dupatta",
-                    silhouette="A-Line flared lehenga with structured blouse and draped dupatta",
-                    colors=["Emerald Green", "Royal Gold", "Deep Crimson Accent"],
-                    fabric="Pure Banarasi Silk and Organza Dupatta",
-                    embroidery_or_pattern="Handcrafted Zardozi floral motifs along the border with gold zari weave",
-                    accessories=["Kundan choker set", "Maang tikka", "Gold bangles", "Potli bag"],
-                    footwear="Embroidered Antique Gold Mojris",
-                    hairstyle="Soft low bun decorated with fresh jasmine flowers (Gajra)",
-                    makeup="Warm glowing skin with subtle gold eye shadow and deep berry lip color",
-                    styling_tips=[
-                        "Drape the organza dupatta neatly across one shoulder to highlight blouse embroidery.",
-                        "Choose warm gold jewelry to complement the emerald and crimson color palette.",
-                        "Ensure the lehenga hem sits 0.5 inches above footwear for graceful movement."
-                    ],
-                    rationale=f"Designed specifically for a {occasion} in a {season} climate. The rich Banarasi silk offers regal elegance suitable for a {budget} budget, while the emerald and gold hues align with traditional festive aesthetics."
-                )
-                alt1 = OutfitDetail(
-                    clothing_type="Contemporary Draped Silk Saree with Embroidered Velvet Blouse",
-                    silhouette="Fluid pre-draped contour silhouette with structured sweetheart neckline",
-                    colors=["Ruby Red", "Antique Copper", "Warm Champagne"],
-                    fabric="Fluid Georgette Saree with Micro-Velvet Blouse",
-                    embroidery_or_pattern="Gota Patti work along saree borders with subtle zari embroidery",
-                    accessories=["Chandbali statement earrings", "Statement ring", "Embellished clutch"],
-                    footwear="Block Heel Metallic Sandals",
-                    hairstyle="Side-swept loose Hollywood waves",
-                    makeup="Classic winged eyeliner with nude crimson gloss",
-                    styling_tips=[
-                        "Pre-draped pleats provide effortless elegance throughout evening festivities.",
-                        "Focus statement jewelry on earrings to let the neckline shine."
-                    ],
-                    rationale=f"An elegant drape alternative combining traditional Ruby Red tones with modern fluid silhouette cuts."
-                )
-                alt2 = OutfitDetail(
-                    clothing_type="Indo-Western Anarkali Gown with Sheer Cape",
-                    silhouette="Floor-length high-waist flared gown silhouette",
-                    colors=["Mustard Yellow", "Magenta Accent", "Gold"],
-                    fabric="Chiffon and Silk Satin blend",
-                    embroidery_or_pattern="Chikankari shadow threadwork with delicate mirror highlights",
-                    accessories=["Filigree cuff bracelet", "Pearl drop earrings"],
-                    footwear="Kolhapuri Wedge Sandals",
-                    hairstyle="Half-up braided crown with loose tendrils",
-                    makeup="Dewy coral blush with soft brown eyeliner",
-                    styling_tips=[
-                        "The lightweight chiffon cape allows breathable movement for long celebrations.",
-                        "Pair with light-reflective Kolhapuri wedges for all-day comfort."
-                    ],
-                    rationale="A lighter, contemporary Indo-Western alternative ideal for festive social gatherings."
-                )
-            else: # Male / Other
-                primary = OutfitDetail(
-                    clothing_type="Silk Sherwani with Asymmetric Kurta and Churidar",
-                    silhouette="Tailored fitted shoulder silhouette with mandarin collar",
-                    colors=["Royal Navy Blue", "Champagne Gold", "Antique Silver"],
-                    fabric="Raw Silk with Brocade Inner Tunic",
-                    embroidery_or_pattern="Self-textured brocade weave with delicate threadwork on collar and cuffs",
-                    accessories=["Pocket square in champagne silk", "Emerald brooches", "Beaded strand mala"],
-                    footwear="Handcrafted Royal Blue Leather Mojris",
-                    hairstyle="Neatly groomed side part with matte finish pomade",
-                    makeup="Groomed eyebrows and natural hydrated lip balm",
-                    styling_tips=[
-                        "Button the sherwani jacket up to the collar for a regal structured profile.",
-                        "Match pocket square tone precisely to the churidar trousers."
-                    ],
-                    rationale=f"A regal male ensemble tailored for a {occasion}. Raw silk provides structure and warmth suitable for {budget} budget execution."
-                )
-                alt1 = OutfitDetail(
-                    clothing_type="Bandhgala Suit with Tailored Trousers",
-                    silhouette="Structured military-inspired slim silhouette",
-                    colors=["Charcoal Gray", "Burgundy Accent"],
-                    fabric="Fine Italian Wool and Silk Blend",
-                    embroidery_or_pattern="Minimalist tonal stitching with custom brass buttons",
-                    accessories=["Silk lapel pin", "Leather watch with silver bezel"],
-                    footwear="Polished Dark Brown Leather Monk Straps",
-                    hairstyle="Clean pompadour fade",
-                    makeup="Hydrated skin finish",
-                    styling_tips=["Keep collar crisp and buttoned; pair with sleek leather monk straps."],
-                    rationale="A modern fusion option bridging South Asian heritage with contemporary formal tailoring."
-                )
-                alt2 = OutfitDetail(
-                    clothing_type="Embroidered Kurta Set with Brocade Nehru Jacket",
-                    silhouette="Relaxed fit straight kurta with waist-length tailored jacket",
-                    colors=["Ivory Cream", "Deep Maroon", "Gold"],
-                    fabric="Cotton Silk Kurta with Jacquard Brocade Jacket",
-                    embroidery_or_pattern="Traditional floral jacquard weave on vest",
-                    accessories=["Gold cufflinks", "Contrasting pocket square"],
-                    footwear="Tan Leather Mojris",
-                    hairstyle="Natural textured look",
-                    makeup="Minimal grooming",
-                    styling_tips=["Layer the jacket open or half-buttoned for comfortable movement during festivities."],
-                    rationale="A comfortable, festive alternative offering high visual appeal with ease of movement."
-                )
-        else: # Generic South Asian
-            primary = OutfitDetail(
-                clothing_type=f"Classic {garments[0]} Ensemble",
-                silhouette="Structured traditional fit",
-                colors=["Jewel Tone", "Gold Accent"],
-                fabric=fabrics[0] if fabrics else "Silk Blend",
-                embroidery_or_pattern=f"{motifs[0]} embroidery" if motifs else "Refined threadwork",
-                accessories=accessories[:3] if accessories else ["Traditional Jewelry", "Clutch"],
-                footwear=footwear_list[0] if footwear_list else "Traditional Footwear",
-                hairstyle="Elegant Updo or Styled Waves",
-                makeup="Polished event makeup",
-                styling_tips=["Ensure clean draping and fit.", "Coordinate accessories with metallic accents."],
-                rationale=f"Customized for {gender} attending a {occasion} in {culture} context."
-            )
-            alt1 = OutfitDetail(
-                clothing_type=f"Modern {garments[1] if len(garments)>1 else garments[0]} Set",
-                silhouette="Slim contour fit",
-                colors=["Pastel Rose", "Silver"],
-                fabric="Georgette",
-                embroidery_or_pattern="Chikankari work",
-                accessories=["Minimal Earrings", "Bracelet"],
-                footwear="Block Heels",
-                hairstyle="Soft Curls",
-                makeup="Nude tones",
-                styling_tips=["Focus on lightweight layering."],
-                rationale="Contemporary alternative with soft pastel hues."
-            )
-            alt2 = OutfitDetail(
-                clothing_type="Indo-Western Co-ord Suit",
-                silhouette="Asymmetric relaxed fit",
-                colors=["Mustard", "Olive Green"],
-                fabric="Linen Silk",
-                embroidery_or_pattern="Geometric stitchwork",
-                accessories=["Statement Ring", "Leather Belt"],
-                footwear="Loafers",
-                hairstyle="Sleek ponytail or cropped side-part",
-                makeup="Fresh natural glow",
-                styling_tips=["Keep silhouettes clean and uncluttered."],
-                rationale="Fusion design alternative for comfort and modern aesthetic."
-            )
-    else: # Western / Other Culture
+    # --- 1. BUSINESS MEETING / FORMAL CORPORATE ---
+    if "business" in occ_lower or "meeting" in occ_lower or "corporate" in occ_lower or "work" in occ_lower:
         if is_female:
             primary = OutfitDetail(
-                clothing_type="Tailored Two-Piece Satin Blazer Suit",
-                silhouette="Structured architectural blazer with high-waisted wide-leg trousers",
-                colors=["Emerald Green", "Champagne Silk Inner"],
-                fabric="Heavyweight Italian Satin Silk",
-                embroidery_or_pattern="Clean monochrome finish with covered silk buttons",
-                accessories=["Gold cuff bracelet", "Geometric drop earrings", "Structure leather clutch"],
-                footwear="Pointed-Toe Stiletto Pumps",
-                hairstyle="Sleek low ponytail with middle part",
-                makeup="Bold red lip with clean luminous complexion",
+                clothing_type="Tailored Two-Piece Blazer Suit with Silk Camisole",
+                silhouette="Structured single-breasted blazer with sharp shoulders and ankle-length cigarette trousers",
+                colors=["Navy Blue", "Ivory Silk Inner", "Silver Accents"],
+                fabric="Fine Italian Wool & Silk Blend",
+                embroidery_or_pattern="Monochrome crisp finish with clean pick-stitching on lapels",
+                accessories=["Minimalist leather tote bag", "Silver analog watch", "Pearl stud earrings"],
+                footwear="Pointed-Toe Black Leather Pumps",
+                hairstyle="Sleek low bun or polished blow-dry with side part",
+                makeup="Clean professional nude lip with subtle eyeshadow and even complexion",
                 styling_tips=[
-                    "Wear the blazer buttoned with a delicate silk camisole underneath.",
-                    "The wide-leg trouser hem should skim the top of shoe heels for maximum leg elongation."
+                    "Keep blazer buttoned during formal presentations; unbutton when seated.",
+                    "Ensure trouser hem rests precisely at the ankle bone for a modern executive profile."
                 ],
-                rationale=f"A modern power-tailoring design created for {occasion}. Sleek satin fabric provides luxury texture suitable for {budget} budget."
+                rationale=f"Designed specifically for a {occasion}. Provides an executive, professional presence suitable for a {budget} budget during {season} weather."
             )
             alt1 = OutfitDetail(
-                clothing_type="Asymmetric Midi Wrap Evening Dress",
-                silhouette="Draped body-con contour with subtle side leg slit",
-                colors=["Midnight Navy", "Silver Accents"],
-                fabric="Fluid Silk Crepe",
-                embroidery_or_pattern="Subtle crystal brooch accent at the waist drape",
-                accessories=["Silver pendant necklace", "Diamond stud earrings"],
-                footwear="Strappy High Heel Sandals",
-                hairstyle="Voluminous blowout waves",
-                makeup="Smokey eye with nude glossy lip",
-                styling_tips=["Highlight waist wrap detailing with minimalist silver jewelry."],
-                rationale="A feminine silhouette alternative emphasizing draped elegance."
+                clothing_type="Formal Silk Kurta Set with Tailored Straight Trousers",
+                silhouette="Structured knee-length straight kurta with mandarin collar and slim trousers",
+                colors=["Muted Olive Green", "Cream Trousers", "Gold Accents"],
+                fabric="Raw Silk & Linen Blend",
+                embroidery_or_pattern="Minimalist tonal threadwork along neck placket",
+                accessories=["Structure leather handbag", "Subtle wrist cuff"],
+                footwear="Leather Block-Heel Mules",
+                hairstyle="Neat half-up hair arrangement",
+                makeup="Fresh natural makeup with matte finish",
+                styling_tips=["Pair with minimalist jewelry to maintain a professional boardroom aesthetic."],
+                rationale="A refined South Asian formal alternative offering executive authority with cultural nuance."
             )
             alt2 = OutfitDetail(
-                clothing_type="Sleek Minimalist Slip Gown with Tailored Tuxedo Jacket",
-                silhouette="Column gown silhouette paired with sharp cropped tuxedo jacket",
-                colors=["Classic Black", "Ivory White"],
-                fabric="Heavy Crepe & Satin Contrast Lapels",
-                embroidery_or_pattern="Contrast satin lapel trims",
-                accessories=["Minimalist wire choker", "Micro clutch"],
-                footwear="Ankle-Strap Pumps",
-                hairstyle="Chic french twist updo",
-                makeup="Dewy skin with winged liner",
-                styling_tips=["Drape jacket over shoulders for an effortless fashion-forward look."],
-                rationale="A high-contrast monochrome alternative combining feminine slip gown with masculine tuxedo structure."
+                clothing_type="Structured Solid Silk Saree with High-Neck Blouse",
+                silhouette="Crisp neatly pleated saree contour with high-neck elbow-sleeve blouse",
+                colors=["Slate Gray", "Charcoal Accent"],
+                fabric="Handloom Linen-Silk Saree",
+                embroidery_or_pattern="Minimalist contrast selvedge border",
+                accessories=["Executive briefcase leather bag", "Silver stud earrings"],
+                footwear="Closed-Toe Mid-Heel Pumps",
+                hairstyle="Low neat hair bun",
+                makeup="Neutral professional tones",
+                styling_tips=["Pin saree pleats securely at shoulder for a sleek, hands-free corporate drape."],
+                rationale="A classic corporate saree option balancing traditional Indian drape with modern professional rigor."
             )
-        else: # Male / Other Western
+        else: # Male / Other Business
+            if "south asian" in culture.lower() or "indo-western" in culture.lower():
+                primary = OutfitDetail(
+                    clothing_type="Tailored Bandhgala Suit with Slim Trousers",
+                    silhouette="Structured military-inspired fitted shoulder silhouette with mandarin collar",
+                    colors=["Charcoal Slate", "Midnight Navy", "Black Accents"],
+                    fabric="Fine Italian Wool and Silk Blend",
+                    embroidery_or_pattern="Minimalist tonal edge stitching with custom brass metal buttons",
+                    accessories=["Silk pocket square in muted burgundy", "Classic leather strap watch"],
+                    footwear="Polished Black Leather Oxfords",
+                    hairstyle="Clean side-part fade with matte pomade",
+                    makeup="Groomed eyebrows and hydrated natural lip balm",
+                    styling_tips=[
+                        "Keep Bandhgala jacket buttoned up to the neck for a sharp corporate posture.",
+                        "Select a contrasting silk pocket square to add subtle personal flair without violating dress codes."
+                    ],
+                    rationale=f"A distinguished South Asian formal option ideal for a {occasion}. Unlike festive sherwanis, the Bandhgala suit is strictly tailored for corporate leadership and formal meetings."
+                )
+                alt1 = OutfitDetail(
+                    clothing_type="Crisp Silk Kurta with Structured Nehru Vest and Trousers",
+                    silhouette="Knee-length straight kurta layered with a sharp waist-length Nehru vest",
+                    colors=["Royal Navy", "Ivory Kurta", "Silver Pin"],
+                    fabric="Raw Silk Vest with Fine Cotton Kurta",
+                    embroidery_or_pattern="Clean solid weave with subtle lapel stitching",
+                    accessories=["Leather briefcase", "Silver cuff watch"],
+                    footwear="Dark Brown Leather Monk Strap Shoes",
+                    hairstyle="Neat short trim",
+                    makeup="Clean groomed finish",
+                    styling_tips=["Ensure Nehru vest fits snugly around the chest for a streamlined appearance."],
+                    rationale="A smart-formal Indo-Western corporate alternative offering warmth and elegance."
+                )
+                alt2 = OutfitDetail(
+                    clothing_type="Custom Tailored Two-Piece Wool Suit",
+                    silhouette="Modern slim-fit two-button jacket with notched lapel and flat-front trousers",
+                    colors=["Dark Charcoal", "Crisp Light Blue Shirt", "Navy Silk Tie"],
+                    fabric="Super 120s Italian Wool",
+                    embroidery_or_pattern="Clean solid weave with pick-stitch detailing",
+                    accessories=["Silver tie clip", "White linen pocket square"],
+                    footwear="Black Calfskin Derby Shoes",
+                    hairstyle="Classic executive side part",
+                    makeup="Minimal grooming",
+                    styling_tips=["Tie knot should fit snugly against the collar band."],
+                    rationale="A universal Western executive suit tailored for executive business meetings."
+                )
+            else: # Western Male Business
+                primary = OutfitDetail(
+                    clothing_type="Custom Tailored Two-Piece Wool Suit",
+                    silhouette="Modern slim-fit two-button jacket with notched lapel and flat-front trousers",
+                    colors=["Charcoal Gray", "Crisp Ice Blue Shirt", "Burgundy Silk Tie"],
+                    fabric="Super 120s Italian Wool & Silk Tie",
+                    embroidery_or_pattern="Subtle pick-stitching along lapels",
+                    accessories=["Silver tie bar", "Silk pocket square", "Leather strap watch"],
+                    footwear="Polished Black Leather Oxford Shoes",
+                    hairstyle="Classic neat side-part fade",
+                    makeup="Clean groomed finish with hydrating moisturizer",
+                    styling_tips=[
+                        "Ensure shirt cuff extends 0.5 inches past blazer sleeve.",
+                        "Match belt leather color precisely with oxford shoes."
+                    ],
+                    rationale=f"A timeless executive suit designed for a {occasion}. Charcoal wool offers professional authority suitable for a {budget} budget during {season} climate."
+                )
+                alt1 = OutfitDetail(
+                    clothing_type="Single-Breasted Blazer with Tailored Trousers",
+                    silhouette="Structured single-breasted jacket with slim chinos",
+                    colors=["Navy Blue", "Khaki Trousers", "White Shirt"],
+                    fabric="Wool-Linen Blend",
+                    embroidery_or_pattern="Horn buttons",
+                    accessories=["Leather belt", "Leather briefcase"],
+                    footwear="Dark Brown Leather Loafers",
+                    hairstyle="Textured side-swept hair",
+                    makeup="Clean skin finish",
+                    styling_tips=["Pair with a classic leather briefcase and subtle watch."],
+                    rationale="A flexible business-formal alternative suitable for modern corporate environments."
+                )
+                alt2 = OutfitDetail(
+                    clothing_type="Double-Breasted Corporate Suit",
+                    silhouette="Broad-shoulder six-button double-breasted silhouette",
+                    colors=["Midnight Navy", "Crisp White Shirt", "Dark Gray Tie"],
+                    fabric="Fine Wool Flannel",
+                    embroidery_or_pattern="Solid weave",
+                    accessories=["Patterned silk pocket square", "Cufflinks"],
+                    footwear="Black Leather Monk Strap Shoes",
+                    hairstyle="Sleek slicked back hair",
+                    makeup="Minimal grooming",
+                    styling_tips=["Keep double-breasted jacket buttoned when standing."],
+                    rationale="A commanding executive tailoring option for high-stakes business presentations."
+                )
+
+    # --- 2. WEDDING / DIWALI / FESTIVE / FORMAL EVENT ---
+    elif "wedding" in occ_lower or "diwali" in occ_lower or "festive" in occ_lower or "gala" in occ_lower:
+        if is_female:
             primary = OutfitDetail(
-                clothing_type="Custom Tailored Two-Piece Wool Suit",
-                silhouette="Modern slim-fit structured silhouette with notched lapel",
-                colors=["Charcoal Slate", "Crisp Ice Blue Shirt", "Burgundy Tie"],
-                fabric="Super 120s Italian Wool & Silk Tie",
-                embroidery_or_pattern="Subtle pick-stitching along lapels and pockets",
-                accessories=["Silver tie clip", "Silk pocket square", "Leather strap watch"],
-                footwear="Polished Black Leather Oxford Shoes",
-                hairstyle="Classic neat side-part fade",
-                makeup="Clean groomed finish with hydrating moisturizer",
+                clothing_type="Banarasi Silk Lehenga Choli with Zardozi Embroidered Dupatta",
+                silhouette="A-Line flared lehenga with structured blouse and draped dupatta",
+                colors=["Emerald Green", "Royal Gold", "Deep Crimson Accent"],
+                fabric="Pure Banarasi Silk and Organza Dupatta",
+                embroidery_or_pattern="Handcrafted Zardozi floral motifs along the border with gold zari weave",
+                accessories=["Kundan choker set", "Maang tikka", "Gold bangles", "Potli bag"],
+                footwear="Embroidered Antique Gold Mojris",
+                hairstyle="Soft low bun decorated with fresh jasmine flowers (Gajra)",
+                makeup="Warm glowing skin with subtle gold eye shadow and deep berry lip color",
                 styling_tips=[
-                    "Ensure shirt cuff extends 0.5 inches past blazer sleeve.",
-                    "Match belt leather color precisely with oxford shoes."
+                    "Drape the organza dupatta neatly across one shoulder to highlight blouse embroidery.",
+                    "Choose warm gold jewelry to complement the emerald and crimson color palette."
                 ],
-                rationale=f"A timeless suit designed for a {occasion}. Charcoal wool offers versatility across seasons and matches formal dress codes."
+                rationale=f"Designed specifically for a {occasion} in a {season} climate. The rich Banarasi silk offers regal elegance suitable for a {budget} budget."
             )
             alt1 = OutfitDetail(
-                clothing_type="Unstructured Linen-Wool Blazer with Chino Trousers",
-                silhouette="Relaxed soft-shoulder fit",
-                colors=["Tan Camel", "Navy Trousers", "White Shirt"],
-                fabric="Linen-Wool Blend",
-                embroidery_or_pattern="Horn button details",
-                accessories=["Woven leather belt", "Subtle wrist cuff"],
-                footwear="Dark Brown Suede Loafers",
-                hairstyle="Textured natural pompadour",
-                makeup="Hydrated skin",
-                styling_tips=["Wear shirt collar open without tie for smart-casual events."],
-                rationale="A smart-casual alternative suitable for warmer climates and less rigid formality."
+                clothing_type="Contemporary Draped Silk Saree with Embroidered Velvet Blouse",
+                silhouette="Fluid pre-draped contour silhouette with structured sweetheart neckline",
+                colors=["Ruby Red", "Antique Copper", "Warm Champagne"],
+                fabric="Fluid Georgette Saree with Micro-Velvet Blouse",
+                embroidery_or_pattern="Gota Patti work along saree borders with subtle zari embroidery",
+                accessories=["Chandbali statement earrings", "Statement ring", "Embellished clutch"],
+                footwear="Block Heel Metallic Sandals",
+                hairstyle="Side-swept loose Hollywood waves",
+                makeup="Classic winged eyeliner with nude crimson gloss",
+                styling_tips=["Pre-draped pleats provide effortless elegance throughout evening festivities."],
+                rationale="An elegant drape alternative combining traditional Ruby Red tones with modern fluid silhouette cuts."
             )
             alt2 = OutfitDetail(
-                clothing_type="Double-Breasted Blazer Set",
-                silhouette="Bold broad-shoulder double-breasted cut",
-                colors=["Midnight Navy", "Black Trousers"],
-                fabric="Fine Wool Flannel",
-                embroidery_or_pattern="Gold crest buttons",
-                accessories=["Patterned silk pocket square", "Cufflinks"],
-                footwear="Black Leather Monk Strap Shoes",
-                hairstyle="Sleek slicked back hair",
+                clothing_type="Indo-Western Anarkali Gown with Sheer Cape",
+                silhouette="Floor-length high-waist flared gown silhouette",
+                colors=["Mustard Yellow", "Magenta Accent", "Gold"],
+                fabric="Chiffon and Silk Satin blend",
+                embroidery_or_pattern="Chikankari shadow threadwork with delicate mirror highlights",
+                accessories=["Filigree cuff bracelet", "Pearl drop earrings"],
+                footwear="Kolhapuri Wedge Sandals",
+                hairstyle="Half-up braided crown with loose tendrils",
+                makeup="Dewy coral blush with soft brown eyeliner",
+                styling_tips=["The lightweight chiffon cape allows breathable movement for long celebrations."],
+                rationale="A lighter, contemporary Indo-Western alternative ideal for festive social gatherings."
+            )
+        else: # Male Festive
+            primary = OutfitDetail(
+                clothing_type="Silk Sherwani with Asymmetric Kurta and Churidar",
+                silhouette="Tailored fitted shoulder silhouette with mandarin collar and churidar",
+                colors=["Royal Navy Blue", "Champagne Gold", "Antique Silver"],
+                fabric="Raw Silk with Brocade Inner Tunic",
+                embroidery_or_pattern="Self-textured brocade weave with delicate threadwork on collar and cuffs",
+                accessories=["Pocket square in champagne silk", "Emerald brooches", "Beaded strand mala"],
+                footwear="Handcrafted Royal Blue Leather Mojris",
+                hairstyle="Neatly groomed side part with matte finish pomade",
+                makeup="Groomed eyebrows and natural hydrated lip balm",
+                styling_tips=[
+                    "Button the sherwani jacket up to the collar for a regal structured profile.",
+                    "Match pocket square tone precisely to the churidar trousers."
+                ],
+                rationale=f"A regal male festive ensemble tailored for a {occasion}. Raw silk provides structure and elegance suitable for a {budget} budget."
+            )
+            alt1 = OutfitDetail(
+                clothing_type="Bandhgala Suit with Tailored Trousers",
+                silhouette="Structured military-inspired slim silhouette",
+                colors=["Deep Maroon", "Gold Accent"],
+                fabric="Brocade Silk & Fine Wool Blend",
+                embroidery_or_pattern="Traditional zari threadwork with brass buttons",
+                accessories=["Silk lapel pin", "Brooch"],
+                footwear="Embroidered Juttis",
+                hairstyle="Clean pompadour fade",
+                makeup="Hydrated skin finish",
+                styling_tips=["Keep collar crisp and buttoned; pair with embroidered juttis."],
+                rationale="A modern fusion option bridging South Asian heritage with contemporary formal tailoring."
+            )
+            alt2 = OutfitDetail(
+                clothing_type="Embroidered Kurta Set with Brocade Nehru Jacket",
+                silhouette="Relaxed fit straight kurta with waist-length tailored jacket",
+                colors=["Ivory Cream", "Deep Magenta", "Gold"],
+                fabric="Cotton Silk Kurta with Jacquard Brocade Jacket",
+                embroidery_or_pattern="Traditional floral jacquard weave on vest",
+                accessories=["Gold cufflinks", "Contrasting pocket square"],
+                footwear="Tan Leather Mojris",
+                hairstyle="Natural textured look",
                 makeup="Minimal grooming",
-                styling_tips=["Keep double-breasted jacket buttoned when standing."],
-                rationale="A statement tailoring option offering commanding presence."
+                styling_tips=["Layer the jacket open or half-buttoned for comfortable movement during festivities."],
+                rationale="A comfortable, festive alternative offering high visual appeal with ease of movement."
+            )
+
+    # --- 3. CASUAL / COLLEGE / EVERYDAY ---
+    else:
+        if is_female:
+            primary = OutfitDetail(
+                clothing_type="Breathable Linen-Cotton Kurta with Cropped Straight Trousers",
+                silhouette="Relaxed straight-cut knee-length kurta with cropped trousers",
+                colors=["Peach Pastel", "White Trousers", "Terracotta Accent"],
+                fabric="100% Organic Linen-Cotton Blend",
+                embroidery_or_pattern="Subtle Chikankari threadwork along collar and sleeve hem",
+                accessories=["Handcrafted wooden bangles", "Canvas tote bag", "Minimalist pendant"],
+                footwear="Flat Leather Kolhapuri Sandals",
+                hairstyle="Natural loose curls or casual high ponytail",
+                makeup="Minimal dewy tint with lip balm",
+                styling_tips=[
+                    "Roll up sleeve cuffs slightly for an easygoing, casual campus vibe.",
+                    "Pair with flat breathable sandals for comfortable all-day walking."
+                ],
+                rationale=f"Ideal for a casual {occasion}. Breathable linen fabric keeps you cool during {season} weather."
+            )
+            alt1 = OutfitDetail(
+                clothing_type="Casual Shirt Dress with Fabric Belt",
+                silhouette="A-line shirt dress silhouette cinched at waist",
+                colors=["Sky Blue", "Tan Belt"],
+                fabric="Lightweight Cotton Poplin",
+                embroidery_or_pattern="Clean pinstripes",
+                accessories=["Crossbody canvas bag", "Sunglasses"],
+                footwear="Clean White Sneakers",
+                hairstyle="Messy top knot",
+                makeup="Fresh tint",
+                styling_tips=["Tie the fabric belt loosely to define silhouette without constricting."],
+                rationale="A modern casual alternative prioritizing mobility and contemporary style."
+            )
+            alt2 = OutfitDetail(
+                clothing_type="Monochrome Co-ord Linen Set",
+                silhouette="Relaxed button-down shirt paired with wide-leg cropped trousers",
+                colors=["Sage Green", "Ivory Buttons"],
+                fabric="Pure Linen",
+                embroidery_or_pattern="Minimalist tonal stitching",
+                accessories=["Straw tote bag", "Hoop earrings"],
+                footwear="Leather Slides",
+                hairstyle="Soft natural waves",
+                makeup="Nude lip gloss",
+                styling_tips=["Tuck front hem of shirt loosely into trousers for an effortless look."],
+                rationale="A trendy, effortless co-ord set for everyday comfort."
+            )
+        else: # Male Casual / College
+            primary = OutfitDetail(
+                clothing_type="Linen-Cotton Button-Down Shirt with Tailored Chinos",
+                silhouette="Relaxed slim-fit shirt with flat-front chino trousers",
+                colors=["Olive Green", "Beige Chinos", "White Inner Tee"],
+                fabric="Linen-Cotton Blend",
+                embroidery_or_pattern="Clean solid texture",
+                accessories=["Minimalist leather wristband", "Canvas backpack", "Sunglasses"],
+                footwear="White Minimalist Leather Sneakers",
+                hairstyle="Casual textured crop with matte clay",
+                makeup="Hydrated skin finish",
+                styling_tips=[
+                    "Leave top two shirt buttons open for a relaxed, approachable look.",
+                    "Pair with clean white sneakers for everyday campus or casual outings."
+                ],
+                rationale=f"A smart casual ensemble tailored for a {occasion}. Linen fabric provides breathability for {season} weather."
+            )
+            alt1 = OutfitDetail(
+                clothing_type="Short Cotton Kurta with Slim Denim Jeans",
+                silhouette="Hip-length straight kurta paired with dark wash denim",
+                colors=["Navy Blue Kurta", "Dark Indigo Jeans"],
+                fabric="100% Breathable Khadi Cotton",
+                embroidery_or_pattern="Minimalist wooden button placket",
+                accessories=["Leather strap watch", "Messenger bag"],
+                footwear="Tan Suede Loafers",
+                hairstyle="Natural side sweep",
+                makeup="Clean grooming",
+                styling_tips=["Roll sleeves up to forearms for an active smart-casual appearance."],
+                rationale="A comfortable Indo-Western fusion alternative ideal for college or informal gatherings."
+            )
+            alt2 = OutfitDetail(
+                clothing_type="Smart Polo Shirt with Stretch Trousers",
+                silhouette="Fitted knit polo shirt with tapered trousers",
+                colors=["Charcoal Gray", "Black Trousers"],
+                fabric="Pique Cotton Knit",
+                embroidery_or_pattern="Tonal collar tipping",
+                accessories=["Canvas belt", "Minimalist watch"],
+                footwear="Canvas Slip-On Shoes",
+                hairstyle="Neat trim",
+                makeup="Hydrated lip balm",
+                styling_tips=["Keep polo un-tucked for a casual, sporty silhouette."],
+                rationale="A versatile casual option offering low-maintenance comfort."
             )
 
     return RecommendationResponse(
@@ -394,7 +476,7 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
 if __name__ == "__main__":
     from rules import FashionRuleEngine
     engine = FashionRuleEngine()
-    ctx = engine.evaluate("Female", "Diwali", "South Asian", "Medium", "Mild", "Jewel tones")
+    ctx = engine.evaluate("Male", "Business Meeting", "South Asian", "Medium", "Mild")
     res = generate_recommendation_ai(ctx)
-    print("AI Provider Module Test (Fallback/Live output):")
+    print("Business Meeting Recommendation Test:")
     print(res.model_dump_json(indent=2))

@@ -47,14 +47,34 @@ class FashionRuleEngine:
             "footwear": ["Dress Shoes", "Heels", "Loafers"]
         })
 
-        # Filter Garments by Gender
+        # Garment Selection by Gender & Occasion Formality
         gender_lower = (gender or "").lower()
         if "female" in gender_lower or "woman" in gender_lower:
-            candidate_garments = culture_data.get("key_garments_female", [])
+            raw_garments = culture_data.get("key_garments_female", [])
         elif "male" in gender_lower or "man" in gender_lower:
-            candidate_garments = culture_data.get("key_garments_male", [])
+            raw_garments = culture_data.get("key_garments_male", [])
         else:
-            candidate_garments = culture_data.get("key_garments_other", culture_data.get("key_garments_female", []))
+            raw_garments = culture_data.get("key_garments_other", culture_data.get("key_garments_female", []))
+
+        # Formality Filtering: Ensure business meetings don't get sherwanis or heavy wedding lehengas
+        occ_lower = (occasion or "").lower()
+        if "business" in occ_lower or "meeting" in occ_lower or "corporate" in occ_lower:
+            # Strictly professional garments
+            if "female" in gender_lower or "woman" in gender_lower:
+                candidate_garments = ["Tailored Pant Suit", "Blazer with Trousers", "Formal Silk Kurta Set with Trousers", "Contemporary Solid Saree"]
+            elif "male" in gender_lower or "man" in gender_lower:
+                candidate_garments = ["Two-Piece Tailored Suit", "Bandhgala Suit", "Blazer with Chinos", "Crisp Nehru Jacket with Trousers"]
+            else:
+                candidate_garments = ["Tailored Unisex Business Suit", "Blazer with Structured Trousers"]
+        elif "casual" in occ_lower or "college" in occ_lower:
+            if "female" in gender_lower or "woman" in gender_lower:
+                candidate_garments = ["Cotton Kurta with Trousers", "Casual Shirt Dress", "Midi Wrap Dress", "Co-ord Set"]
+            elif "male" in gender_lower or "man" in gender_lower:
+                candidate_garments = ["Linen-Cotton Shirt with Chinos", "Short Kurta with Denim", "Smart Polo with Trousers", "Blazer with Chinos"]
+            else:
+                candidate_garments = ["Smart Casual Co-ord Set", "Linen Shirt with Trousers"]
+        else:
+            candidate_garments = raw_garments
 
         # 3. Match Season
         matched_season = self._find_best_match(season, self.kb.get("season_rules", {}))
@@ -126,17 +146,3 @@ class FashionRuleEngine:
         
         # Default fallback to first key
         return next(iter(target_dict)) if target_dict else ""
-
-# Test block
-if __name__ == "__main__":
-    engine = FashionRuleEngine()
-    result = engine.evaluate(
-        gender="Female",
-        occasion="Diwali celebration",
-        culture="South Asian",
-        budget="Medium",
-        season="Mild",
-        preferences="Jewel tones, elegant traditional style"
-    )
-    print("Rule Engine Output Test:")
-    print(json.dumps(result, indent=2))
