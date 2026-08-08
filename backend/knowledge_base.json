@@ -1,4 +1,185 @@
 {
+  "garment_catalog": {
+    "Saree": {
+      "seasons": ["Summer", "Winter", "Festive", "All-season"],
+      "sleeve_styles": ["Sleeveless", "Cap", "Half", "Elbow", "Three-quarter", "Full", "Puff", "Bell"],
+      "neck_styles": ["Round", "Boat", "V", "Sweetheart", "Square", "Halter", "High Neck", "Mandarin"],
+      "fits": ["Fitted blouse", "Relaxed blouse"],
+      "lengths": ["5.5m", "6m", "9-yard"],
+      "fabrics": ["Silk", "Cotton", "Linen", "Organza", "Chiffon", "Georgette", "Tissue", "Crepe", "Banarasi Silk"],
+      "motifs": ["Floral", "Paisley", "Temple", "Peacock", "Butta", "Kalamkari", "Kantha", "Kasuti", "Zari"],
+      "additional_requirements": ["Border style", "Pallu style", "Pleats", "Tassels", "Weave", "Blouse design"]
+    },
+    "Lehenga": {
+      "seasons": ["All-season", "Festive", "Winter"],
+      "sleeve_styles": ["Sleeveless", "Full", "Cape", "Bell", "Cap", "Half"],
+      "neck_styles": ["Sweetheart", "V", "Boat", "High", "Halter", "Square"],
+      "fits": ["A-line", "Circular", "Mermaid", "Panelled"],
+      "lengths": ["Mini", "Midi", "Full"],
+      "fabrics": ["Silk", "Velvet", "Organza", "Net", "Georgette", "Brocade"],
+      "motifs": ["Mirror Work", "Zari", "Sequins", "Floral", "Threadwork", "Zardozi"],
+      "additional_requirements": ["Dupatta style", "Can-can", "Waist style"]
+    },
+    "Salwar Suit": {
+      "seasons": ["All-season", "Summer", "Monsoon"],
+      "sleeve_styles": ["Sleeveless", "Cap", "Half", "Three-quarter", "Full"],
+      "neck_styles": ["Round", "V", "Keyhole", "Mandarin", "Square", "Boat"],
+      "fits": ["Straight", "Anarkali", "A-line"],
+      "lengths": ["Short", "Knee", "Calf", "Floor"],
+      "fabrics": ["Cotton", "Rayon", "Silk", "Chanderi", "Linen", "Georgette"],
+      "motifs": ["Block Print", "Embroidery", "Ajrakh", "Bandhani", "Chikankari"],
+      "additional_requirements": ["Pant style", "Dupatta type"]
+    },
+    "Kurta": {
+      "seasons": ["All-season", "Summer", "Festive"],
+      "sleeve_styles": ["Half", "Full", "Roll-up", "Three-quarter"],
+      "neck_styles": ["Mandarin", "Band Collar", "Shirt Collar", "Round"],
+      "fits": ["Slim", "Regular", "Relaxed", "Straight"],
+      "lengths": ["Short", "Mid-thigh", "Knee"],
+      "fabrics": ["Cotton", "Linen", "Silk", "Rayon", "Khadi"],
+      "motifs": ["Solid", "Printed", "Embroidered", "Chikankari", "Bandhani"],
+      "additional_requirements": ["Side slits", "Buttons", "Pocket"]
+    },
+    "Sherwani": {
+      "seasons": ["Winter", "Festive"],
+      "sleeve_styles": ["Full"],
+      "neck_styles": ["Mandarin", "Bandhgala"],
+      "fits": ["Tailored", "Slim"],
+      "lengths": ["Knee", "Mid-calf"],
+      "fabrics": ["Silk", "Velvet", "Brocade", "Jacquard", "Raw Silk"],
+      "motifs": ["Zardozi", "Threadwork", "Floral", "Zari", "Gota Patti"],
+      "additional_requirements": ["Stole", "Safa", "Buttons", "Mala"]
+    },
+    "Bandhgala": {
+      "seasons": ["Winter", "Formal", "Festive"],
+      "sleeve_styles": ["Full"],
+      "neck_styles": ["Bandhgala", "Mandarin"],
+      "fits": ["Slim", "Tailored"],
+      "lengths": ["Hip"],
+      "fabrics": ["Wool", "Velvet", "Jacquard", "Silk", "Tweed"],
+      "motifs": ["Solid", "Jacquard", "Subtle Pinstripe"],
+      "additional_requirements": ["Pocket Square", "Brass Buttons", "Lapel Pin"]
+    },
+    "Dhoti": {
+      "seasons": ["Summer", "Festive"],
+      "sleeve_styles": ["N/A"],
+      "neck_styles": ["N/A"],
+      "fits": ["Draped"],
+      "lengths": ["Ankle"],
+      "fabrics": ["Cotton", "Silk"],
+      "motifs": ["Temple Border", "Gold Border", "Zari Selvedge"],
+      "additional_requirements": ["Pleating style", "Angavastram"]
+    },
+    "Lungi": {
+      "seasons": ["Summer", "Casual"],
+      "sleeve_styles": ["N/A"],
+      "neck_styles": ["N/A"],
+      "fits": ["Relaxed"],
+      "lengths": ["Calf", "Ankle"],
+      "fabrics": ["Cotton"],
+      "motifs": ["Checks", "Plaid", "Stripe"],
+      "additional_requirements": ["Fold style"]
+    },
+    "Jacket": {
+      "seasons": ["All-season", "Winter"],
+      "sleeve_styles": ["Full", "Sleeveless"],
+      "neck_styles": ["Stand", "Shirt", "Hooded", "Band Collar"],
+      "fits": ["Slim", "Regular", "Oversized"],
+      "lengths": ["Cropped", "Waist", "Hip"],
+      "fabrics": ["Denim", "Leather", "Cotton", "Polyester", "Fleece"],
+      "motifs": ["Quilted", "Printed", "Solid"],
+      "additional_requirements": ["Hood", "Zip", "Pockets"]
+    },
+    "Blazer": {
+      "seasons": ["All-season", "Formal"],
+      "sleeve_styles": ["Full"],
+      "neck_styles": ["Notch Lapel", "Peak Lapel", "Shawl Lapel"],
+      "fits": ["Slim", "Regular", "Tailored"],
+      "lengths": ["Hip"],
+      "fabrics": ["Wool", "Linen", "Cotton", "Velvet"],
+      "motifs": ["Solid", "Pinstripe", "Check", "Houndstooth"],
+      "additional_requirements": ["Single/Double Breasted", "Pocket Square"]
+    },
+    "Suit": {
+      "seasons": ["All-season", "Formal"],
+      "sleeve_styles": ["Full"],
+      "neck_styles": ["Notch Lapel", "Peak Lapel", "Shawl Lapel"],
+      "fits": ["Slim", "Classic", "Tailored"],
+      "lengths": ["Standard"],
+      "fabrics": ["Wool", "Linen", "Silk blend", "Tuxedo Wool"],
+      "motifs": ["Solid", "Pinstripe", "Check"],
+      "additional_requirements": ["Vest", "Pocket Square", "Cufflinks", "Tie"]
+    },
+    "Hoodie": {
+      "seasons": ["Winter", "Casual"],
+      "sleeve_styles": ["Full"],
+      "neck_styles": ["Hood"],
+      "fits": ["Regular", "Oversized"],
+      "lengths": ["Waist", "Hip"],
+      "fabrics": ["Fleece", "Cotton"],
+      "motifs": ["Graphic", "Logo", "Solid"],
+      "additional_requirements": ["Kangaroo Pocket", "Drawstrings"]
+    },
+    "Shirt": {
+      "seasons": ["All-season", "Casual", "Formal"],
+      "sleeve_styles": ["Half", "Full", "Roll-up"],
+      "neck_styles": ["Spread Collar", "Button-down", "Mandarin", "Cuban Collar"],
+      "fits": ["Slim", "Regular", "Relaxed"],
+      "lengths": ["Waist", "Hip"],
+      "fabrics": ["Cotton", "Linen", "Oxford", "Satin", "Rayon"],
+      "motifs": ["Solid", "Floral", "Plaid", "Stripe", "Check"],
+      "additional_requirements": ["Cuffs", "Pocket"]
+    },
+    "Co-ord Set": {
+      "seasons": ["All-season", "Summer", "Resort"],
+      "sleeve_styles": ["Sleeveless", "Half", "Full"],
+      "neck_styles": ["V-neck", "Round", "Shirt Collar", "Square"],
+      "fits": ["Regular", "Relaxed", "A-line"],
+      "lengths": ["Crop", "Hip", "Full"],
+      "fabrics": ["Cotton", "Linen", "Satin", "Silk", "Rayon"],
+      "motifs": ["Floral", "Abstract", "Geometric", "Solid"],
+      "additional_requirements": ["Matching Bottom", "Contrast Trim"]
+    },
+    "Dress": {
+      "seasons": ["All-season", "Summer", "Cocktail"],
+      "sleeve_styles": ["Sleeveless", "Puff", "Bell", "Full", "Cap", "Off Shoulder"],
+      "neck_styles": ["Sweetheart", "Square", "Boat", "V-neck", "Halter", "Round"],
+      "fits": ["Bodycon", "A-line", "Fit & Flare", "Shift", "Empire", "Wrap"],
+      "lengths": ["Mini", "Midi", "Maxi"],
+      "fabrics": ["Cotton", "Satin", "Chiffon", "Silk", "Linen", "Georgette"],
+      "motifs": ["Floral", "Polka Dot", "Abstract", "Lace", "Sequin"],
+      "additional_requirements": ["Slit", "Ruffles", "Belt", "Train"]
+    }
+  },
+  "common_option_library": {
+    "seasons": ["Summer", "Winter", "Spring", "Autumn", "Monsoon", "Festive", "All-season"],
+    "sleeve_styles": [
+      "Sleeveless", "Cap", "Short", "Half", "Elbow", "Three-quarter", "Full",
+      "Puff", "Bell", "Bishop", "Raglan", "Dolman", "Lantern", "Kimono", "Cape", "Cold Shoulder", "Off Shoulder"
+    ],
+    "neck_styles": [
+      "Round", "Crew", "Scoop", "Boat", "Square", "Sweetheart", "V-neck", "Deep V",
+      "Keyhole", "Halter", "High Neck", "Turtleneck", "Mock Neck", "Mandarin",
+      "Band Collar", "Shirt Collar", "Cuban Collar", "Spread Collar", "Button-down",
+      "Notch Lapel", "Peak Lapel", "Shawl Lapel", "Hood"
+    ],
+    "fits": [
+      "Skinny", "Slim", "Tailored", "Regular", "Relaxed", "Loose", "Oversized",
+      "Straight", "A-line", "Empire", "Bodycon", "Fit & Flare", "Shift", "Mermaid", "Circular"
+    ],
+    "fabrics": [
+      "Cotton", "Linen", "Silk", "Satin", "Chiffon", "Georgette", "Organza", "Tissue",
+      "Velvet", "Wool", "Tweed", "Denim", "Leather", "Rayon", "Viscose", "Polyester",
+      "Nylon", "Acrylic", "Fleece", "Net", "Brocade", "Jacquard", "Khadi", "Muslin", "Crepe"
+    ],
+    "motifs": [
+      "Solid", "Floral", "Paisley", "Butta", "Temple", "Peacock", "Elephant", "Mango",
+      "Lotus", "Geometric", "Chevron", "Stripe", "Check", "Plaid", "Polka Dot", "Ikat",
+      "Ajrakh", "Bandhani", "Kalamkari", "Block Print", "Kantha", "Kasuti", "Chikankari",
+      "Phulkari", "Mirror Work", "Gota Patti", "Zari", "Zardozi", "Threadwork", "Sequins",
+      "Beadwork", "Lace", "Digital Print", "Abstract"
+    ]
+  },
   "occasions": {
     "Wedding": {
       "formality": "High",
@@ -75,73 +256,73 @@
   },
   "cultures": {
     "South Asian": {
-      "key_garments_female": ["Saree", "Lehenga Choli", "Anarkali Suit", "Kurta Set with Dupatta", "Indo-Western Gown", "Sharara Set"],
-      "key_garments_male": ["Sherwani", "Bandhgala Suit", "Modi Jacket with Kurta", "Tuxedo", "Jodhpuri Suit", "Pathani Suit", "Dhoti Kurta Set"],
+      "key_garments_female": ["Saree", "Lehenga", "Salwar Suit", "Kurta", "Anarkali Suit", "Sharara Set"],
+      "key_garments_male": ["Sherwani", "Bandhgala", "Kurta", "Modi Jacket", "Dhoti", "Pathani Suit"],
       "key_garments_other": ["Gender-Neutral Embroidered Kurta Set", "Draped Indo-Western Jacket Set"],
-      "signature_motifs": ["Paisley", "Floral Jal", "Zardozi", "Gota Patti", "Chikankari", "Banarasi Weave"],
+      "signature_motifs": ["Paisley", "Floral", "Zardozi", "Gota Patti", "Chikankari", "Banarasi Weave", "Temple", "Peacock", "Butta"],
       "traditional_accessories": ["Jhumkas", "Maang Tikka", "Kundan Necklace", "Pocket Square", "Brooch", "Mojris / Juttis"],
       "footwear": ["Mojris", "Embroidered Juttis", "Block Heel Sandals", "Kolhapuri Chappals"]
     },
     "Western": {
-      "key_garments_female": ["Cocktail Dress", "Evening Gown", "Tailored Pant Suit", "Blazer & Trousers", "Midi Wrap Dress", "Co-ord Suit"],
-      "key_garments_male": ["Tuxedo", "Two-Piece Suit", "Blazer with Chinos", "Oxford Shirt & Trousers", "Double-Breasted Suit"],
+      "key_garments_female": ["Dress", "Suit", "Blazer", "Co-ord Set", "Jacket", "Shirt"],
+      "key_garments_male": ["Suit", "Blazer", "Shirt", "Jacket", "Hoodie"],
       "key_garments_other": ["Tailored Unisex Suit", "Minimalist Structured Set"],
-      "signature_motifs": ["Houndstooth", "Pinstripes", "Plaid", "Monochrome Solid", "Minimal Floral"],
+      "signature_motifs": ["Houndstooth", "Pinstripe", "Plaid", "Check", "Solid", "Abstract"],
       "traditional_accessories": ["Leather Belt", "Cufflinks", "Silk Tie", "Minimal Pendant", "Clutch Bag"],
       "footwear": ["Oxfords", "Derbies", "Loafers", "Stilettos", "Ankle Boots", "Clean Leather Sneakers"]
     },
     "Indo-Western": {
-      "key_garments_female": ["Crop Top with Draped Saree", "Indo-Western Co-ord Set", "Jacket Lehenga", "Draped Dhoti Pants with Cape", "Kurta with Trousers"],
-      "key_garments_male": ["Modi Jacket with Kurta", "Bandhgala with Chinos", "Indo-Western Trench Jacket", "Asymmetric Kurta with Trouser"],
+      "key_garments_female": ["Co-ord Set", "Saree", "Lehenga", "Dress", "Kurta"],
+      "key_garments_male": ["Modi Jacket", "Bandhgala", "Kurta", "Blazer", "Jacket"],
       "key_garments_other": ["Asymmetric Draped Jacket Set", "Fusion Co-ord"],
-      "signature_motifs": ["Geometric Fusion", "Contemporary Threadwork", "Minimalist Metallic Foil"],
+      "signature_motifs": ["Geometric", "Threadwork", "Gota Patti", "Digital Print", "Abstract"],
       "traditional_accessories": ["Statement Earrings", "Modern Cuff", "Lapel Pin", "Designer Clutch"],
       "footwear": ["Monk Straps", "Embroidered Loafers", "Heeled Mule", "Stylish Leather Sandals"]
     },
     "Middle Eastern": {
-      "key_garments_female": ["Embroidered Abaya", "Kaftan Gown", "Modest Satin Dress", "Layered Tunic Set"],
-      "key_garments_male": ["Thobe with Tailored Bisht", "Smart Blazer with Tunic", "Tailored Crisp Shirt & Trousers"],
-      "key_garments_other": ["Draped Flowing Kaftan", "Modest Layered Set"],
-      "signature_motifs": ["Arabesque", "Islamic Geometric Lattice", "Gold Thread Embroidery", "Calligraphic Motifs"],
-      "traditional_accessories": ["Silk Hijab / Headscarf", "Gold Bangles", "Oud Perfume Accent", "Signet Ring"],
+      "key_garments_female": ["Dress", "Kaftan Gown", "Co-ord Set", "Saree"],
+      "key_garments_male": ["Shirt", "Blazer", "Kurta", "Jacket"],
+      "key_garments_other": ["Flowing Kaftan", "Modest Layered Set"],
+      "signature_motifs": ["Zardozi", "Gold Threadwork", "Geometric", "Arabesque"],
+      "traditional_accessories": ["Silk Headscarf", "Gold Bangles", "Oud Perfume Accent", "Signet Ring"],
       "footwear": ["Embellished Mules", "Pointed Leather Slides", "Formal Loafers"]
     },
     "East Asian": {
-      "key_garments_female": ["Modern Cheongsam / Qipao", "Modern Hanfu Gown", "Wrap Silk Dress", "Structured Kimono Jacket Set"],
-      "key_garments_male": ["Tang Suit Jacket", "Mandarin Collar Suit", "Minimalist Wrap Shirt Set"],
-      "key_garments_other": ["Mandarin Collar Tunic Set", "Minimalist Flowing Silk Wrap"],
-      "signature_motifs": ["Bamboo", "Cherry Blossom", "Cloud Patterns", "Dragon / Phoenix Weave", "Minimalist Ink Wash"],
-      "traditional_accessories": ["Jade Pendant", "Silk Hairpin", "Minimalist Folding Fan motif", "Clean Leather Belt"],
-      "footwear": ["Minimalist Mules", "Silk Slippers", "Clean Oxford Shoes", "Sleek Ankle Boots"]
+      "key_garments_female": ["Dress", "Co-ord Set", "Jacket", "Shirt"],
+      "key_garments_male": ["Shirt", "Jacket", "Suit", "Kurta"],
+      "key_garments_other": ["Mandarin Collar Tunic Set", "Minimalist Flowing Wrap"],
+      "signature_motifs": ["Floral", "Peacock", "Bamboo", "Cloud", "Solid"],
+      "traditional_accessories": ["Jade Pendant", "Silk Hairpin", "Clean Leather Belt"],
+      "footwear": ["Minimalist Mules", "Silk Slippers", "Clean Oxford Shoes"]
     },
     "African": {
-      "key_garments_female": ["Ankara Print Gown", "Kente Pattern Maxi Dress", "Tailored Peplum Top & Skirt", "Gele Headwrap Set"],
-      "key_garments_male": ["Agbada Set", "Dashiki Suit", "Kaftan Shirt & Trousers", "Tailored Ankara Accent Suit"],
-      "key_garments_other": ["Vibrant Ankara Co-ord", "Gender-Neutral Dashiki Set"],
-      "signature_motifs": ["Kente Weave", "Ankara Wax Print", "Tribal Geometric Patterns", "Cowrie Shell Accents"],
-      "traditional_accessories": ["Beaded Necklace", "Gele Headwrap", "Statement Wooden Bangle", "Leather Crossbody"],
-      "footwear": ["Handcrafted Leather Sandals", "Woven Loafers", "Strappy Heel Sandals"]
+      "key_garments_female": ["Dress", "Co-ord Set", "Salwar Suit"],
+      "key_garments_male": ["Shirt", "Kurta", "Jacket", "Suit"],
+      "key_garments_other": ["Vibrant Ankara Co-ord", "Dashiki Set"],
+      "signature_motifs": ["Block Print", "Geometric", "Kente", "Tribal"],
+      "traditional_accessories": ["Beaded Necklace", "Gele Headwrap", "Wooden Bangle"],
+      "footwear": ["Handcrafted Leather Sandals", "Woven Loafers"]
     }
   },
   "garment_images": {
-    "tuxedo": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
-    "modi": "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80",
-    "nehru": "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80",
-    "jodhpuri": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80",
-    "pathani": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80",
-    "sharara": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80",
-    "kaftan": "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=800&q=80",
-    "lehenga": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80",
     "saree": "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80",
+    "lehenga": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80",
+    "salwar": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80",
     "anarkali": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80",
+    "kurta": "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80",
     "sherwani": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80",
     "bandhgala": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
-    "suit": "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?auto=format&fit=crop&w=800&q=80",
+    "dhoti": "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80",
+    "lungi": "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80",
+    "jacket": "https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=800&q=80",
+    "modi": "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80",
     "blazer": "https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=800&q=80",
+    "suit": "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?auto=format&fit=crop&w=800&q=80",
+    "tuxedo": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+    "hoodie": "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80",
+    "shirt": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
+    "co-ord": "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=800&q=80",
     "dress": "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80",
-    "gown": "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=800&q=80",
-    "kurta": "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80",
-    "casual": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
     "default": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80"
   },
   "color_palettes": {
@@ -151,54 +332,6 @@
     "Monochromatic": ["Jet Black", "Charcoal Gray", "Slate", "Crisp White", "Off-White"],
     "Bright Festive": ["Marigold Yellow", "Crimson Red", "Fuschia Pink", "Turquoise", "Saffron"],
     "Metallics": ["Champagne Gold", "Antique Copper", "Rose Gold", "Metallic Silver"]
-  },
-  "fabrics": {
-    "Silk": {"weight": "Medium", "feel": "Lustrous & Smooth", "best_for_seasons": ["Winter", "Mild"]},
-    "Cotton": {"weight": "Light", "feel": "Breathable & Soft", "best_for_seasons": ["Summer", "Monsoon", "Mild"]},
-    "Linen": {"weight": "Light", "feel": "Textured & Cool", "best_for_seasons": ["Summer"]},
-    "Velvet": {"weight": "Heavy", "feel": "Plush & Warm", "best_for_seasons": ["Winter"]},
-    "Brocade": {"weight": "Heavy", "feel": "Rich & Structured", "best_for_seasons": ["Winter", "Mild"]},
-    "Chiffon": {"weight": "Ultra-Light", "feel": "Sheer & Flowing", "best_for_seasons": ["Summer", "Mild"]},
-    "Organza": {"weight": "Light", "feel": "Crisp & Sheer", "best_for_seasons": ["Summer", "Mild"]},
-    "Georgette": {"weight": "Light-Medium", "feel": "Bouncy & Fluid", "best_for_seasons": ["Summer", "Monsoon", "Mild"]},
-    "Wool": {"weight": "Heavy", "feel": "Insulating & Structured", "best_for_seasons": ["Winter"]},
-    "Satin": {"weight": "Medium", "feel": "Glossy & Draped", "best_for_seasons": ["Mild", "Winter"]}
-  },
-  "embroidery_and_motifs": {
-    "Zardozi": "Heavy metallic gold/silver threadwork with pearls and beads; suitable for weddings and formal royalty.",
-    "Chikankari": "Delicate white shadow threadwork on light fabrics; ideal for summer, casual, and festive daytime events.",
-    "Gota Patti": "Applique ribbon embroidery native to Rajasthan; vibrant for festive and wedding occasions.",
-    "Kantha": "Traditional running stitch work with artistic folk motifs; suitable for casual and semi-formal wear.",
-    "Threadwork": "Refined colorful thread stitching forming floral or geometric patterns.",
-    "Pinstripes": "Parallel clean lines ideal for corporate and formal western tailoring.",
-    "Houndstooth": "Dual-tone geometric weave pattern for classic outerwear and suits.",
-    "Minimalist Stitching": "Subtle tonal edge stitching for modern clean aesthetic."
-  },
-  "season_rules": {
-    "Summer": {
-      "preferred_fabrics": ["Cotton", "Linen", "Chiffon", "Organza", "Georgette"],
-      "avoid_fabrics": ["Velvet", "Heavy Wool", "Heavy Brocade"],
-      "color_recommendations": ["Pastels", "Earthy Tones", "Crisp White", "Light Metallics"],
-      "styling_focus": "Breathability, movement, light layering, UV protection."
-    },
-    "Winter": {
-      "preferred_fabrics": ["Velvet", "Brocade", "Wool", "Silk", "Satin"],
-      "avoid_fabrics": ["Ultra-light chiffon", "Ultra-thin linen"],
-      "color_recommendations": ["Jewel Tones", "Monochromatic Dark", "Deep Burgundy", "Gold"],
-      "styling_focus": "Thermal layering, structured silhouettes, rich textures."
-    },
-    "Monsoon": {
-      "preferred_fabrics": ["Georgette", "Cotton-Synthetic blend", "Lightweight Silk", "Quick-drying crepe"],
-      "avoid_fabrics": ["Heavy Velvet", "Floor-sweeping silk lehengas", "Uncoated Suede"],
-      "color_recommendations": ["Vibrant Festive", "Darker Hues (mud-safe)", "Jewel Tones"],
-      "styling_focus": "Ankle-length or mid-length hems, water-resilient accessories, anti-frizz hairstyles."
-    },
-    "Mild": {
-      "preferred_fabrics": ["Raw Silk", "Satin", "Georgette", "Light Wool", "Cotton Silk"],
-      "avoid_fabrics": [],
-      "color_recommendations": ["All palettes applicable depending on occasion"],
-      "styling_focus": "Versatile transitional layering (jackets, capes, dupattas)."
-    }
   },
   "budget_rules": {
     "Low": {
