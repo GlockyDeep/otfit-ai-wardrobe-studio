@@ -13,12 +13,14 @@
 - [x] climate rules
 - [x] culture rules
 - [x] budget rules
+- [x] garment reference image mappings (Option A)
 
 ## AI
 - [x] prompt builder
 - [x] OpenAI support
 - [x] Groq support
 - [x] JSON validation
+- [x] image URL resolution
 
 ## Frontend
 - [x] form
@@ -26,6 +28,7 @@
 - [x] loading screen
 - [x] results
 - [x] alternatives
+- [x] high-res fashion reference image previews
 - [x] responsive cleanup
 
 ## QA

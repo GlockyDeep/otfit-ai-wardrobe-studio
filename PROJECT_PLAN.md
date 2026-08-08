@@ -24,6 +24,7 @@ The system generates a complete outfit recommendation including:
 * Styling tips
 * Design rationale
 * Two alternative outfits
+* Visual Concept Reference Image Preview (Curated High-Res Fashion Imagery)
 
 This is a **fashion design recommendation system**, not an e-commerce product recommendation system.
 
@@ -177,6 +178,8 @@ Options:
 * East Asian
 * African
 
+*(Note: Dynamically filtered based on occasion, e.g., Diwali auto-constrains options to South Asian & Indo-Western)*
+
 ## Budget
 
 Options:
@@ -230,12 +233,13 @@ Every successful recommendation must contain:
 * Makeup
 * Styling tips
 * Rationale
+* High-resolution fashion concept reference image (`image_url`)
 
 ## Alternatives
 
 Exactly two alternative outfit recommendations.
 
-Each alternative should follow the same structure as the primary outfit.
+Each alternative should follow the same structure as the primary outfit, including visual concept reference image URL.
 
 ---
 
@@ -258,7 +262,8 @@ Expected recommendation structure:
     "hairstyle": "",
     "makeup": "",
     "styling_tips": [],
-    "rationale": ""
+    "rationale": "",
+    "image_url": ""
   },
   "alternatives": [
     {
@@ -272,7 +277,8 @@ Expected recommendation structure:
       "hairstyle": "",
       "makeup": "",
       "styling_tips": [],
-      "rationale": ""
+      "rationale": "",
+      "image_url": ""
     },
     {
       "clothing_type": "",
@@ -285,7 +291,8 @@ Expected recommendation structure:
       "hairstyle": "",
       "makeup": "",
       "styling_tips": [],
-      "rationale": ""
+      "rationale": "",
+      "image_url": ""
     }
   ]
 }
@@ -327,7 +334,8 @@ The endpoint must:
 6. Call the configured AI provider.
 7. Request structured JSON output where supported.
 8. Parse and validate the generated result.
-9. Return the validated response.
+9. Attach visual concept reference image URLs (`image_url`).
+10. Return the validated response.
 
 Also create:
 
@@ -360,7 +368,7 @@ Relevant Fashion Context
     ↓
 LLM
     ↓
-Pydantic Validation
+Pydantic Validation & Image Attacher (Option A)
     ↓
 API Response
 ```
@@ -412,7 +420,7 @@ Wedding:
 Business Meeting:
 
 * Restrained colors
-* Structured silhouettes
+* Structured silhouettes (Suits, Bandhgalas, Blazers; NO Sherwanis or heavy festive Lehengas)
 * Minimal embellishment
 * Professional accessories
 
@@ -432,6 +440,7 @@ Prefer combinations such as:
 * Organza
 * Brocade
 * Traditional embroidery
+* Automatically constrained to South Asian & Indo-Western cultural aesthetics
 
 Do not hardcode only these examples.
 
@@ -458,7 +467,8 @@ Organize information into categories such as:
   "fabrics": {},
   "embroidery_and_motifs": {},
   "season_rules": {},
-  "budget_rules": {}
+  "budget_rules": {},
+  "garment_images": {}
 }
 ```
 
@@ -501,6 +511,7 @@ Include useful information concerning:
 * Embroidery
 * Motifs
 * Styling considerations
+* Garment image mappings (`garment_images`)
 
 The knowledge base should contain enough data to visibly influence generated recommendations.
 
@@ -611,6 +622,7 @@ Display the primary outfit prominently.
 
 Use sections/cards for:
 
+* Visual Concept Reference Image Preview
 * Outfit
 * Colors
 * Fabric
@@ -709,6 +721,7 @@ Implement:
 * Embroidery
 * Seasonal rules
 * Budget guidance
+* Garment image mappings (Option A)
 
 Validate the JSON.
 
@@ -749,6 +762,7 @@ Ensure:
 * Environment-based provider selection
 * Structured output parsing
 * Pydantic validation
+* Image URL resolution (`image_url`)
 * Graceful error handling
 
 ---
@@ -784,6 +798,8 @@ Add:
 Create polished result presentation.
 
 Primary recommendation should have visual hierarchy over alternatives.
+
+Include visual concept reference image preview.
 
 Ensure long rationale and styling content remains readable.
 
@@ -911,9 +927,9 @@ The MVP is complete only when:
 * Knowledge base affects recommendations.
 * Rule engine works.
 * AI provider integration works.
-* Output follows the defined schema.
-* Primary outfit is displayed.
-* Exactly two alternatives are displayed.
+* Output follows the defined schema (including `image_url`).
+* Primary outfit is displayed with visual reference image.
+* Exactly two alternatives are displayed with visual reference images.
 * Styling tips are displayed.
 * Rationale is displayed.
 * Errors are handled cleanly.
@@ -937,8 +953,8 @@ Potential future features:
 * Vector database
 * RAG
 * Larger fashion dataset
-* Image generation
-* Outfit visualization
+* Real-time generative AI image generation (DALL-E 3 / Stable Diffusion)
+* 3D Outfit visualization
 * Trend analysis
 * Designer feedback
 * Recommendation history

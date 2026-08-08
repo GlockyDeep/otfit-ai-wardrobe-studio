@@ -1,6 +1,6 @@
 import React from 'react';
 import type { OutfitDetail } from '../types';
-import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass } from 'lucide-react';
+import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon } from 'lucide-react';
 
 interface OutfitCardProps {
   outfit: OutfitDetail;
@@ -18,9 +18,31 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({ outfit, title, isPrimary
       }`}
     >
       {isPrimary && (
-        <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-500 to-rose-500 text-gray-950 font-bold text-xs px-4 py-1.5 rounded-bl-xl uppercase tracking-wider flex items-center space-x-1 shadow-md">
+        <div className="absolute top-0 right-0 z-20 bg-gradient-to-l from-amber-500 to-rose-500 text-gray-950 font-bold text-xs px-4 py-1.5 rounded-bl-xl uppercase tracking-wider flex items-center space-x-1 shadow-md">
           <Sparkles className="w-3.5 h-3.5" />
           <span>Primary Choice</span>
+        </div>
+      )}
+
+      {/* Outfit Fashion Image Preview */}
+      {outfit.image_url && (
+        <div className="mb-6 rounded-xl overflow-hidden relative group border border-gray-800 shadow-lg">
+          <div className="h-64 sm:h-72 w-full overflow-hidden bg-gray-900 relative">
+            <img
+              src={outfit.image_url}
+              alt={outfit.clothing_type}
+              className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent opacity-80" />
+            <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs text-amber-200 font-medium bg-gray-950/70 backdrop-blur-md px-3 py-1.5 rounded-lg border border-gray-800/80">
+              <span className="flex items-center space-x-1.5">
+                <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
+                <span>Visual Concept Preview</span>
+              </span>
+              <span className="text-gray-400 text-[10px] uppercase font-semibold">High-Res Couture Reference</span>
+            </div>
+          </div>
         </div>
       )}
 

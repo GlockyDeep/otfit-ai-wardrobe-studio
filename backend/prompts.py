@@ -4,6 +4,37 @@ from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 import httpx
 
+# Load Knowledge Base for Garment Image Mapping
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+KB_PATH = os.path.join(BASE_DIR, "knowledge_base.json")
+try:
+    with open(KB_PATH, "r", encoding="utf-8") as f:
+        KNOWLEDGE_BASE = json.load(f)
+except Exception:
+    KNOWLEDGE_BASE = {}
+
+GARMENT_IMAGES = KNOWLEDGE_BASE.get("garment_images", {
+    "lehenga": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80",
+    "saree": "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80",
+    "anarkali": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80",
+    "sherwani": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80",
+    "bandhgala": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+    "suit": "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?auto=format&fit=crop&w=800&q=80",
+    "blazer": "https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=800&q=80",
+    "dress": "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80",
+    "gown": "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=800&q=80",
+    "kurta": "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80",
+    "casual": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
+    "default": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80"
+})
+
+def resolve_garment_image(clothing_type: str) -> str:
+    c_lower = clothing_type.lower()
+    for key, url in GARMENT_IMAGES.items():
+        if key != "default" and key in c_lower:
+            return url
+    return GARMENT_IMAGES.get("default", "")
+
 # --- Pydantic Data Models (Matches Required Response Schema) ---
 
 class OutfitDetail(BaseModel):
@@ -18,6 +49,7 @@ class OutfitDetail(BaseModel):
     makeup: str = Field(..., description="Makeup or grooming recommendation")
     styling_tips: List[str] = Field(..., description="Actionable styling tips for wearing this outfit")
     rationale: str = Field(..., description="Fashion design rationale explaining why this outfit suits the occasion, culture, season, and budget")
+    image_url: Optional[str] = Field(default="", description="Curated high-resolution fashion reference image URL")
 
 class RecommendationResponse(BaseModel):
     primary_outfit: OutfitDetail
@@ -133,6 +165,11 @@ def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationRespons
                 while len(validated.alternatives) < 2:
                     validated.alternatives.append(fallback_alt)
 
+            # Attach high-resolution curated image URLs
+            validated.primary_outfit.image_url = resolve_garment_image(validated.primary_outfit.clothing_type)
+            for alt in validated.alternatives:
+                alt.image_url = resolve_garment_image(alt.clothing_type)
+
             return validated
             
     except Exception as e:
@@ -173,7 +210,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                     "Keep blazer buttoned during formal presentations; unbutton when seated.",
                     "Ensure trouser hem rests precisely at the ankle bone for a modern executive profile."
                 ],
-                rationale=f"Designed specifically for a {occasion}. Provides an executive, professional presence suitable for a {budget} budget during {season} weather."
+                rationale=f"Designed specifically for a {occasion}. Provides an executive, professional presence suitable for a {budget} budget during {season} weather.",
+                image_url=resolve_garment_image("Tailored Two-Piece Blazer Suit")
             )
             alt1 = OutfitDetail(
                 clothing_type="Formal Silk Kurta Set with Tailored Straight Trousers",
@@ -186,7 +224,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                 hairstyle="Neat half-up hair arrangement",
                 makeup="Fresh natural makeup with matte finish",
                 styling_tips=["Pair with minimalist jewelry to maintain a professional boardroom aesthetic."],
-                rationale="A refined South Asian formal alternative offering executive authority with cultural nuance."
+                rationale="A refined South Asian formal alternative offering executive authority with cultural nuance.",
+                image_url=resolve_garment_image("Formal Silk Kurta Set")
             )
             alt2 = OutfitDetail(
                 clothing_type="Structured Solid Silk Saree with High-Neck Blouse",
@@ -199,7 +238,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                 hairstyle="Low neat hair bun",
                 makeup="Neutral professional tones",
                 styling_tips=["Pin saree pleats securely at shoulder for a sleek, hands-free corporate drape."],
-                rationale="A classic corporate saree option balancing traditional Indian drape with modern professional rigor."
+                rationale="A classic corporate saree option balancing traditional Indian drape with modern professional rigor.",
+                image_url=resolve_garment_image("Structured Solid Silk Saree")
             )
         else: # Male / Other Business
             if "south asian" in culture.lower() or "indo-western" in culture.lower():
@@ -217,7 +257,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                         "Keep Bandhgala jacket buttoned up to the neck for a sharp corporate posture.",
                         "Select a contrasting silk pocket square to add subtle personal flair without violating dress codes."
                     ],
-                    rationale=f"A distinguished South Asian formal option ideal for a {occasion}. Unlike festive sherwanis, the Bandhgala suit is strictly tailored for corporate leadership and formal meetings."
+                    rationale=f"A distinguished South Asian formal option ideal for a {occasion}. Unlike festive sherwanis, the Bandhgala suit is strictly tailored for corporate leadership and formal meetings.",
+                    image_url=resolve_garment_image("Tailored Bandhgala Suit")
                 )
                 alt1 = OutfitDetail(
                     clothing_type="Crisp Silk Kurta with Structured Nehru Vest and Trousers",
@@ -230,7 +271,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                     hairstyle="Neat short trim",
                     makeup="Clean groomed finish",
                     styling_tips=["Ensure Nehru vest fits snugly around the chest for a streamlined appearance."],
-                    rationale="A smart-formal Indo-Western corporate alternative offering warmth and elegance."
+                    rationale="A smart-formal Indo-Western corporate alternative offering warmth and elegance.",
+                    image_url=resolve_garment_image("Crisp Silk Kurta")
                 )
                 alt2 = OutfitDetail(
                     clothing_type="Custom Tailored Two-Piece Wool Suit",
@@ -243,7 +285,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                     hairstyle="Classic executive side part",
                     makeup="Minimal grooming",
                     styling_tips=["Tie knot should fit snugly against the collar band."],
-                    rationale="A universal Western executive suit tailored for executive business meetings."
+                    rationale="A universal Western executive suit tailored for executive business meetings.",
+                    image_url=resolve_garment_image("Custom Tailored Two-Piece Wool Suit")
                 )
             else: # Western Male Business
                 primary = OutfitDetail(
@@ -260,7 +303,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                         "Ensure shirt cuff extends 0.5 inches past blazer sleeve.",
                         "Match belt leather color precisely with oxford shoes."
                     ],
-                    rationale=f"A timeless executive suit designed for a {occasion}. Charcoal wool offers professional authority suitable for a {budget} budget during {season} climate."
+                    rationale=f"A timeless executive suit designed for a {occasion}. Charcoal wool offers professional authority suitable for a {budget} budget during {season} climate.",
+                    image_url=resolve_garment_image("Custom Tailored Two-Piece Wool Suit")
                 )
                 alt1 = OutfitDetail(
                     clothing_type="Single-Breasted Blazer with Tailored Trousers",
@@ -273,7 +317,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                     hairstyle="Textured side-swept hair",
                     makeup="Clean skin finish",
                     styling_tips=["Pair with a classic leather briefcase and subtle watch."],
-                    rationale="A flexible business-formal alternative suitable for modern corporate environments."
+                    rationale="A flexible business-formal alternative suitable for modern corporate environments.",
+                    image_url=resolve_garment_image("Single-Breasted Blazer")
                 )
                 alt2 = OutfitDetail(
                     clothing_type="Double-Breasted Corporate Suit",
@@ -286,7 +331,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                     hairstyle="Sleek slicked back hair",
                     makeup="Minimal grooming",
                     styling_tips=["Keep double-breasted jacket buttoned when standing."],
-                    rationale="A commanding executive tailoring option for high-stakes business presentations."
+                    rationale="A commanding executive tailoring option for high-stakes business presentations.",
+                    image_url=resolve_garment_image("Double-Breasted Corporate Suit")
                 )
 
     # --- 2. WEDDING / DIWALI / FESTIVE / FORMAL EVENT ---
@@ -306,7 +352,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                     "Drape the organza dupatta neatly across one shoulder to highlight blouse embroidery.",
                     "Choose warm gold jewelry to complement the emerald and crimson color palette."
                 ],
-                rationale=f"Designed specifically for a {occasion} in a {season} climate. The rich Banarasi silk offers regal elegance suitable for a {budget} budget."
+                rationale=f"Designed specifically for a {occasion} in a {season} climate. The rich Banarasi silk offers regal elegance suitable for a {budget} budget.",
+                image_url=resolve_garment_image("Banarasi Silk Lehenga Choli")
             )
             alt1 = OutfitDetail(
                 clothing_type="Contemporary Draped Silk Saree with Embroidered Velvet Blouse",
@@ -319,7 +366,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                 hairstyle="Side-swept loose Hollywood waves",
                 makeup="Classic winged eyeliner with nude crimson gloss",
                 styling_tips=["Pre-draped pleats provide effortless elegance throughout evening festivities."],
-                rationale="An elegant drape alternative combining traditional Ruby Red tones with modern fluid silhouette cuts."
+                rationale="An elegant drape alternative combining traditional Ruby Red tones with modern fluid silhouette cuts.",
+                image_url=resolve_garment_image("Contemporary Draped Silk Saree")
             )
             alt2 = OutfitDetail(
                 clothing_type="Indo-Western Anarkali Gown with Sheer Cape",
@@ -332,7 +380,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                 hairstyle="Half-up braided crown with loose tendrils",
                 makeup="Dewy coral blush with soft brown eyeliner",
                 styling_tips=["The lightweight chiffon cape allows breathable movement for long celebrations."],
-                rationale="A lighter, contemporary Indo-Western alternative ideal for festive social gatherings."
+                rationale="A lighter, contemporary Indo-Western alternative ideal for festive social gatherings.",
+                image_url=resolve_garment_image("Indo-Western Anarkali Gown")
             )
         else: # Male Festive
             primary = OutfitDetail(
@@ -349,7 +398,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                     "Button the sherwani jacket up to the collar for a regal structured profile.",
                     "Match pocket square tone precisely to the churidar trousers."
                 ],
-                rationale=f"A regal male festive ensemble tailored for a {occasion}. Raw silk provides structure and elegance suitable for a {budget} budget."
+                rationale=f"A regal male festive ensemble tailored for a {occasion}. Raw silk provides structure and elegance suitable for a {budget} budget.",
+                image_url=resolve_garment_image("Silk Sherwani")
             )
             alt1 = OutfitDetail(
                 clothing_type="Bandhgala Suit with Tailored Trousers",
@@ -362,7 +412,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                 hairstyle="Clean pompadour fade",
                 makeup="Hydrated skin finish",
                 styling_tips=["Keep collar crisp and buttoned; pair with embroidered juttis."],
-                rationale="A modern fusion option bridging South Asian heritage with contemporary formal tailoring."
+                rationale="A modern fusion option bridging South Asian heritage with contemporary formal tailoring.",
+                image_url=resolve_garment_image("Bandhgala Suit")
             )
             alt2 = OutfitDetail(
                 clothing_type="Embroidered Kurta Set with Brocade Nehru Jacket",
@@ -375,7 +426,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                 hairstyle="Natural textured look",
                 makeup="Minimal grooming",
                 styling_tips=["Layer the jacket open or half-buttoned for comfortable movement during festivities."],
-                rationale="A comfortable, festive alternative offering high visual appeal with ease of movement."
+                rationale="A comfortable, festive alternative offering high visual appeal with ease of movement.",
+                image_url=resolve_garment_image("Embroidered Kurta Set")
             )
 
     # --- 3. CASUAL / COLLEGE / EVERYDAY ---
@@ -395,7 +447,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                     "Roll up sleeve cuffs slightly for an easygoing, casual campus vibe.",
                     "Pair with flat breathable sandals for comfortable all-day walking."
                 ],
-                rationale=f"Ideal for a casual {occasion}. Breathable linen fabric keeps you cool during {season} weather."
+                rationale=f"Ideal for a casual {occasion}. Breathable linen fabric keeps you cool during {season} weather.",
+                image_url=resolve_garment_image("Breathable Linen-Cotton Kurta")
             )
             alt1 = OutfitDetail(
                 clothing_type="Casual Shirt Dress with Fabric Belt",
@@ -408,7 +461,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                 hairstyle="Messy top knot",
                 makeup="Fresh tint",
                 styling_tips=["Tie the fabric belt loosely to define silhouette without constricting."],
-                rationale="A modern casual alternative prioritizing mobility and contemporary style."
+                rationale="A modern casual alternative prioritizing mobility and contemporary style.",
+                image_url=resolve_garment_image("Casual Shirt Dress")
             )
             alt2 = OutfitDetail(
                 clothing_type="Monochrome Co-ord Linen Set",
@@ -421,7 +475,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                 hairstyle="Soft natural waves",
                 makeup="Nude lip gloss",
                 styling_tips=["Tuck front hem of shirt loosely into trousers for an effortless look."],
-                rationale="A trendy, effortless co-ord set for everyday comfort."
+                rationale="A trendy, effortless co-ord set for everyday comfort.",
+                image_url=resolve_garment_image("Monochrome Co-ord Linen Set")
             )
         else: # Male Casual / College
             primary = OutfitDetail(
@@ -438,7 +493,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                     "Leave top two shirt buttons open for a relaxed, approachable look.",
                     "Pair with clean white sneakers for everyday campus or casual outings."
                 ],
-                rationale=f"A smart casual ensemble tailored for a {occasion}. Linen fabric provides breathability for {season} weather."
+                rationale=f"A smart casual ensemble tailored for a {occasion}. Linen fabric provides breathability for {season} weather.",
+                image_url=resolve_garment_image("Linen-Cotton Button-Down Shirt")
             )
             alt1 = OutfitDetail(
                 clothing_type="Short Cotton Kurta with Slim Denim Jeans",
@@ -451,7 +507,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                 hairstyle="Natural side sweep",
                 makeup="Clean grooming",
                 styling_tips=["Roll sleeves up to forearms for an active smart-casual appearance."],
-                rationale="A comfortable Indo-Western fusion alternative ideal for college or informal gatherings."
+                rationale="A comfortable Indo-Western fusion alternative ideal for college or informal gatherings.",
+                image_url=resolve_garment_image("Short Cotton Kurta")
             )
             alt2 = OutfitDetail(
                 clothing_type="Smart Polo Shirt with Stretch Trousers",
@@ -464,7 +521,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                 hairstyle="Neat trim",
                 makeup="Hydrated lip balm",
                 styling_tips=["Keep polo un-tucked for a casual, sporty silhouette."],
-                rationale="A versatile casual option offering low-maintenance comfort."
+                rationale="A versatile casual option offering low-maintenance comfort.",
+                image_url=resolve_garment_image("Smart Polo Shirt")
             )
 
     return RecommendationResponse(
@@ -478,5 +536,5 @@ if __name__ == "__main__":
     engine = FashionRuleEngine()
     ctx = engine.evaluate("Male", "Business Meeting", "South Asian", "Medium", "Mild")
     res = generate_recommendation_ai(ctx)
-    print("Business Meeting Recommendation Test:")
+    print("Business Meeting Recommendation Test with Images:")
     print(res.model_dump_json(indent=2))

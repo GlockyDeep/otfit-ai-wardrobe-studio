@@ -25,6 +25,7 @@ export interface OutfitDetail {
   makeup: string;
   styling_tips: string[];
   rationale: string;
+  image_url?: string;
 }
 
 export interface RecommendationResponse {
