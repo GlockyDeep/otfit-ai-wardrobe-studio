@@ -18,6 +18,7 @@ class FashionRuleEngine:
         culture: str,
         budget: str,
         season: str,
+        desired_garment: str = "",
         preferences: str = "",
         additional_notes: str = ""
     ) -> Dict[str, Any]:
@@ -72,7 +73,7 @@ class FashionRuleEngine:
             if "female" in gender_lower or "woman" in gender_lower:
                 candidate_garments = ["Tailored Pant Suit", "Blazer with Trousers", "Formal Silk Kurta Set with Trousers", "Contemporary Solid Saree"]
             elif "male" in gender_lower or "man" in gender_lower:
-                candidate_garments = ["Two-Piece Tailored Suit", "Bandhgala Suit", "Blazer with Chinos", "Crisp Nehru Jacket with Trousers"]
+                candidate_garments = ["Two-Piece Tailored Suit", "Bandhgala Suit", "Tuxedo", "Blazer with Chinos", "Crisp Nehru Jacket with Trousers"]
             else:
                 candidate_garments = ["Tailored Unisex Business Suit", "Blazer with Structured Trousers"]
         elif "casual" in occ_lower or "college" in occ_lower:
@@ -84,6 +85,10 @@ class FashionRuleEngine:
                 candidate_garments = ["Smart Casual Co-ord Set", "Linen Shirt with Trousers"]
         else:
             candidate_garments = raw_garments
+
+        # If user specified a desired garment, prioritize it as the primary candidate
+        if desired_garment and desired_garment.strip():
+            candidate_garments = [desired_garment.strip()] + [g for g in candidate_garments if g.lower() != desired_garment.strip().lower()]
 
         # 3. Match Season
         matched_season = self._find_best_match(season, self.kb.get("season_rules", {}))
@@ -126,6 +131,7 @@ class FashionRuleEngine:
             "matched_culture": matched_culture,
             "budget": budget,
             "season": season,
+            "desired_garment": desired_garment,
             "user_preferences": preferences,
             "additional_notes": additional_notes,
             "candidate_garments": candidate_garments,

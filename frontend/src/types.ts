@@ -9,6 +9,7 @@ export interface RecommendationFormData {
   culture: CultureOption;
   budget: BudgetOption;
   season: SeasonOption;
+  desired_garment?: string;
   preferences: string;
   additional_notes: string;
 }

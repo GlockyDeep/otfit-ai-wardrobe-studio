@@ -76,7 +76,7 @@
   "cultures": {
     "South Asian": {
       "key_garments_female": ["Saree", "Lehenga Choli", "Anarkali Suit", "Kurta Set with Dupatta", "Indo-Western Gown", "Sharara Set"],
-      "key_garments_male": ["Sherwani", "Bandhgala Suit", "Kurta Pyjama with Nehru Jacket", "Dhoti Kurta Set", "Indo-Western Achkan"],
+      "key_garments_male": ["Sherwani", "Bandhgala Suit", "Modi Jacket with Kurta", "Tuxedo", "Jodhpuri Suit", "Pathani Suit", "Dhoti Kurta Set"],
       "key_garments_other": ["Gender-Neutral Embroidered Kurta Set", "Draped Indo-Western Jacket Set"],
       "signature_motifs": ["Paisley", "Floral Jal", "Zardozi", "Gota Patti", "Chikankari", "Banarasi Weave"],
       "traditional_accessories": ["Jhumkas", "Maang Tikka", "Kundan Necklace", "Pocket Square", "Brooch", "Mojris / Juttis"],
@@ -84,7 +84,7 @@
     },
     "Western": {
       "key_garments_female": ["Cocktail Dress", "Evening Gown", "Tailored Pant Suit", "Blazer & Trousers", "Midi Wrap Dress", "Co-ord Suit"],
-      "key_garments_male": ["Two-Piece Suit", "Tuxedo", "Blazer with Chinos", "Oxford Shirt & Trousers", "Smart Leather Jacket Set"],
+      "key_garments_male": ["Tuxedo", "Two-Piece Suit", "Blazer with Chinos", "Oxford Shirt & Trousers", "Double-Breasted Suit"],
       "key_garments_other": ["Tailored Unisex Suit", "Minimalist Structured Set"],
       "signature_motifs": ["Houndstooth", "Pinstripes", "Plaid", "Monochrome Solid", "Minimal Floral"],
       "traditional_accessories": ["Leather Belt", "Cufflinks", "Silk Tie", "Minimal Pendant", "Clutch Bag"],
@@ -92,7 +92,7 @@
     },
     "Indo-Western": {
       "key_garments_female": ["Crop Top with Draped Saree", "Indo-Western Co-ord Set", "Jacket Lehenga", "Draped Dhoti Pants with Cape", "Kurta with Trousers"],
-      "key_garments_male": ["Asymmetric Kurta with Trouser", "Bandhgala with Chinos", "Indo-Western Trench Jacket", "Short Kurta with Blazer"],
+      "key_garments_male": ["Modi Jacket with Kurta", "Bandhgala with Chinos", "Indo-Western Trench Jacket", "Asymmetric Kurta with Trouser"],
       "key_garments_other": ["Asymmetric Draped Jacket Set", "Fusion Co-ord"],
       "signature_motifs": ["Geometric Fusion", "Contemporary Threadwork", "Minimalist Metallic Foil"],
       "traditional_accessories": ["Statement Earrings", "Modern Cuff", "Lapel Pin", "Designer Clutch"],
@@ -124,6 +124,13 @@
     }
   },
   "garment_images": {
+    "tuxedo": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+    "modi": "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80",
+    "nehru": "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80",
+    "jodhpuri": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80",
+    "pathani": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80",
+    "sharara": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80",
+    "kaftan": "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=800&q=80",
     "lehenga": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80",
     "saree": "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80",
     "anarkali": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80",

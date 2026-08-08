@@ -40,6 +40,7 @@ class RecommendationRequest(BaseModel):
     culture: str = Field(..., description="Cultural context, e.g., South Asian, Western, Indo-Western")
     budget: str = Field(..., description="Budget tier: Low, Medium, or High")
     season: str = Field(..., description="Season or climate: Summer, Winter, Monsoon, Mild")
+    desired_garment: Optional[str] = Field(default="", description="Optional specific preferred garment type, e.g. Tuxedo, Modi Jacket, Saree, Lehenga")
     preferences: Optional[str] = Field(default="", description="Optional preferred colors or style preferences")
     additional_notes: Optional[str] = Field(default="", description="Optional extra notes or requirements")
 
@@ -80,6 +81,7 @@ def get_fashion_recommendation(request: RecommendationRequest):
             culture=request.culture,
             budget=request.budget,
             season=request.season,
+            desired_garment=request.desired_garment or "",
             preferences=request.preferences or "",
             additional_notes=request.additional_notes or ""
         )

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { RecommendationFormData, GenderOption, CultureOption, BudgetOption, SeasonOption } from '../types';
-import { Sparkles, Calendar, Globe, DollarSign, Sun, Palette, FileText, User, Info } from 'lucide-react';
+import { Sparkles, Calendar, Globe, DollarSign, Sun, Palette, FileText, User, Info, Shirt } from 'lucide-react';
 
 interface FormProps {
   onSubmit: (data: RecommendationFormData) => void;
@@ -17,6 +17,20 @@ const OCCASION_CHIPS = [
   'Date Night',
   'Festival',
   'Formal Event'
+];
+
+const GARMENT_CHIPS = [
+  'Tuxedo',
+  'Modi Jacket / Nehru Vest',
+  'Bandhgala Suit',
+  'Sherwani',
+  'Banarasi Silk Saree',
+  'Lehenga Choli',
+  'Blazer with Trousers',
+  'Anarkali Suit',
+  'Pathani Suit',
+  'Sharara Set',
+  'Co-ord Set'
 ];
 
 const ALL_CULTURES: CultureOption[] = [
@@ -44,6 +58,7 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
     culture: 'South Asian',
     budget: 'Medium',
     season: 'Mild',
+    desired_garment: '',
     preferences: 'Jewel tones, elegant traditional style',
     additional_notes: ''
   });
@@ -89,6 +104,10 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
     }));
   };
 
+  const handleGarmentClick = (garment: string) => {
+    setFormData(prev => ({ ...prev, desired_garment: garment }));
+  };
+
   const handleTagClick = (tag: string) => {
     setFormData(prev => {
       const current = prev.preferences;
@@ -105,7 +124,7 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
           Design Your Bespoke Outfit
         </h2>
         <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
-          Specify your occasion, cultural heritage, and styling preferences. Our hybrid fashion rule engine and AI will curate a complete primary ensemble alongside two alternative designs.
+          Specify your occasion, desired garment, cultural heritage, and styling preferences. Our hybrid fashion rule engine and AI will curate a complete primary ensemble alongside two alternative designs.
         </p>
       </div>
 
@@ -173,7 +192,39 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
           </div>
         </div>
 
-        {/* 3. Culture & Heritage */}
+        {/* 3. Preferred Clothing Type / Garment */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-300 mb-2 flex items-center space-x-2">
+            <Shirt className="w-4 h-4 text-rose-400" />
+            <span>Preferred Clothing Type / Garment (Optional)</span>
+          </label>
+          <input
+            type="text"
+            value={formData.desired_garment || ''}
+            onChange={e => setFormData(prev => ({ ...prev, desired_garment: e.target.value }))}
+            placeholder="e.g. Tuxedo, Modi Jacket, Bandhgala Suit, Saree, Lehenga, Sherwani"
+            className="w-full bg-gray-900/80 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition"
+          />
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="text-xs text-gray-500 self-center mr-1">Garment Choices:</span>
+            {GARMENT_CHIPS.map(garment => (
+              <button
+                key={garment}
+                type="button"
+                onClick={() => handleGarmentClick(garment)}
+                className={`text-xs px-3 py-1.5 rounded-lg border transition cursor-pointer ${
+                  formData.desired_garment === garment
+                    ? 'bg-rose-500/20 border-rose-400 text-rose-300'
+                    : 'bg-gray-900/40 border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300'
+                }`}
+              >
+                {garment}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 4. Culture & Heritage */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <label className="text-sm font-semibold text-gray-300 flex items-center space-x-2">
@@ -206,7 +257,7 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
           </div>
         </div>
 
-        {/* 4. Budget & Season Grid */}
+        {/* 5. Budget & Season Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Budget */}
           <div>
@@ -257,7 +308,7 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
           </div>
         </div>
 
-        {/* 5. Preferred Colors & Style */}
+        {/* 6. Preferred Colors & Style */}
         <div>
           <label className="block text-sm font-semibold text-gray-300 mb-2 flex items-center space-x-2">
             <Palette className="w-4 h-4 text-amber-400" />
@@ -284,7 +335,7 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
           </div>
         </div>
 
-        {/* 6. Additional Notes */}
+        {/* 7. Additional Notes */}
         <div>
           <label className="block text-sm font-semibold text-gray-300 mb-2 flex items-center space-x-2">
             <FileText className="w-4 h-4 text-amber-400" />

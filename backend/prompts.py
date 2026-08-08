@@ -14,6 +14,12 @@ except Exception:
     KNOWLEDGE_BASE = {}
 
 GARMENT_IMAGES = KNOWLEDGE_BASE.get("garment_images", {
+    "tuxedo": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+    "modi": "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80",
+    "nehru": "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80",
+    "jodhpuri": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80",
+    "pathani": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80",
+    "sharara": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80",
     "lehenga": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80",
     "saree": "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80",
     "anarkali": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80",
@@ -57,15 +63,16 @@ class RecommendationResponse(BaseModel):
 
 
 SYSTEM_PROMPT = """You are an expert AI Fashion Designer and Personal Stylist.
-Your goal is to create bespoke fashion design recommendations tailored to a client's gender, occasion, cultural preference, budget level, and season/climate.
+Your goal is to create bespoke fashion design recommendations tailored to a client's gender, occasion, cultural preference, budget level, season/climate, and preferred clothing type.
 
 CRITICAL INSTRUCTIONS:
 1. You must act as a creative fashion designer, NOT an e-commerce product recommender. Do NOT mention store links, brand names, or shopping prices. Focus on design aesthetics, garment cuts, fabric drape, color harmonies, and styling rationale.
 2. Incorporate the provided Fashion Knowledge Context (rules, candidate garments, recommended fabrics, color guidance, and embroidery levels).
-3. Ensure garments strictly match event formality: Business Meetings REQUIRE formal suits, blazers, bandhgalas, or tailored kurtas (NEVER sherwanis, heavy lehengas, or wedding attire). Weddings/Diwali require festive attire. Casual requires relaxed, comfortable clothing.
-4. Produce EXACTLY ONE primary outfit and EXACTLY TWO meaningfully different alternative outfits.
-5. Each outfit MUST include: clothing_type, silhouette, colors (array of strings), fabric, embroidery_or_pattern, accessories (array of strings), footwear, hairstyle, makeup, styling_tips (array of strings), and rationale.
-6. Your response MUST be valid JSON adhering precisely to the specified schema.
+3. If the user explicitly requests a specific garment type (e.g. Tuxedo, Modi Jacket, Sherwani, Bandhgala, Saree, Lehenga, Blazer), prioritize that garment type as the Primary Outfit!
+4. Ensure garments match event formality: Business Meetings REQUIRE formal suits, tuxedos, blazers, bandhgalas, or tailored kurtas/Modi jackets (NEVER heavy lehengas or wedding sherwanis unless appropriate).
+5. Produce EXACTLY ONE primary outfit and EXACTLY TWO meaningfully different alternative outfits.
+6. Each outfit MUST include: clothing_type, silhouette, colors (array of strings), fabric, embroidery_or_pattern, accessories (array of strings), footwear, hairstyle, makeup, styling_tips (array of strings), and rationale.
+7. Your response MUST be valid JSON adhering precisely to the specified schema.
 """
 
 def build_user_prompt(context: Dict[str, Any]) -> str:
@@ -77,6 +84,7 @@ User Specifications:
 - Cultural Context: {context.get('culture')} (Matched Culture: {context.get('matched_culture')})
 - Budget Level: {context.get('budget')}
 - Season / Climate: {context.get('season')}
+- Preferred Clothing Type: {context.get('desired_garment') or 'None specified'}
 - Preferred Colors / Style: {context.get('user_preferences') or 'None specified'}
 - Additional Notes: {context.get('additional_notes') or 'None specified'}
 
@@ -187,11 +195,102 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
     culture = context.get("culture", "South Asian")
     budget = context.get("budget", "Medium")
     season = context.get("season", "Mild")
-    prefs = context.get("user_preferences", "")
+    desired_garment = (context.get("desired_garment") or "").lower()
     
     occ_lower = occasion.lower()
     is_female = "female" in gender.lower() or "woman" in gender.lower()
     is_male = "male" in gender.lower() or "man" in gender.lower()
+
+    # --- SPECIFIC DESIRED GARMENT OVERRIDES ---
+    if "tuxedo" in desired_garment:
+        primary = OutfitDetail(
+            clothing_type="Classic Black Tie Satin Lapel Tuxedo",
+            silhouette="Single-breasted structured jacket with satin peak lapel and slim trousers with satin side stripe",
+            colors=["Midnight Black", "Crisp White Tuxedo Shirt", "Black Satin Bow Tie"],
+            fabric="Super 130s Wool & Silk Satin Lapels",
+            embroidery_or_pattern="Clean monochrome finish with satin facing on lapels and buttons",
+            accessories=["Black silk cummerbund or waistcoat", "Mother-of-pearl cufflinks", "Silver dress watch"],
+            footwear="Patent Leather Black Oxfords",
+            hairstyle="Sleek slicked back side-part",
+            makeup="Groomed eyebrows and clean hydrated finish",
+            styling_tips=["Keep bow tie hand-tied for authentic black-tie elegance."],
+            rationale=f"Requested specifically by client for a {occasion}. Offers timeless black-tie sophistication.",
+            image_url=resolve_garment_image("Tuxedo")
+        )
+        alt1 = OutfitDetail(
+            clothing_type="Velvet Dinner Jacket Tuxedo Ensemble",
+            silhouette="Structured shawl collar velvet blazer with black trousers",
+            colors=["Deep Burgundy Velvet", "Midnight Black Trousers"],
+            fabric="Plush Micro-Velvet & Wool",
+            embroidery_or_pattern="Satin shawl collar",
+            accessories=["Black silk pocket square", "Gold cufflinks"],
+            footwear="Black Velvet Loafers",
+            hairstyle="Neat executive trim",
+            makeup="Clean skin finish",
+            styling_tips=["Pair velvet dinner jacket with unadorned black trousers."],
+            rationale="An opulent evening tuxedo alternative for formal galas.",
+            image_url=resolve_garment_image("Tuxedo")
+        )
+        alt2 = OutfitDetail(
+            clothing_type="Tailored Double-Breasted Black Tuxedo",
+            silhouette="Six-button peak lapel double-breasted tuxedo silhouette",
+            colors=["Charcoal Black", "White Shirt"],
+            fabric="Fine Italian Wool & Silk",
+            embroidery_or_pattern="Satin covered buttons",
+            accessories=["Black satin bow tie", "Silver studs"],
+            footwear="Patent Oxfords",
+            hairstyle="Classic side part",
+            makeup="Hydrated lip balm",
+            styling_tips=["Keep jacket buttoned when standing."],
+            rationale="A sharp alternative for formal evening attire.",
+            image_url=resolve_garment_image("Tuxedo")
+        )
+        return RecommendationResponse(primary_outfit=primary, alternatives=[alt1, alt2])
+
+    elif "modi" in desired_garment or "nehru" in desired_garment:
+        primary = OutfitDetail(
+            clothing_type="Silk Modi Jacket (Nehru Vest) with Kurta & Trousers",
+            silhouette="Structured sleeveless Modi jacket with mandarin collar over straight kurta and slim trousers",
+            colors=["Royal Navy Jacket", "Ivory Silk Kurta", "Brass Buttons"],
+            fabric="Raw Silk Vest with Fine Cotton-Silk Kurta",
+            embroidery_or_pattern="Subtle tonal texture with custom metallic brass buttons",
+            accessories=["Silk pocket square in deep maroon", "Silver lapel pin", "Leather strap watch"],
+            footwear="Handcrafted Leather Monk Straps or Mojris",
+            hairstyle="Neatly groomed side-part fade",
+            makeup="Groomed eyebrows and hydrated natural lip balm",
+            styling_tips=["Ensure Modi jacket fits snugly across chest without pulling at buttons."],
+            rationale=f"Requested specifically by client. The Modi Jacket (Nehru Vest) combines regal South Asian heritage with clean executive structure.",
+            image_url=resolve_garment_image("Modi Jacket")
+        )
+        alt1 = OutfitDetail(
+            clothing_type="Embroidered Jacquard Modi Jacket Set",
+            silhouette="Tailored jacquard vest layered over a knee-length kurta",
+            colors=["Mustard Gold Vest", "Cream Kurta"],
+            fabric="Brocade Silk Vest & Silk Blend Kurta",
+            embroidery_or_pattern="Intricate geometric jacquard weave",
+            accessories=["Pocket square", "Brass brooch"],
+            footwear="Tan Leather Mojris",
+            hairstyle="Classic executive look",
+            makeup="Clean skin finish",
+            styling_tips=["Contrast the jacket hue against a neutral ivory or cream kurta."],
+            rationale="A festive Modi jacket alternative suitable for celebrations.",
+            image_url=resolve_garment_image("Modi Jacket")
+        )
+        alt2 = OutfitDetail(
+            clothing_type="Linen Modi Jacket with Straight Trouser Set",
+            silhouette="Breathable sleeveless jacket over short linen kurta and trousers",
+            colors=["Olive Green Vest", "White Shirt", "Khaki Trousers"],
+            fabric="100% Organic Linen",
+            embroidery_or_pattern="Minimalist horn buttons",
+            accessories=["Leather belt", "Watch"],
+            footwear="Brown Leather Loafers",
+            hairstyle="Textured crop",
+            makeup="Hydrated finish",
+            styling_tips=["Ideal for warm daytime formal or semi-formal events."],
+            rationale="A lightweight linen Modi jacket alternative for summer weather.",
+            image_url=resolve_garment_image("Modi Jacket")
+        )
+        return RecommendationResponse(primary_outfit=primary, alternatives=[alt1, alt2])
 
     # --- 1. BUSINESS MEETING / FORMAL CORPORATE ---
     if "business" in occ_lower or "meeting" in occ_lower or "corporate" in occ_lower or "work" in occ_lower:
@@ -261,8 +360,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                     image_url=resolve_garment_image("Tailored Bandhgala Suit")
                 )
                 alt1 = OutfitDetail(
-                    clothing_type="Crisp Silk Kurta with Structured Nehru Vest and Trousers",
-                    silhouette="Knee-length straight kurta layered with a sharp waist-length Nehru vest",
+                    clothing_type="Silk Modi Jacket (Nehru Vest) with Kurta & Trousers",
+                    silhouette="Knee-length straight kurta layered with a sharp waist-length Modi vest",
                     colors=["Royal Navy", "Ivory Kurta", "Silver Pin"],
                     fabric="Raw Silk Vest with Fine Cotton Kurta",
                     embroidery_or_pattern="Clean solid weave with subtle lapel stitching",
@@ -272,7 +371,7 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                     makeup="Clean groomed finish",
                     styling_tips=["Ensure Nehru vest fits snugly around the chest for a streamlined appearance."],
                     rationale="A smart-formal Indo-Western corporate alternative offering warmth and elegance.",
-                    image_url=resolve_garment_image("Crisp Silk Kurta")
+                    image_url=resolve_garment_image("Silk Modi Jacket")
                 )
                 alt2 = OutfitDetail(
                     clothing_type="Custom Tailored Two-Piece Wool Suit",
@@ -307,18 +406,18 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                     image_url=resolve_garment_image("Custom Tailored Two-Piece Wool Suit")
                 )
                 alt1 = OutfitDetail(
-                    clothing_type="Single-Breasted Blazer with Tailored Trousers",
-                    silhouette="Structured single-breasted jacket with slim chinos",
-                    colors=["Navy Blue", "Khaki Trousers", "White Shirt"],
-                    fabric="Wool-Linen Blend",
-                    embroidery_or_pattern="Horn buttons",
-                    accessories=["Leather belt", "Leather briefcase"],
-                    footwear="Dark Brown Leather Loafers",
-                    hairstyle="Textured side-swept hair",
-                    makeup="Clean skin finish",
-                    styling_tips=["Pair with a classic leather briefcase and subtle watch."],
-                    rationale="A flexible business-formal alternative suitable for modern corporate environments.",
-                    image_url=resolve_garment_image("Single-Breasted Blazer")
+                    clothing_type="Classic Black Tie Satin Lapel Tuxedo",
+                    silhouette="Structured single-breasted tuxedo with satin lapel",
+                    colors=["Midnight Black", "White Shirt", "Black Bow Tie"],
+                    fabric="Fine Italian Wool & Satin",
+                    embroidery_or_pattern="Satin peak lapel",
+                    accessories=["Black cummerbund", "Cufflinks"],
+                    footwear="Patent Leather Oxfords",
+                    hairstyle="Clean executive side part",
+                    makeup="Clean grooming",
+                    styling_tips=["Pair with black satin bow tie for formal executive dinners."],
+                    rationale="An elevated black-tie tuxedo option for formal corporate galas.",
+                    image_url=resolve_garment_image("Tuxedo")
                 )
                 alt2 = OutfitDetail(
                     clothing_type="Double-Breasted Corporate Suit",
@@ -402,32 +501,32 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                 image_url=resolve_garment_image("Silk Sherwani")
             )
             alt1 = OutfitDetail(
-                clothing_type="Bandhgala Suit with Tailored Trousers",
-                silhouette="Structured military-inspired slim silhouette",
-                colors=["Deep Maroon", "Gold Accent"],
-                fabric="Brocade Silk & Fine Wool Blend",
-                embroidery_or_pattern="Traditional zari threadwork with brass buttons",
-                accessories=["Silk lapel pin", "Brooch"],
+                clothing_type="Silk Modi Jacket (Nehru Vest) with Kurta Set",
+                silhouette="Structured Modi jacket over a straight knee-length kurta",
+                colors=["Maroon Vest", "Cream Kurta"],
+                fabric="Raw Silk & Cotton Silk",
+                embroidery_or_pattern="Brocade jacquard vest with brass buttons",
+                accessories=["Silk pocket square", "Brooch"],
                 footwear="Embroidered Juttis",
                 hairstyle="Clean pompadour fade",
                 makeup="Hydrated skin finish",
-                styling_tips=["Keep collar crisp and buttoned; pair with embroidered juttis."],
-                rationale="A modern fusion option bridging South Asian heritage with contemporary formal tailoring.",
-                image_url=resolve_garment_image("Bandhgala Suit")
+                styling_tips=["Keep vest buttoned over cream kurta for a refined festive look."],
+                rationale="A popular Modi jacket alternative combining festive flair with light layering.",
+                image_url=resolve_garment_image("Modi Jacket")
             )
             alt2 = OutfitDetail(
-                clothing_type="Embroidered Kurta Set with Brocade Nehru Jacket",
-                silhouette="Relaxed fit straight kurta with waist-length tailored jacket",
-                colors=["Ivory Cream", "Deep Magenta", "Gold"],
-                fabric="Cotton Silk Kurta with Jacquard Brocade Jacket",
-                embroidery_or_pattern="Traditional floral jacquard weave on vest",
-                accessories=["Gold cufflinks", "Contrasting pocket square"],
-                footwear="Tan Leather Mojris",
-                hairstyle="Natural textured look",
-                makeup="Minimal grooming",
-                styling_tips=["Layer the jacket open or half-buttoned for comfortable movement during festivities."],
-                rationale="A comfortable, festive alternative offering high visual appeal with ease of movement.",
-                image_url=resolve_garment_image("Embroidered Kurta Set")
+                clothing_type="Classic Black Tie Satin Lapel Tuxedo",
+                silhouette="Structured black-tie tuxedo silhouette",
+                colors=["Midnight Black", "White Shirt", "Black Bow Tie"],
+                fabric="Super 130s Italian Wool & Satin",
+                embroidery_or_pattern="Satin peak lapel",
+                accessories=["Silk bow tie", "Cufflinks"],
+                footwear="Patent Leather Oxfords",
+                hairstyle="Classic executive side part",
+                makeup="Clean grooming",
+                styling_tips=["Wear for high-end black-tie wedding receptions."],
+                rationale="A formal Western tuxedo alternative for black-tie wedding receptions.",
+                image_url=resolve_garment_image("Tuxedo")
             )
 
     # --- 3. CASUAL / COLLEGE / EVERYDAY ---
@@ -534,7 +633,7 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
 if __name__ == "__main__":
     from rules import FashionRuleEngine
     engine = FashionRuleEngine()
-    ctx = engine.evaluate("Male", "Business Meeting", "South Asian", "Medium", "Mild")
+    ctx = engine.evaluate("Male", "Business Meeting", "South Asian", "Medium", "Mild", desired_garment="Tuxedo")
     res = generate_recommendation_ai(ctx)
-    print("Business Meeting Recommendation Test with Images:")
+    print("Tuxedo Recommendation Test:")
     print(res.model_dump_json(indent=2))
