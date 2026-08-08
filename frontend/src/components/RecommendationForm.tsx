@@ -20,17 +20,17 @@ const OCCASION_CHIPS = [
 ];
 
 const GARMENT_CHIPS = [
-  'Tuxedo',
-  'Modi Jacket / Nehru Vest',
-  'Bandhgala Suit',
-  'Sherwani',
-  'Banarasi Silk Saree',
-  'Lehenga Choli',
-  'Blazer with Trousers',
-  'Anarkali Suit',
-  'Pathani Suit',
-  'Sharara Set',
-  'Co-ord Set'
+  { label: 'Tuxedo', emoji: '🤵' },
+  { label: 'Modi Jacket / Nehru Vest', emoji: '🧥' },
+  { label: 'Bandhgala Suit', emoji: '👔' },
+  { label: 'Sherwani', emoji: '👑' },
+  { label: 'Banarasi Silk Saree', emoji: '🥻' },
+  { label: 'Lehenga Choli', emoji: '👗' },
+  { label: 'Blazer with Trousers', emoji: '💼' },
+  { label: 'Anarkali Suit', emoji: '💃' },
+  { label: 'Pathani Suit', emoji: '👕' },
+  { label: 'Sharara Set', emoji: '✨' },
+  { label: 'Co-ord Set', emoji: '👚' }
 ];
 
 const ALL_CULTURES: CultureOption[] = [
@@ -104,8 +104,8 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
     }));
   };
 
-  const handleGarmentClick = (garment: string) => {
-    setFormData(prev => ({ ...prev, desired_garment: garment }));
+  const handleGarmentClick = (garmentLabel: string) => {
+    setFormData(prev => ({ ...prev, desired_garment: garmentLabel }));
   };
 
   const handleTagClick = (tag: string) => {
@@ -207,18 +207,19 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
           />
           <div className="mt-3 flex flex-wrap gap-2">
             <span className="text-xs text-gray-500 self-center mr-1">Garment Choices:</span>
-            {GARMENT_CHIPS.map(garment => (
+            {GARMENT_CHIPS.map(({ label, emoji }) => (
               <button
-                key={garment}
+                key={label}
                 type="button"
-                onClick={() => handleGarmentClick(garment)}
-                className={`text-xs px-3 py-1.5 rounded-lg border transition cursor-pointer ${
-                  formData.desired_garment === garment
+                onClick={() => handleGarmentClick(label)}
+                className={`text-xs px-3 py-1.5 rounded-lg border transition cursor-pointer flex items-center space-x-1.5 ${
+                  formData.desired_garment === label
                     ? 'bg-rose-500/20 border-rose-400 text-rose-300'
                     : 'bg-gray-900/40 border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300'
                 }`}
               >
-                {garment}
+                <span>{emoji}</span>
+                <span>{label}</span>
               </button>
             ))}
           </div>
