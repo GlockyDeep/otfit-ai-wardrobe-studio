@@ -16,8 +16,27 @@ except Exception:
 
 def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male") -> List[str]:
     color_str = " ".join(colors) if colors else ""
-    gender_prefix = "handsome male model" if "male" in gender.lower() and "female" not in gender.lower() else "female fashion model"
-    raw_prompt = f"full body standing fashion croquis illustration of a {gender_prefix} wearing {clothing_type} in {fabric} {color_str}, head to toe full length portrait showing complete outfit including legs, trousers, skirt, and footwear, studio lighting, ultra detailed 8k"
+    lower = clothing_type.lower()
+    
+    # Specific prompt engineering to guarantee authentic traditional drapes vs modern western suits
+    if any(k in lower for k in ["panche", "veshti", "dhoti", "mundu", "lungi"]):
+        raw_prompt = f"full body standing fashion croquis illustration of a handsome South Indian male model wearing traditional draped white silk Veshti Panche dhoti with gold zari border, white silk shirt and Angavastram shoulder stole in {color_str}, head to toe full length portrait showing authentic traditional Indian draped garment"
+    elif "saree" in lower:
+        raw_prompt = f"full body standing fashion croquis illustration of an elegant Indian female model wearing traditional draped silk saree in {color_str} with rich embroidered border and blouse, head to toe full length portrait showing draped saree pallu"
+    elif "lehenga" in lower:
+        raw_prompt = f"full body standing fashion croquis illustration of an elegant Indian female model wearing traditional flared lehenga choli with dupatta in {color_str}, head to toe full length portrait"
+    elif "anarkali" in lower or "salwar" in lower:
+        raw_prompt = f"full body standing fashion croquis illustration of an elegant Indian female model wearing traditional floor length flared anarkali suit in {color_str}, head to toe full length portrait"
+    elif "sherwani" in lower or "bandhgala" in lower:
+        raw_prompt = f"full body standing fashion croquis illustration of a handsome Indian male model wearing traditional silk sherwani jacket with churidar in {color_str}, head to toe full length portrait"
+    elif "modi" in lower or "nehru" in lower:
+        raw_prompt = f"full body standing fashion croquis illustration of a handsome Indian male model wearing traditional sleeveless Modi jacket Nehru vest over kurta and trousers in {color_str}, head to toe full length portrait"
+    elif "tuxedo" in lower or "suit" in lower or "blazer" in lower:
+        raw_prompt = f"full body standing fashion croquis illustration of a handsome male model wearing tailored formal tuxedo suit in {color_str}, head to toe full length portrait with trousers"
+    else:
+        gender_prefix = "handsome male model" if "male" in gender.lower() and "female" not in gender.lower() else "female fashion model"
+        raw_prompt = f"full body standing fashion croquis illustration of a {gender_prefix} wearing {clothing_type} in {fabric} {color_str}, head to toe full length portrait showing complete outfit, studio lighting, ultra detailed 8k"
+
     encoded = urllib.parse.quote(raw_prompt)
     
     # Generate 5 distinct AI image variations using different seeds
@@ -68,8 +87,13 @@ class SketchResponse(BaseModel):
 def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     color_str = ", ".join(req.colors) if req.colors else "harmonious luxury palette"
-    gender_prefix = "handsome male model" if "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower() else "female model"
-    prompt = f"Bespoke full body standing fashion sketch illustration of a {gender_prefix} wearing {req.clothing_type} in {color_str}. Fabric: {req.fabric or 'luxury textile'}. Cut/Silhouette: {req.silhouette or 'structured'}. Head to toe full length portrait showing legs, trousers, and footwear, studio lighting, elegant watercolor and ink."
+    lower = req.clothing_type.lower()
+
+    if any(k in lower for k in ["panche", "veshti", "dhoti", "mundu", "lungi"]):
+        prompt = f"Bespoke full body standing fashion sketch illustration of a handsome South Indian male model wearing traditional white silk Veshti Panche dhoti wrapped around waist with gold border and Angavastram shoulder stole in {color_str}, studio lighting, watercolor and ink."
+    else:
+        gender_prefix = "handsome male model" if "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower() else "female model"
+        prompt = f"Bespoke full body standing fashion sketch illustration of a {gender_prefix} wearing {req.clothing_type} in {color_str}. Fabric: {req.fabric or 'luxury textile'}. Cut/Silhouette: {req.silhouette or 'structured'}. Head to toe full length portrait, studio lighting, elegant watercolor and ink."
 
     if api_key:
         try:
@@ -104,7 +128,7 @@ Your goal is to create bespoke fashion design recommendations tailored to a clie
 CRITICAL INSTRUCTIONS:
 1. You must act as a creative fashion designer, NOT an e-commerce product recommender. Do NOT mention store links, brand names, or shopping prices. Focus on design aesthetics, garment cuts, fabric drape, color harmonies, and styling rationale.
 2. Incorporate the provided Fashion Knowledge Context (rules, candidate garments, recommended fabrics, color guidance, and embroidery levels).
-3. If the user explicitly requests a specific garment type (e.g. Tuxedo, Modi Jacket, Sherwani, Bandhgala, Saree, Lehenga, Blazer), prioritize that garment type as the Primary Outfit!
+3. If the user explicitly requests a specific garment type (e.g. Tuxedo, Modi Jacket, Sherwani, Bandhgala, Saree, Lehenga, Blazer, Veshti, Panche, Dhoti), prioritize that garment type as the Primary Outfit!
 4. Ensure garments match event formality: Business Meetings REQUIRE formal suits, tuxedos, blazers, bandhgalas, or tailored kurtas/Modi jackets (NEVER heavy lehengas or wedding sherwanis unless appropriate).
 5. Produce EXACTLY ONE primary outfit and EXACTLY TWO meaningfully different alternative outfits.
 6. Each outfit MUST include: clothing_type, silhouette, colors (array of strings), fabric, embroidery_or_pattern, accessories (array of strings), footwear, hairstyle, makeup, styling_tips (array of strings), and rationale.
@@ -239,7 +263,47 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
     is_male = "male" in gender.lower() or "man" in gender.lower()
 
     # --- SPECIFIC DESIRED GARMENT OVERRIDES ---
-    if "tuxedo" in desired_garment:
+    if "panche" in desired_garment or "veshti" in desired_garment or "dhoti" in desired_garment:
+        primary = OutfitDetail(
+            clothing_type="Panche / Veshti & Angavastram",
+            silhouette="Traditional South Indian unstitched silk dhoti wrapped around waist with folded shoulder Angavastram stole",
+            colors=["Ivory Silk", "Saffron Gold Zari Border", "Cream White"],
+            fabric="Pure Mulberry Silk with Pure Gold Zari Weave",
+            embroidery_or_pattern="Traditional Temple Zari border motif along the hem and Angavastram",
+            accessories=["Gold chain", "Traditional wrist watch", "Silk Angavastram stole"],
+            footwear="Handcrafted Leather Kolhapuri Sandals or Leather Chappals",
+            hairstyle="Neatly groomed classic comb-over side part",
+            makeup="Clean hydrated skin finish",
+            styling_tips=["Pleat and tuck the Veshti / Panche waist securely at the center, letting the gold zari border shine at the hem."],
+            rationale="Authentic South Indian traditional drape ensemble for auspicious festivals and weddings."
+        )
+        alt1 = OutfitDetail(
+            clothing_type="Silk Modi Jacket over Kurta Set",
+            silhouette="Structured Modi vest over a knee-length silk kurta",
+            colors=["Deep Maroon Vest", "Ivory Kurta"],
+            fabric="Raw Silk Vest",
+            embroidery_or_pattern="Brocade jacquard weave",
+            accessories=["Pocket square", "Silver brooch"],
+            footwear="Tan Leather Mojris",
+            hairstyle="Neat hair side part",
+            makeup="Clean finish",
+            styling_tips=["A modern Indo-Western celebration alternative."],
+            rationale="Festive smart-formal alternative."
+        )
+        alt2 = OutfitDetail(
+            clothing_type="Silk Sherwani with Churidar",
+            silhouette="Structured fitted sherwani jacket",
+            colors=["Navy Blue", "Gold Churidar"],
+            fabric="Raw Silk",
+            embroidery_or_pattern="Tonal neck embroidery",
+            accessories=["Silk pocket square"],
+            footwear="Royal Blue Juttis",
+            hairstyle="Classic trim",
+            makeup="Hydrated skin",
+            styling_tips=["Formal wedding reception option."],
+            rationale="Regal formal South Asian evening option."
+        )
+    elif "tuxedo" in desired_garment:
         primary = OutfitDetail(
             clothing_type="Classic Black Tie Satin Lapel Tuxedo",
             silhouette="Single-breasted structured jacket with satin peak lapel and slim trousers with satin side stripe",
