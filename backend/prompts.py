@@ -36,22 +36,19 @@ def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fa
         gender_prefix = "handsome male model" if "male" in gender.lower() and "female" not in gender.lower() else "female fashion model"
         base_prompt = f"full body standing fashion croquis illustration of a {gender_prefix} wearing {clothing_type} in {fabric} {color_str}"
 
-    style_modifiers = [
-        "studio lighting, classic couture styling, head to toe full length portrait",
-        "runway catwalk pose, dynamic fashion angle, studio backdrop",
-        "minimalist luxury aesthetic, dramatic studio lighting, full length view",
-        "editorial fashion magazine portrait, elegant pose, studio view",
-        "haute couture fashion week croquis sketch, watercolor and ink"
-    ]
-
     base_seed = abs(hash(clothing_type + (gender or ""))) % 10000
-    variations = []
-    for idx in range(5):
-        prompt_var = f"{base_prompt}, {style_modifiers[idx]}"
-        encoded = urllib.parse.quote(prompt_var)
-        seed = base_seed + (idx * 271)
-        variations.append(f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true&seed={seed}")
-    return variations
+
+    # Image 1: Pollinations AI Primary Concept Sketch
+    prompt_1 = f"{base_prompt}, studio lighting, classic couture styling, head to toe full length portrait"
+    encoded_1 = urllib.parse.quote(prompt_1)
+    url_1 = f"https://image.pollinations.ai/prompt/{encoded_1}?width=800&height=1000&nologo=true&seed={base_seed}"
+
+    # Image 2: FLUX / DALL-E Couture Model Sketch
+    prompt_2 = f"{base_prompt}, haute couture runway pose, dramatic studio lighting, ultra detailed fashion sketch"
+    encoded_2 = urllib.parse.quote(prompt_2)
+    url_2 = f"https://image.pollinations.ai/prompt/{encoded_2}?width=800&height=1000&nologo=true&seed={base_seed + 999}"
+
+    return [url_1, url_2]
 
 def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male") -> str:
     return resolve_garment_images_list(clothing_type, colors, fabric, gender)[0]
@@ -72,7 +69,7 @@ class OutfitDetail(BaseModel):
     rationale: str = Field(..., description="Fashion design rationale explaining why this outfit suits the occasion, culture, season, and budget")
     image_url: Optional[str] = Field(default="", description="High-resolution AI fashion illustration reference URL")
     sketch_url: Optional[str] = Field(default="", description="Bespoke AI fashion sketch URL")
-    image_urls: Optional[List[str]] = Field(default_factory=list, description="Array of 5 unique AI seed variation URLs")
+    image_urls: Optional[List[str]] = Field(default_factory=list, description="Array of 2 unique AI image URLs")
 
 class RecommendationResponse(BaseModel):
     primary_outfit: OutfitDetail
