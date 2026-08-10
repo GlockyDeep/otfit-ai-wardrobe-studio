@@ -1,6 +1,7 @@
 import os
 import json
 import base64
+import time
 import urllib.parse
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
@@ -39,15 +40,15 @@ def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fa
 
     base_seed = abs(hash(clothing_type + (gender or ""))) % 10000
 
-    # Image 1: Pollinations AI Primary Concept Sketch (Fast & Clean)
-    prompt_1 = f"fashion illustration of {base_prompt}, full length studio portrait"
+    # Image 1: FLUX Engine Model Concept
+    prompt_1 = f"fashion studio photograph of {base_prompt}, full length portrait"
     encoded_1 = urllib.parse.quote(prompt_1)
-    url_1 = f"https://image.pollinations.ai/prompt/{encoded_1}?width=800&height=1000&nologo=true&seed={base_seed}"
+    url_1 = f"https://image.pollinations.ai/prompt/{encoded_1}?width=800&height=1000&nologo=true&seed={base_seed}&model=flux"
 
-    # Image 2: FLUX / DALL-E Couture Model Sketch
-    prompt_2 = f"couture fashion sketch of {base_prompt}, runway studio pose"
+    # Image 2: TURBO Engine Model Concept (Distinct rendering engine & artistic sketch style)
+    prompt_2 = f"artistic haute couture fashion croquis illustration of {base_prompt}, dramatic runway lighting"
     encoded_2 = urllib.parse.quote(prompt_2)
-    url_2 = f"https://image.pollinations.ai/prompt/{encoded_2}?width=800&height=1000&nologo=true&seed={base_seed + 999}"
+    url_2 = f"https://image.pollinations.ai/prompt/{encoded_2}?width=800&height=1000&nologo=true&seed={base_seed + 777}&model=turbo"
 
     return [url_1, url_2]
 
@@ -144,9 +145,10 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
         except Exception as e:
             print(f"[WARN] DALL-E 3 sketch generation failed ({e}). Fallback to Pollinations AI generation.")
 
-    # Option C: High-resolution Pollinations AI Generation fallback (No Key required)
+    # Option C: High-resolution FLUX Generation with dynamic seed (Guarantees unique new image every click)
     encoded = urllib.parse.quote(prompt)
-    sketch_url = f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true&seed={abs(hash(req.clothing_type + (req.gender or ''))) % 100000}"
+    dynamic_seed = int(time.time() * 1000) % 1000000
+    sketch_url = f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true&seed={dynamic_seed}&model=flux"
     return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
 
 
