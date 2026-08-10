@@ -81,7 +81,7 @@ _image_jobs: Dict[str, Dict[str, Any]] = {}
 _image_jobs_lock = threading.Lock()
 
 
-def _generate_alternative_images_bg(job_id: str, alternatives: List[OutfitDetail], gender: str):
+def _generate_alternative_images_bg(job_id: str, alternatives: List[OutfitDetail], gender: str, user_preferences: str = ""):
     """Background thread: generate images for alternative outfits one by one, 11s apart."""
     results = []
     for idx, alt in enumerate(alternatives):
@@ -89,7 +89,7 @@ def _generate_alternative_images_bg(job_id: str, alternatives: List[OutfitDetail
             print(f"[BG] Waiting 11s before alternative {idx+1} to respect Replicate rate limit...")
             time.sleep(11)
         print(f"[BG] Generating image for alternative {idx+1}: {alt.clothing_type}")
-        attach_ai_images(alt, gender, idx + 1)
+        attach_ai_images(alt, gender, idx + 1, user_preferences)
         results.append({
             "index": idx,
             "image_url": alt.image_url or "",
@@ -179,10 +179,10 @@ def get_fashion_recommendation(request: RecommendationRequest):
                 "alternatives": []
             }
 
-        # Kick off background thread for alternatives
+        # Kick off background thread for alternatives (passes user color prefs so images stay on-palette)
         t = threading.Thread(
             target=_generate_alternative_images_bg,
-            args=(job_id, recommendation.alternatives, request.gender),
+            args=(job_id, recommendation.alternatives, request.gender, request.preferences or ""),
             daemon=True
         )
         t.start()

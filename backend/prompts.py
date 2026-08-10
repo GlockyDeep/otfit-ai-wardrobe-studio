@@ -95,19 +95,57 @@ def call_replicate_flux(prompt: str) -> Optional[str]:
     print(f"[ERROR] Replicate failed after {max_retries} attempts.")
     return None
 
-def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> str:
+# Strong color keywords that override the LLM-generated palette and enforce strict color in the image prompt
+_STRICT_COLOR_KEYWORDS = {
+    "all-white":   ["pure white", "ivory white"],
+    "all white":   ["pure white", "ivory white"],
+    "all-black":   ["jet black", "deep black"],
+    "all black":   ["jet black", "deep black"],
+    "monochrome":  ["monochrome", "single-tone"],
+    "ivory & cream": ["ivory", "cream white"],
+    "ivory and cream": ["ivory", "cream white"],
+    "dusty rose":  ["dusty rose", "blush pink"],
+    "sapphire blue": ["sapphire blue", "deep blue"],
+    "burgundy & wine": ["burgundy", "wine red"],
+    "burgundy and wine": ["burgundy", "wine red"],
+    "forest green": ["forest green", "deep green"],
+    "terracotta":  ["terracotta", "burnt orange-brown"],
+    "gold & bronze": ["gold", "bronze"],
+    "gold and bronze": ["gold", "bronze"],
+}
+
+def _extract_strict_colors(user_preferences: str) -> List[str]:
+    """Parse user preference string and return enforced color list if strong color keywords exist."""
+    if not user_preferences:
+        return []
+    lower = user_preferences.lower()
+    found = []
+    for keyword, colors in _STRICT_COLOR_KEYWORDS.items():
+        if keyword in lower:
+            found.extend(colors)
+    return found
+
+def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0, user_preferences: str = "") -> str:
     # Exclusive Replicate Flux AI 8k Studio Photography Generator — NO external fallbacks
-    color_str = ", ".join(colors) if colors else "harmonious luxury palette"
     is_male = "male" in (gender or "").lower() and "female" not in (gender or "").lower()
     gender_str = "handsome male model" if is_male else "elegant female model"
-    
-    prompt = f"Full length professional studio fashion photography of a {gender_str} wearing {clothing_type} in {color_str}, {fabric or 'luxury blend'} fabric, high fashion magazine editorial style, luxury studio background, soft box lighting, 8k ultra resolution"
+
+    # Strict color override: if user explicitly chose palette chips, enforce them in the image prompt
+    strict_colors = _extract_strict_colors(user_preferences)
+    if strict_colors:
+        color_str = " and ".join(strict_colors)
+        color_instruction = f"STRICT COLOR REQUIREMENT: the outfit must be ONLY {color_str} — absolutely no other colors"
+    else:
+        color_str = ", ".join(colors) if colors else "harmonious luxury palette"
+        color_instruction = f"in {color_str}"
+
+    prompt = f"Full length professional studio fashion photography of a {gender_str} wearing {clothing_type} {color_instruction}, {fabric or 'luxury blend'} fabric, high fashion magazine editorial style, luxury studio background, soft box lighting, 8k ultra resolution"
 
     img = call_replicate_flux(prompt)
     return img or ""   # Return empty string — frontend shows skeleton loader, never Unsplash
 
-def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> List[str]:
-    img = resolve_garment_image(clothing_type, colors, fabric, gender, card_index)
+def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0, user_preferences: str = "") -> List[str]:
+    img = resolve_garment_image(clothing_type, colors, fabric, gender, card_index, user_preferences)
     return [img]
 
 # --- Pydantic Data Models (Matches Required Response Schema) ---
@@ -168,6 +206,7 @@ CRITICAL INSTRUCTIONS:
 5. Produce EXACTLY ONE primary outfit and EXACTLY TWO meaningfully different alternative outfits.
 6. Each outfit MUST include: clothing_type, silhouette, colors (array of strings), fabric, embroidery_or_pattern, accessories (array of strings), footwear, hairstyle, makeup, styling_tips (array of strings), and rationale.
 7. Your response MUST be valid JSON adhering precisely to the specified schema.
+8. STRICT COLOR RULE: If the user's preferred colors contain terms like "All-white", "All-black", "Monochrome", or specific named colors (e.g. "Sapphire blue", "Burgundy", "Ivory"), you MUST use ONLY those exact colors in the outfit's 'colors' array. Do NOT introduce other colors not mentioned by the user. "All-white" means the entire outfit must be white/ivory tones ONLY. "All-black" means black tones ONLY.
 """
 
 def build_user_prompt(context: Dict[str, Any]) -> str:
@@ -216,22 +255,25 @@ Provide your output as a JSON object with:
 }}
 """
 
-def attach_ai_images(outfit: OutfitDetail, gender: str = "Male", card_index: int = 0):
-    images = resolve_garment_images_list(outfit.clothing_type, outfit.colors, outfit.fabric, gender, card_index)
+def attach_ai_images(outfit: OutfitDetail, gender: str = "Male", card_index: int = 0, user_preferences: str = ""):
+    images = resolve_garment_images_list(outfit.clothing_type, outfit.colors, outfit.fabric, gender, card_index, user_preferences)
     outfit.image_urls = images
     outfit.image_url = images[0]
     outfit.sketch_url = images[0]
 
 def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationResponse:
     gender = context.get("gender", "Male")
+    user_preferences = context.get("user_preferences", "") or context.get("preferences", "") or ""
     recommendation = generate_mock_fallback(context)
 
     # Generate ONLY the primary outfit image here (fast ~10s)
     # Alternative images are handled by a background thread in main.py
-    print("[INFO] Generating primary outfit image...")
-    attach_ai_images(recommendation.primary_outfit, gender, 0)
-    print("[INFO] Primary image done — returning response (alternatives will be generated in background)")
+    print(f"[INFO] Generating primary outfit image (user color prefs: '{user_preferences}')...")
+    attach_ai_images(recommendation.primary_outfit, gender, 0, user_preferences)
+    print("[INFO] Primary image done — returning response (alternatives generated in background)")
 
+    # Store preferences on recommendation for background thread to use
+    recommendation._user_preferences = user_preferences  # type: ignore[attr-defined]
     return recommendation
 
 
