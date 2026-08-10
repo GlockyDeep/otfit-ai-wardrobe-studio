@@ -36,6 +36,7 @@ const ALL_GARMENT_CHIPS: GarmentChip[] = [
   { label: 'Lehenga Choli', emoji: '👗' },
   { label: 'Tailored Pant Suit / Skirt Suit', emoji: '💼' },
   { label: 'Anarkali Suit', emoji: '💃' },
+  { label: 'Kurta Set', emoji: '👘' },
   { label: 'Shirt & Chinos / Denim', emoji: '👕' },
   { label: 'Polo & Chinos', emoji: '👕' },
   { label: 'Casual Dress / Shirt Dress', emoji: '👗' },
@@ -52,19 +53,19 @@ const GENDER_GARMENT_MAP: Record<GenderOption, string[]> = {
   ],
   Female: [
     'Banarasi Silk Saree', 'Lehenga Choli', 'Anarkali Suit', 'Sharara Set',
-    'Tailored Pant Suit / Skirt Suit', 'Casual Dress / Shirt Dress', 'Co-ord Set'
+    'Kurta Set', 'Tailored Pant Suit / Skirt Suit', 'Casual Dress / Shirt Dress', 'Co-ord Set'
   ],
   Other: ['Bandhgala Suit', 'Modi Jacket / Nehru Vest', 'Co-ord Set', '2-Piece Suit', 'Shirt & Chinos / Denim']
 };
 
 // Occasion-specific garment chip filters
 const OCCASION_GARMENT_MAP: Record<string, string[]> = {
-  diwali: ['Banarasi Silk Saree', 'Lehenga Choli', 'Sherwani', 'Panche / Veshti & Angavastram', 'Bandhgala Suit', 'Anarkali Suit', 'Sharara Set', 'Modi Jacket / Nehru Vest'],
-  festival: ['Banarasi Silk Saree', 'Lehenga Choli', 'Sherwani', 'Panche / Veshti & Angavastram', 'Anarkali Suit', 'Sharara Set', 'Modi Jacket / Nehru Vest'],
-  wedding: ['Banarasi Silk Saree', 'Lehenga Choli', 'Sherwani', 'Panche / Veshti & Angavastram', '3-Piece Vest Suit', '2-Piece Suit', 'Bandhgala Suit', 'Anarkali Suit', 'Tuxedo', 'Sharara Set'],
+  diwali: ['Banarasi Silk Saree', 'Lehenga Choli', 'Sherwani', 'Panche / Veshti & Angavastram', 'Bandhgala Suit', 'Anarkali Suit', 'Sharara Set', 'Kurta Set', 'Modi Jacket / Nehru Vest'],
+  festival: ['Banarasi Silk Saree', 'Lehenga Choli', 'Sherwani', 'Panche / Veshti & Angavastram', 'Anarkali Suit', 'Sharara Set', 'Kurta Set', 'Modi Jacket / Nehru Vest'],
+  wedding: ['Banarasi Silk Saree', 'Lehenga Choli', 'Sherwani', 'Panche / Veshti & Angavastram', '3-Piece Vest Suit', '2-Piece Suit', 'Bandhgala Suit', 'Anarkali Suit', 'Tuxedo', 'Sharara Set', 'Kurta Set'],
   'business meeting': ['Tailored Pant Suit / Skirt Suit', '3-Piece Vest Suit', '2-Piece Suit', 'Tuxedo', 'Bandhgala Suit', 'Co-ord Set'],
-  casual: ['Shirt & Chinos / Denim', 'Polo & Chinos', 'Casual Dress / Shirt Dress', 'Co-ord Set'],
-  college: ['Shirt & Chinos / Denim', 'Polo & Chinos', 'Casual Dress / Shirt Dress', 'Co-ord Set'],
+  casual: ['Shirt & Chinos / Denim', 'Polo & Chinos', 'Casual Dress / Shirt Dress', 'Co-ord Set', 'Kurta Set'],
+  college: ['Shirt & Chinos / Denim', 'Polo & Chinos', 'Casual Dress / Shirt Dress', 'Co-ord Set', 'Kurta Set'],
   'cocktail party': ['Tuxedo', '3-Piece Vest Suit', '2-Piece Suit', 'Casual Dress / Shirt Dress', 'Co-ord Set', 'Anarkali Suit', 'Bandhgala Suit']
 };
 
