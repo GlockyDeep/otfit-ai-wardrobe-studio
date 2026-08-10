@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
+from fastapi.staticfiles import StaticFiles
+
 # Load environment variables
 load_dotenv()
 
@@ -35,6 +37,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Ensure generated_svgs directory exists and mount static endpoint
+svg_dir = os.path.join(os.path.dirname(__file__), "generated_svgs")
+os.makedirs(svg_dir, exist_ok=True)
+app.mount("/generated-svgs", StaticFiles(directory=svg_dir), name="generated-svgs")
 
 # Initialize Rule Engine instance
 rule_engine = FashionRuleEngine()

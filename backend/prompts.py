@@ -84,8 +84,19 @@ def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: 
   
   <rect x="30" y="730" width="280" height="36" rx="8" fill="#1e293b" opacity="0.95" stroke="{c2_hex}" stroke-width="1"/>
   <text x="45" y="753" fill="#f59e0b" font-family="sans-serif" font-size="13" font-weight="bold">✨ Gemini AI Fashion Illustration</text>
-  <text x="300" y="778" text-anchor="middle" fill="#9ca3af" font-family="serif" font-size="15" font-style="italic">{clothing_type} &bull; {fabric or 'Luxury Blend'}</text>
+  <text x="300" y="778" text-anchor="middle" fill="#9ca3af" font-family="serif" font-size="15" font-style="italic">{clothing_type} • {fabric or 'Luxury Blend'}</text>
 </svg>'''
+
+    # Save SVG file locally in project folder logs
+    try:
+        svg_dir = os.path.join(os.path.dirname(__file__), "generated_svgs")
+        os.makedirs(svg_dir, exist_ok=True)
+        with open(os.path.join(svg_dir, f"outfit_{card_index}.svg"), "w", encoding="utf-8") as f:
+            f.write(svg_xml)
+        with open(os.path.join(svg_dir, "latest_outfit.svg"), "w", encoding="utf-8") as f:
+            f.write(svg_xml)
+    except Exception as e:
+        print(f"[WARN] Failed to save SVG file log: {e}")
 
     b64_str = base64.b64encode(svg_xml.encode("utf-8")).decode("utf-8")
     return f"data:image/svg+xml;base64,{b64_str}"

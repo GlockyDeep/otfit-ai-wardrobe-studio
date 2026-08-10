@@ -299,18 +299,28 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
                   {outfit.clothing_type}
                 </h4>
                 <p className="text-xs text-amber-400 font-medium">
-                  {gender} &bull; {outfit.fabric} &bull; {outfit.colors.join(', ')}
+                  {gender} • {outfit.fabric} • {outfit.colors.join(', ')}
                 </p>
               </div>
 
               <div className="flex items-center space-x-3">
+                <a
+                  href="http://localhost:8000/generated-svgs/latest_outfit.svg"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold hover:bg-indigo-500/20 transition flex items-center space-x-1"
+                >
+                  <span>Open Local SVG File</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+
                 <a
                   href={currentImageSrc}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold hover:bg-amber-500/20 transition flex items-center space-x-1"
                 >
-                  <span>Open Gemini SVG Data URL</span>
+                  <span>Open Base64 Data URL</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
 
