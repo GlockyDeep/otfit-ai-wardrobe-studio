@@ -119,8 +119,8 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
                         img_b64 = base64.b64encode(res.content).decode("utf-8")
                         sketch_url = f"data:image/jpeg;base64,{img_b64}"
                         return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
-            except Exception as e:
-                print(f"[INFO] HF endpoint ({url}) attempt: {e}")
+            except Exception:
+                pass
 
     # Option B: OpenAI DALL-E 3
     if openai_key:
