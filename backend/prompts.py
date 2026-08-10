@@ -17,7 +17,7 @@ except Exception:
     KNOWLEDGE_BASE = {}
 
 def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> str:
-    # High-resolution Google Gemini AI Vector Fashion Illustration Generator
+    # High-resolution Google Gemini AI Vector Fashion Illustration Generator (Base64 Encoded)
     primary_color = colors[0] if colors and len(colors) > 0 else "Navy Blue"
     secondary_color = colors[1] if colors and len(colors) > 1 else "Gold"
     
@@ -87,8 +87,8 @@ def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: 
   <text x="300" y="778" text-anchor="middle" fill="#9ca3af" font-family="serif" font-size="15" font-style="italic">{clothing_type} &bull; {fabric or 'Luxury Blend'}</text>
 </svg>'''
 
-    encoded = urllib.parse.quote(svg_xml)
-    return f"data:image/svg+xml;utf8,{encoded}"
+    b64_str = base64.b64encode(svg_xml.encode("utf-8")).decode("utf-8")
+    return f"data:image/svg+xml;base64,{b64_str}"
 
 def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> List[str]:
     img = resolve_garment_image(clothing_type, colors, fabric, gender, card_index)
