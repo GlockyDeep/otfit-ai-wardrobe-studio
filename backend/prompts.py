@@ -19,7 +19,13 @@ def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fa
     lower = clothing_type.lower()
     
     if any(k in lower for k in ["panche", "veshti", "dhoti", "mundu", "lungi"]):
-        base_prompt = f"full body standing fashion croquis illustration of a handsome South Indian male model wearing traditional draped white silk Veshti Panche dhoti with gold zari border, white silk shirt and Angavastram shoulder stole in {color_str}"
+        base_prompt = (
+            f"full body standing fashion portrait of a handsome South Indian male model wearing authentic traditional South Indian white silk Veshti Panche. "
+            f"The Veshti is an unstitched rectangular pure white silk waist drape wrapped straight around the hips cascading straight down to the ankles like a sarong, "
+            f"with a prominent golden zari border along the vertical hem. "
+            f"He wears a crisp white silk button-up shirt and a gold zari bordered Angavastram shoulder stole in {color_str}. "
+            f"Traditional South Indian wedding style photo"
+        )
     elif "saree" in lower:
         base_prompt = f"full body standing fashion croquis illustration of an elegant Indian female model wearing traditional draped silk saree in {color_str} with rich embroidered border and blouse"
     elif "lehenga" in lower:
@@ -93,7 +99,12 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
     lower = req.clothing_type.lower()
 
     if any(k in lower for k in ["panche", "veshti", "dhoti", "mundu", "lungi"]):
-        prompt = f"Bespoke full body standing fashion sketch illustration of a handsome South Indian male model wearing traditional white silk Veshti Panche dhoti wrapped around waist with gold border and Angavastram shoulder stole in {color_str}, studio lighting, watercolor and ink."
+        prompt = (
+            f"Bespoke full body standing fashion sketch illustration of a handsome South Indian male model wearing authentic traditional South Indian white silk Veshti Panche. "
+            f"The Veshti is an unstitched rectangular pure white silk waist drape wrapped straight around hips cascading down to ankles like a sarong with gold zari border. "
+            f"He wears a crisp white silk button-up shirt and Angavastram shoulder stole in {color_str}. "
+            f"No trousers, no pants, no churidar. Studio fashion croquis lighting, watercolor and ink."
+        )
     else:
         gender_prefix = "handsome male model" if "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower() else "female model"
         prompt = f"Bespoke full body standing fashion sketch illustration of a {gender_prefix} wearing {req.clothing_type} in {color_str}. Fabric: {req.fabric or 'luxury textile'}. Cut/Silhouette: {req.silhouette or 'structured'}. Head to toe full length portrait, studio lighting, elegant watercolor and ink."
