@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { OutfitDetail } from '../types';
-import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, Wand2, ExternalLink, Loader2 } from 'lucide-react';
+import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, Wand2, ExternalLink, Loader2, Maximize2, X } from 'lucide-react';
 
 interface OutfitCardProps {
   outfit: OutfitDetail;
@@ -22,6 +22,9 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   const [sketchUrl, setSketchUrl] = useState<string | null>(outfit.sketch_url || null);
   const [isGeneratingSketch, setIsGeneratingSketch] = useState(false);
   const [sketchError, setSketchError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const activeImageUrl = sketchUrl || outfit.image_url;
 
   const pinterestUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(
     `${gender} ${outfit.clothing_type} ${outfit.fabric} fashion style`
@@ -89,46 +92,72 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
         )}
       </div>
 
-      {/* Outfit Fashion Image / AI Sketch Preview */}
-      {(sketchUrl || outfit.image_url) && (
-        <div className="mb-6 rounded-xl overflow-hidden relative group border border-gray-800 shadow-lg">
-          <div className="h-64 sm:h-72 w-full overflow-hidden bg-gray-950 relative">
+      {/* Outfit Fashion Image / AI Sketch Preview Container */}
+      {activeImageUrl && (
+        <div className="mb-6 rounded-xl overflow-hidden relative group border border-gray-800 shadow-lg bg-gray-950">
+          <div
+            onClick={() => setIsModalOpen(true)}
+            className="w-full min-h-[380px] max-h-[480px] overflow-hidden bg-gray-950 relative flex items-center justify-center cursor-pointer"
+          >
             <img
-              src={sketchUrl || outfit.image_url}
+              src={activeImageUrl}
               alt={outfit.clothing_type}
-              className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-contain max-h-[480px] transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent opacity-80" />
-            
-            <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs text-amber-200 font-medium bg-gray-950/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-gray-800/80">
+
+            {/* Hover Expand Overlay */}
+            <div className="absolute inset-0 bg-gray-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+              <div className="bg-gray-900/90 text-amber-300 text-xs font-semibold px-4 py-2 rounded-xl border border-amber-500/40 flex items-center space-x-2 shadow-2xl">
+                <Maximize2 className="w-4 h-4 text-amber-400" />
+                <span>Click to View Full-Screen High-Res Sketch</span>
+              </div>
+            </div>
+
+            {/* Bottom Caption Bar */}
+            <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs text-amber-200 font-medium bg-gray-950/85 backdrop-blur-md px-3.5 py-2 rounded-xl border border-gray-800/80 shadow-md">
               <span className="flex items-center space-x-1.5">
                 <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
-                <span>{sketchUrl ? 'AI Couture Sketch' : 'High-Res Fashion Reference'}</span>
+                <span>{sketchUrl ? 'AI Couture Sketch' : 'Fashion Concept Sketch'}</span>
               </span>
-              <a
-                href={pinterestUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-amber-400 hover:text-amber-300 flex items-center space-x-1 text-[11px] font-semibold transition"
-              >
-                <span>Pinterest Ideas</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
+
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsModalOpen(true);
+                  }}
+                  className="text-cyan-400 hover:text-cyan-300 flex items-center space-x-1 text-[11px] font-semibold transition cursor-pointer"
+                >
+                  <Maximize2 className="w-3 h-3" />
+                  <span>Full Screen</span>
+                </button>
+
+                <a
+                  href={pinterestUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-amber-400 hover:text-amber-300 flex items-center space-x-1 text-[11px] font-semibold transition"
+                >
+                  <span>Pinterest</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {/* Action: Generate AI Sketch Button */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-gray-900/40 p-3 rounded-xl border border-gray-800/80">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-gray-900/40 p-3.5 rounded-xl border border-gray-800/80">
         <div className="text-xs text-gray-400">
-          <span>Need a custom 1-of-1 AI fashion sketch illustration?</span>
+          <span>Re-generate customized 1-of-1 AI fashion croquis sketch illustration?</span>
         </div>
         <button
           onClick={handleGenerateSketch}
           disabled={isGeneratingSketch}
-          className="py-1.5 px-3 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md transition-all flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
+          className="py-1.5 px-3.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md transition-all flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
         >
           {isGeneratingSketch ? (
             <>
@@ -260,6 +289,53 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
         </div>
         <p className="text-gray-300 leading-relaxed italic">{outfit.rationale}</p>
       </div>
+
+      {/* FULL SCREEN IMAGE LIGHTBOX MODAL */}
+      {isModalOpen && activeImageUrl && (
+        <div className="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="relative max-w-4xl w-full max-h-[90vh] bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden flex flex-col shadow-2xl">
+            {/* Modal Header */}
+            <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/90">
+              <div>
+                <h4 className="font-serif-fashion font-bold text-lg text-gray-100">
+                  {outfit.clothing_type}
+                </h4>
+                <p className="text-xs text-amber-400 font-medium">
+                  {gender} &bull; {outfit.fabric} &bull; {outfit.colors.join(', ')}
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <a
+                  href={activeImageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold hover:bg-amber-500/20 transition flex items-center space-x-1"
+                >
+                  <span>Open Original Image</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 rounded-xl text-gray-400 hover:text-gray-100 hover:bg-gray-800 transition cursor-pointer"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content / Full-Size Image */}
+            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-950">
+              <img
+                src={activeImageUrl}
+                alt={outfit.clothing_type}
+                className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
