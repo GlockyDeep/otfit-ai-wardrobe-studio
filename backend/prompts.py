@@ -104,19 +104,23 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
 
     # Option A: Hugging Face Free Inference API (FLUX.1-schnell or SDXL)
     if hf_token:
-        try:
-            headers = {"Authorization": f"Bearer {hf_token}"}
-            payload = {"inputs": prompt}
-            hf_model = os.getenv("HF_MODEL", "black-forest-labs/FLUX.1-schnell").strip()
-            url = f"https://api-inference.huggingface.co/models/{hf_model}"
-            with httpx.Client(timeout=35.0) as client:
-                res = client.post(url, headers=headers, json=payload)
-                res.raise_for_status()
-                img_b64 = base64.b64encode(res.content).decode("utf-8")
-                sketch_url = f"data:image/jpeg;base64,{img_b64}"
-                return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
-        except Exception as e:
-            print(f"[WARN] Hugging Face sketch generation failed ({e}). Trying fallback.")
+        hf_model = os.getenv("HF_MODEL", "black-forest-labs/FLUX.1-schnell").strip()
+        urls_to_try = [
+            f"https://router.huggingface.co/hf-inference/v1/models/{hf_model}",
+            f"https://api-inference.huggingface.co/models/{hf_model}"
+        ]
+        headers = {"Authorization": f"Bearer {hf_token}"}
+        payload = {"inputs": prompt}
+        for url in urls_to_try:
+            try:
+                with httpx.Client(timeout=35.0) as client:
+                    res = client.post(url, headers=headers, json=payload)
+                    if res.status_code == 200:
+                        img_b64 = base64.b64encode(res.content).decode("utf-8")
+                        sketch_url = f"data:image/jpeg;base64,{img_b64}"
+                        return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
+            except Exception as e:
+                print(f"[INFO] HF endpoint ({url}) attempt: {e}")
 
     # Option B: OpenAI DALL-E 3
     if openai_key:
