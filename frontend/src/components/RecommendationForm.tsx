@@ -86,22 +86,25 @@ const PREFERENCE_GROUPS = [
   }
 ];
 
-// --- Quick-insert chips for Additional Notes ---
-const NOTE_CHIPS = [
-  { emoji: '👟', label: 'Prefer flat footwear for comfort' },
-  { emoji: '👠', label: 'High heels are fine' },
-  { emoji: '🕌', label: 'Modest necklines & full coverage' },
-  { emoji: '💃', label: 'Outfit must allow easy dancing' },
-  { emoji: '🌿', label: 'Prefer sustainable / eco fabrics' },
-  { emoji: '🏋️', label: 'Comfort & ease of movement priority' },
-  { emoji: '✈️', label: 'Lightweight for travel / destination wedding' },
-  { emoji: '🌡️', label: 'Hot & humid climate — keep it breathable' },
-  { emoji: '🧴', label: 'Avoid heavy embellishments / beadwork' },
-  { emoji: '📷', label: 'Photogenic look — camera-ready colors' },
-  { emoji: '🤰', label: 'Flattering for a curvy / fuller figure' },
-  { emoji: '🕺', label: 'Groom-ready — want to stand out' },
-  { emoji: '🧕', label: 'Include dupatta / head coverage' },
-  { emoji: '🥇', label: 'Must be the best-dressed in the room' },
+// --- Quick-insert chips for Additional Notes (gender-aware) ---
+const NOTE_CHIPS: { emoji: string; label: string; genders: GenderOption[] }[] = [
+  { emoji: '👟', label: 'Prefer flat footwear for comfort',              genders: ['Male', 'Female', 'Other'] },
+  { emoji: '👠', label: 'High heels are fine',                           genders: ['Female', 'Other'] },
+  { emoji: '🕌', label: 'Modest necklines & full coverage',              genders: ['Male', 'Female', 'Other'] },
+  { emoji: '💃', label: 'Outfit must allow easy dancing',                genders: ['Male', 'Female', 'Other'] },
+  { emoji: '🌿', label: 'Prefer sustainable / eco fabrics',              genders: ['Male', 'Female', 'Other'] },
+  { emoji: '🏋️', label: 'Comfort & ease of movement priority',          genders: ['Male', 'Female', 'Other'] },
+  { emoji: '✈️', label: 'Lightweight for travel / destination wedding',  genders: ['Male', 'Female', 'Other'] },
+  { emoji: '🌡️', label: 'Hot & humid climate — keep it breathable',     genders: ['Male', 'Female', 'Other'] },
+  { emoji: '🧴', label: 'Avoid heavy embellishments / beadwork',        genders: ['Male', 'Female', 'Other'] },
+  { emoji: '📷', label: 'Photogenic look — camera-ready colors',         genders: ['Male', 'Female', 'Other'] },
+  { emoji: '🤰', label: 'Flattering for a curvy / fuller figure',        genders: ['Female', 'Other'] },
+  { emoji: '🕺', label: 'Groom-ready — want to stand out',              genders: ['Male'] },
+  { emoji: '👰', label: 'Bride-ready — want to be unforgettable',        genders: ['Female', 'Other'] },
+  { emoji: '🧕', label: 'Include dupatta / head coverage',               genders: ['Female', 'Other'] },
+  { emoji: '🥇', label: 'Must be the best-dressed in the room',          genders: ['Male', 'Female', 'Other'] },
+  { emoji: '💪', label: 'Show off a strong / athletic build',            genders: ['Male'] },
+  { emoji: '👔', label: 'Sharp & clean — business-adjacent look',        genders: ['Male', 'Other'] },
 ];
 
 
@@ -394,7 +397,7 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
           <div className="mt-2.5">
             <span className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold mb-1.5 block">⚡ Quick Instructions</span>
             <div className="flex flex-wrap gap-1.5">
-              {NOTE_CHIPS.map(({ emoji, label }) => (
+              {NOTE_CHIPS.filter(chip => chip.genders.includes(formData.gender)).map(({ emoji, label }) => (
                 <button
                   key={label}
                   type="button"
