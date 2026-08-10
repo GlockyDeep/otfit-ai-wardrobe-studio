@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { OutfitDetail } from '../types';
-import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, Wand2, ExternalLink, Loader2, Maximize2, X } from 'lucide-react';
+import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, Wand2, ExternalLink, Loader2, Maximize2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface OutfitCardProps {
   outfit: OutfitDetail;
@@ -47,23 +47,39 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   gender = 'Male'
 }) => {
   const [sketchUrl, setSketchUrl] = useState<string | null>(outfit.sketch_url || null);
-  const [currentImageSrc, setCurrentImageSrc] = useState<string>(
-    sketchUrl || outfit.image_url || getFallbackImage(outfit.clothing_type)
-  );
+  const initialImages: string[] = outfit.image_urls && outfit.image_urls.length > 0
+    ? outfit.image_urls
+    : [sketchUrl || outfit.image_url || getFallbackImage(outfit.clothing_type)];
+
+  const [imageGallery, setImageGallery] = useState<string[]>(initialImages);
+  const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [isGeneratingSketch, setIsGeneratingSketch] = useState(false);
   const [sketchError, setSketchError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const currentImageSrc = imageGallery[activeImageIndex] || getFallbackImage(outfit.clothing_type);
 
   const pinterestUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(
     `${gender} ${outfit.clothing_type} ${outfit.fabric} fashion style`
   )}`;
 
   const handleImageError = () => {
-    // If Pollinations or custom URL fails, immediately swap to bulletproof curated Unsplash fallback
     const fallback = getFallbackImage(outfit.clothing_type);
-    if (currentImageSrc !== fallback) {
-      setCurrentImageSrc(fallback);
-    }
+    setImageGallery((prev) => {
+      const updated = [...prev];
+      updated[activeImageIndex] = fallback;
+      return updated;
+    });
+  };
+
+  const handlePrevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveImageIndex((prev) => (prev === 0 ? imageGallery.length - 1 : prev - 1));
+  };
+
+  const handleNextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveImageIndex((prev) => (prev === imageGallery.length - 1 ? 0 : prev + 1));
   };
 
   const handleGenerateSketch = async () => {
@@ -85,7 +101,8 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
       if (!response.ok) throw new Error('Sketch generation failed');
       const data = await response.json();
       setSketchUrl(data.sketch_url);
-      setCurrentImageSrc(data.sketch_url);
+      setImageGallery((prev) => [data.sketch_url, ...prev]);
+      setActiveImageIndex(0);
     } catch (err) {
       setSketchError('Could not generate sketch at this time.');
     } finally {
@@ -129,7 +146,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
         )}
       </div>
 
-      {/* Outfit Fashion Image / AI Sketch Preview Container */}
+      {/* Outfit Fashion Image Gallery Carousel */}
       {currentImageSrc && (
         <div className="mb-6 rounded-xl overflow-hidden relative group border border-gray-800 shadow-lg bg-gray-950">
           <div
@@ -144,6 +161,27 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
               loading="lazy"
             />
 
+            {/* Left/Right Carousel Arrows */}
+            {imageGallery.length > 1 && (
+              <>
+                <button
+                  onClick={handlePrevImage}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-gray-950/75 border border-gray-800 text-gray-200 hover:text-amber-400 hover:bg-gray-900 transition shadow-xl cursor-pointer opacity-80 group-hover:opacity-100"
+                  title="Previous Variation"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                <button
+                  onClick={handleNextImage}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-gray-950/75 border border-gray-800 text-gray-200 hover:text-amber-400 hover:bg-gray-900 transition shadow-xl cursor-pointer opacity-80 group-hover:opacity-100"
+                  title="Next Variation"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </>
+            )}
+
             {/* Hover Expand Overlay */}
             <div className="absolute inset-0 bg-gray-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
               <div className="bg-gray-900/90 text-amber-300 text-xs font-semibold px-4 py-2 rounded-xl border border-amber-500/40 flex items-center space-x-2 shadow-2xl">
@@ -156,7 +194,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
             <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs text-amber-200 font-medium bg-gray-950/85 backdrop-blur-md px-3.5 py-2 rounded-xl border border-gray-800/80 shadow-md">
               <span className="flex items-center space-x-1.5">
                 <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
-                <span>{sketchUrl ? 'AI Couture Sketch' : 'Fashion Concept Sketch'}</span>
+                <span>Variation {activeImageIndex + 1} of {imageGallery.length}</span>
               </span>
 
               <div className="flex items-center space-x-3">
@@ -184,6 +222,28 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Thumbnail Dots Bar */}
+          {imageGallery.length > 1 && (
+            <div className="p-2 bg-gray-900/90 border-t border-gray-800 flex items-center justify-center space-x-2 overflow-x-auto">
+              {imageGallery.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveImageIndex(idx);
+                  }}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition cursor-pointer border ${
+                    activeImageIndex === idx
+                      ? 'bg-amber-500/20 border-amber-500/80 text-amber-300 shadow-md'
+                      : 'bg-gray-800/60 border-gray-700/60 text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  Var {idx + 1}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -336,7 +396,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
             <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/90">
               <div>
                 <h4 className="font-serif-fashion font-bold text-lg text-gray-100">
-                  {outfit.clothing_type}
+                  {outfit.clothing_type} (Variation {activeImageIndex + 1})
                 </h4>
                 <p className="text-xs text-amber-400 font-medium">
                   {gender} &bull; {outfit.fabric} &bull; {outfit.colors.join(', ')}

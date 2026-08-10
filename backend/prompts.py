@@ -14,13 +14,22 @@ try:
 except Exception:
     KNOWLEDGE_BASE = {}
 
-def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male") -> str:
+def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male") -> List[str]:
     color_str = " ".join(colors) if colors else ""
     gender_prefix = "handsome male model" if "male" in gender.lower() and "female" not in gender.lower() else "female fashion model"
     raw_prompt = f"full body standing fashion croquis illustration of a {gender_prefix} wearing {clothing_type} in {fabric} {color_str}, head to toe full length portrait showing complete outfit including legs, trousers, skirt, and footwear, studio lighting, ultra detailed 8k"
     encoded = urllib.parse.quote(raw_prompt)
-    # Using reliable, instant Pollinations AI image generator URL (No model=flux timeout parameter)
-    return f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true"
+    
+    # Generate 5 distinct AI image variations using different seeds
+    base_seed = abs(hash(clothing_type + (gender or ""))) % 10000
+    variations = []
+    for idx in range(5):
+        seed = base_seed + (idx * 137)
+        variations.append(f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true&seed={seed}")
+    return variations
+
+def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male") -> str:
+    return resolve_garment_images_list(clothing_type, colors, fabric, gender)[0]
 
 # --- Pydantic Data Models (Matches Required Response Schema) ---
 
@@ -38,6 +47,7 @@ class OutfitDetail(BaseModel):
     rationale: str = Field(..., description="Fashion design rationale explaining why this outfit suits the occasion, culture, season, and budget")
     image_url: Optional[str] = Field(default="", description="High-resolution AI fashion illustration reference URL")
     sketch_url: Optional[str] = Field(default="", description="Bespoke AI fashion sketch URL")
+    image_urls: Optional[List[str]] = Field(default_factory=list, description="Array of 5 unique AI seed variation URLs")
 
 class RecommendationResponse(BaseModel):
     primary_outfit: OutfitDetail
@@ -148,8 +158,10 @@ Provide your output as a JSON object with:
 """
 
 def attach_ai_images(outfit: OutfitDetail, gender: str = "Male"):
-    outfit.image_url = resolve_garment_image(outfit.clothing_type, outfit.colors, outfit.fabric, gender)
-    outfit.sketch_url = outfit.image_url
+    images = resolve_garment_images_list(outfit.clothing_type, outfit.colors, outfit.fabric, gender)
+    outfit.image_urls = images
+    outfit.image_url = images[0]
+    outfit.sketch_url = images[0]
 
 def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationResponse:
     provider = os.getenv("AI_PROVIDER", "openai").lower()

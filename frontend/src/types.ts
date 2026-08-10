@@ -28,6 +28,7 @@ export interface OutfitDetail {
   rationale: string;
   image_url?: string;
   sketch_url?: string;
+  image_urls?: string[];
 }
 
 export interface RecommendationResponse {

@@ -1,7 +1,8 @@
 import os
 import sys
-from typing import Optional
-from fastapi import FastAPI, HTTPException, status
+import time
+from typing import Optional, Dict, List
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
@@ -38,6 +39,33 @@ app.add_middleware(
 # Initialize Rule Engine instance
 rule_engine = FashionRuleEngine()
 
+# --- Simple In-Memory IP Rate Limiter ---
+RATE_LIMIT_REQUESTS = 15
+RATE_LIMIT_WINDOW_SECONDS = 60
+ip_request_history: Dict[str, List[float]] = {}
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    if request.url.path in ["/recommend", "/generate-sketch"]:
+        client_ip = request.client.host if request.client else "127.0.0.1"
+        now = time.time()
+        
+        # Clean history
+        history = ip_request_history.get(client_ip, [])
+        history = [t for t in history if now - t < RATE_LIMIT_WINDOW_SECONDS]
+        
+        if len(history) >= RATE_LIMIT_REQUESTS:
+            return JSONResponse(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                content={"detail": "Rate limit exceeded (15 requests per minute). Please wait a moment before requesting another outfit."}
+            )
+        
+        history.append(now)
+        ip_request_history[client_ip] = history
+
+    response = await call_next(request)
+    return response
+
 # --- Request Pydantic Model ---
 
 class RecommendationRequest(BaseModel):
@@ -61,7 +89,8 @@ def health_check():
     return {
         "status": "ok",
         "ai_provider": provider,
-        "live_ai_configured": has_openai or has_groq
+        "live_ai_configured": has_openai or has_groq,
+        "rate_limit": "15 requests/min"
     }
 
 
@@ -130,5 +159,6 @@ def create_fashion_sketch(request: SketchRequest):
 
 if __name__ == "__main__":
     import uvicorn
+    from fastapi.responses import JSONResponse
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
