@@ -80,7 +80,7 @@ class RecommendationRequest(BaseModel):
     gender: str = Field(..., description="Target gender: Male, Female, or Other")
     occasion: str = Field(..., description="Target occasion, e.g., Wedding, Business Meeting, Diwali")
     culture: str = Field(..., description="Cultural context, e.g., South Asian, Western, Indo-Western")
-    budget: str = Field(..., description="Budget tier: Low, Medium, or High")
+    budget: Optional[str] = Field(default="Medium", description="Optional budget tier")
     season: str = Field(..., description="Season or climate: Summer, Winter, Monsoon, Mild")
     desired_garment: Optional[str] = Field(default="", description="Optional specific preferred garment type, e.g. Tuxedo, Modi Jacket, Saree, Lehenga")
     preferences: Optional[str] = Field(default="", description="Optional preferred colors or style preferences")

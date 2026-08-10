@@ -94,7 +94,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           CoutureAI Bespoke Lookbook
         </h2>
         <p className="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto print:text-gray-700 print:m-0">
-          Tailored for {formData.season} climate and {formData.budget} budget requirements.
+          Tailored for {formData.season} climate and your selected style preferences.
         </p>
       </div>
 

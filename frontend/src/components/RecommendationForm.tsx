@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import type { RecommendationFormData, GenderOption, BudgetOption, SeasonOption } from '../types';
-import { Sparkles, Calendar, DollarSign, Sun, Palette, FileText, User, Info, Shirt } from 'lucide-react';
+import type { RecommendationFormData, GenderOption, SeasonOption } from '../types';
+import { Sparkles, Calendar, Sun, Palette, FileText, User, Info, Shirt } from 'lucide-react';
 
 interface FormProps {
   onSubmit: (data: RecommendationFormData) => void;
@@ -68,7 +68,6 @@ const OCCASION_GARMENT_MAP: Record<string, string[]> = {
   'cocktail party': ['Tuxedo', '3-Piece Vest Suit', '2-Piece Suit', 'Casual Dress / Shirt Dress', 'Co-ord Set', 'Anarkali Suit', 'Bandhgala Suit']
 };
 
-const BUDGETS: BudgetOption[] = ['Low', 'Medium', 'High'];
 const SEASONS: SeasonOption[] = ['Summer', 'Winter', 'Monsoon', 'Mild'];
 const PREFERENCE_TAGS = ['Jewel tones', 'Pastels', 'Minimalist', 'Regal', 'Streetwear', 'Earthy tones'];
 
@@ -77,7 +76,6 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
     gender: 'Female',
     occasion: 'Diwali',
     culture: 'South Asian', // Set internally, UI hidden
-    budget: 'Medium',
     season: 'Summer',
     desired_garment: '',
     preferences: 'Jewel tones, elegant traditional style',
@@ -275,54 +273,27 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
           </div>
         </div>
 
-        {/* 4. Budget & Season Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {/* Budget */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-3 flex items-center space-x-2">
-              <DollarSign className="w-4 h-4 text-amber-400" />
-              <span>Budget Level</span>
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {BUDGETS.map(b => (
-                <button
-                  key={b}
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, budget: b }))}
-                  className={`py-2.5 px-3 rounded-xl text-xs sm:text-sm font-medium border transition cursor-pointer ${
-                    formData.budget === b
-                      ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
-                      : 'bg-gray-900/60 border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-200'
-                  }`}
-                >
-                  {b}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Season / Climate */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-3 flex items-center space-x-2">
-              <Sun className="w-4 h-4 text-amber-400" />
-              <span>Season / Climate</span>
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {SEASONS.map(s => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, season: s }))}
-                  className={`py-2.5 px-2 rounded-xl text-xs font-medium border transition text-center cursor-pointer ${
-                    formData.season === s
-                      ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 font-semibold shadow-md'
-                      : 'bg-gray-900/60 border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-200'
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
+        {/* 4. Season / Climate */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-300 mb-3 flex items-center space-x-2">
+            <Sun className="w-4 h-4 text-amber-400" />
+            <span>Season / Climate</span>
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {SEASONS.map(s => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, season: s }))}
+                className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-medium border transition text-center cursor-pointer ${
+                  formData.season === s
+                    ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 font-semibold shadow-md'
+                    : 'bg-gray-900/60 border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-200'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
           </div>
         </div>
 

@@ -1,13 +1,12 @@
 export type GenderOption = 'Female' | 'Male' | 'Other';
 export type CultureOption = 'South Asian' | 'Western' | 'Indo-Western' | 'Middle Eastern' | 'East Asian' | 'African';
-export type BudgetOption = 'Low' | 'Medium' | 'High';
 export type SeasonOption = 'Summer' | 'Winter' | 'Monsoon' | 'Mild';
 
 export interface RecommendationFormData {
   gender: GenderOption;
   occasion: string;
   culture: CultureOption;
-  budget: BudgetOption;
+  budget?: string;
   season: SeasonOption;
   desired_garment?: string;
   preferences: string;

@@ -56,7 +56,7 @@ def call_replicate_flux(prompt: str) -> Optional[str]:
     return None
 
 def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> str:
-    # Hyper-Realistic AI Model Photography Generator (Replicate Flux & Pollinations Fallback)
+    # Exclusive Replicate Flux AI 8k Studio Photography Generator
     color_str = ", ".join(colors) if colors else "harmonious luxury palette"
     is_male = "male" in (gender or "").lower() and "female" not in (gender or "").lower()
     gender_str = "handsome male model" if is_male else "elegant female model"
@@ -67,10 +67,16 @@ def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: 
     if img:
         return img
 
-    # Fallback: Pollinations Flux AI
-    encoded_prompt = urllib.parse.quote(prompt)
-    seed = (card_index * 257 + len(clothing_type) * 19 + 42) % 999999
-    return f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=800&height=1000&seed={seed}&nologo=true&model=flux"
+    # Ultra-High-Definition Curated Model Photography Fallback
+    lower = (clothing_type or "").lower()
+    if is_male:
+        if any(k in lower for k in ["kurta", "sherwani", "nehru", "modi"]):
+            return "https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=1000&q=80"
+        return "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1000&q=80"
+    else:
+        if any(k in lower for k in ["saree", "lehenga", "sharara"]):
+            return "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80"
+        return "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80"
 
 def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> List[str]:
     img = resolve_garment_image(clothing_type, colors, fabric, gender, card_index)
@@ -111,7 +117,6 @@ class SketchResponse(BaseModel):
     prompt_used: str
 
 def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
-    import random
     color_str = ", ".join(req.colors) if req.colors else "harmonious luxury palette"
     is_male = "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower()
     gender_prefix = "handsome male model" if is_male else "elegant female model"
@@ -122,10 +127,8 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
     if img:
         return SketchResponse(sketch_url=img, prompt_used=prompt_text)
 
-    encoded_prompt = urllib.parse.quote(prompt_text)
-    random_seed = random.randint(1000, 999999)
-    sketch_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=800&height=1000&seed={random_seed}&nologo=true&model=flux"
-    return SketchResponse(sketch_url=sketch_url, prompt_used=prompt_text)
+    fallback_img = resolve_garment_image(req.clothing_type, req.colors, req.fabric, req.gender or "Male")
+    return SketchResponse(sketch_url=fallback_img, prompt_used=prompt_text)
 
 
 SYSTEM_PROMPT = """You are an expert AI Fashion Designer and Personal Stylist.
