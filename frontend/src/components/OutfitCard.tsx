@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { OutfitDetail } from '../types';
-import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, Wand2, ExternalLink, Loader2, Maximize2, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, Wand2, ExternalLink, Loader2, Maximize2, X, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 
 interface OutfitCardProps {
   outfit: OutfitDetail;
@@ -12,6 +12,16 @@ interface OutfitCardProps {
 }
 
 const GARMENT_FALLBACK_GALLERIES: Record<string, string[]> = {
+  lehenga: [
+    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80'
+  ],
+  saree: [
+    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80'
+  ],
   modi: [
     'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80'
@@ -39,14 +49,6 @@ const GARMENT_FALLBACK_GALLERIES: Record<string, string[]> = {
   shirt: [
     'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80'
-  ],
-  saree: [
-    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80'
-  ],
-  lehenga: [
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80'
   ],
   sherwani: [
     'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80',
@@ -84,7 +86,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
 }) => {
   const [sketchUrl, setSketchUrl] = useState<string | null>(outfit.sketch_url || null);
   
-  // Build initial 2 distinct image variations (Var 1: Pollinations AI, Var 2: FLUX / DALL-E)
+  // Build initial 2 distinct image variations
   const initialImages: string[] = outfit.image_urls && outfit.image_urls.length >= 2
     ? outfit.image_urls.slice(0, 2)
     : [0, 1].map((idx) => getFallbackImageForIndex(outfit.clothing_type, idx));
@@ -94,19 +96,31 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   const [isGeneratingSketch, setIsGeneratingSketch] = useState(false);
   const [sketchError, setSketchError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [fallbackStep, setFallbackStep] = useState<number>(0);
 
-  const currentImageSrc = imageGallery[activeImageIndex] || getFallbackImageForIndex(outfit.clothing_type, activeImageIndex);
+  const currentImageSrc = imageGallery[activeImageIndex] || getFallbackImageForIndex(outfit.clothing_type, activeImageIndex + fallbackStep);
 
   const pinterestUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(
     `${gender} ${outfit.clothing_type} ${outfit.fabric} fashion style`
   )}`;
 
   const handleImageError = () => {
-    const fallback = getFallbackImageForIndex(outfit.clothing_type, activeImageIndex);
+    const fallback = getFallbackImageForIndex(outfit.clothing_type, activeImageIndex + fallbackStep + 1);
     setImageGallery((prev) => {
       if (prev[activeImageIndex] === fallback) return prev;
       const updated = [...prev];
       updated[activeImageIndex] = fallback;
+      return updated;
+    });
+  };
+
+  const handleCycleFashionImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFallbackStep((prev) => prev + 1);
+    const newFallback = getFallbackImageForIndex(outfit.clothing_type, activeImageIndex + fallbackStep + 1);
+    setImageGallery((prev) => {
+      const updated = [...prev];
+      updated[activeImageIndex] = newFallback;
       return updated;
     });
   };
@@ -236,12 +250,21 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
                 <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
                 <span>
                   {activeImageIndex === 0
-                    ? 'Var 1: Pollinations AI Concept'
+                    ? 'Var 1: AI Style Concept'
                     : 'Var 2: FLUX / DALL-E Couture'}
                 </span>
               </span>
 
               <div className="flex items-center space-x-3">
+                <button
+                  onClick={handleCycleFashionImage}
+                  className="text-amber-400 hover:text-amber-300 flex items-center space-x-1 text-[11px] font-semibold transition cursor-pointer bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30"
+                  title="Cycle to next fashion model look"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Cycle Photo</span>
+                </button>
+
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -281,7 +304,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
                     : 'bg-gray-800/60 border-gray-700/60 text-gray-400 hover:text-gray-200'
                 }`}
               >
-                <span>Var 1 (Pollinations AI)</span>
+                <span>Var 1 (Primary Concept)</span>
               </button>
 
               <button
@@ -452,7 +475,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
             <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/90">
               <div>
                 <h4 className="font-serif-fashion font-bold text-lg text-gray-100">
-                  {outfit.clothing_type} ({activeImageIndex === 0 ? 'Var 1: Pollinations AI' : 'Var 2: FLUX / DALL-E Couture'})
+                  {outfit.clothing_type} ({activeImageIndex === 0 ? 'Var 1: Primary Concept' : 'Var 2: FLUX / DALL-E Couture'})
                 </h4>
                 <p className="text-xs text-amber-400 font-medium">
                   {gender} &bull; {outfit.fabric} &bull; {outfit.colors.join(', ')}
