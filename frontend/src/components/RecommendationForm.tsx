@@ -69,7 +69,41 @@ const OCCASION_GARMENT_MAP: Record<string, string[]> = {
 };
 
 const SEASONS: SeasonOption[] = ['Summer', 'Winter', 'Monsoon', 'Mild'];
-const PREFERENCE_TAGS = ['Jewel tones', 'Pastels', 'Minimalist', 'Regal', 'Streetwear', 'Earthy tones'];
+
+// --- Categorized Preference Tags ---
+const PREFERENCE_GROUPS = [
+  {
+    label: '🎨 Color Palette',
+    tags: ['Jewel tones', 'Pastels', 'Earthy tones', 'Monochrome', 'All-black', 'All-white', 'Ivory & cream', 'Bold neons', 'Dusty rose', 'Sapphire blue', 'Burgundy & wine', 'Forest green', 'Terracotta', 'Gold & bronze']
+  },
+  {
+    label: '✨ Style Mood',
+    tags: ['Minimalist', 'Regal', 'Bohemian', 'Romantic', 'Edgy', 'Glamorous', 'Classic & timeless', 'Avant-garde', 'Old-money', 'Cottagecore', 'Streetwear', 'Maximalist']
+  },
+  {
+    label: '🪡 Fabric & Texture',
+    tags: ['Silk preferred', 'Cotton only', 'Lightweight fabrics', 'Velvet & rich textures', 'Linen & breathable', 'Embroidered details', 'Zari work', 'Sheer overlays']
+  }
+];
+
+// --- Quick-insert chips for Additional Notes ---
+const NOTE_CHIPS = [
+  { emoji: '👟', label: 'Prefer flat footwear for comfort' },
+  { emoji: '👠', label: 'High heels are fine' },
+  { emoji: '🕌', label: 'Modest necklines & full coverage' },
+  { emoji: '💃', label: 'Outfit must allow easy dancing' },
+  { emoji: '🌿', label: 'Prefer sustainable / eco fabrics' },
+  { emoji: '🏋️', label: 'Comfort & ease of movement priority' },
+  { emoji: '✈️', label: 'Lightweight for travel / destination wedding' },
+  { emoji: '🌡️', label: 'Hot & humid climate — keep it breathable' },
+  { emoji: '🧴', label: 'Avoid heavy embellishments / beadwork' },
+  { emoji: '📷', label: 'Photogenic look — camera-ready colors' },
+  { emoji: '🤰', label: 'Flattering for a curvy / fuller figure' },
+  { emoji: '🕺', label: 'Groom-ready — want to stand out' },
+  { emoji: '🧕', label: 'Include dupatta / head coverage' },
+  { emoji: '🥇', label: 'Must be the best-dressed in the room' },
+];
+
 
 export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading }) => {
   const [formData, setFormData] = useState<RecommendationFormData>({
@@ -155,6 +189,15 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
       if (!current) return { ...prev, preferences: tag };
       if (current.includes(tag)) return prev;
       return { ...prev, preferences: `${current}, ${tag}` };
+    });
+  };
+
+  const handleNoteChipClick = (label: string) => {
+    setFormData(prev => {
+      const current = (prev.additional_notes || '').trim();
+      if (!current) return { ...prev, additional_notes: label };
+      if (current.includes(label)) return prev;
+      return { ...prev, additional_notes: `${current}. ${label}` };
     });
   };
 
@@ -310,16 +353,27 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
             placeholder="e.g. Jewel tones, Emerald green, Pastels, Minimalist, Regal"
             className="w-full bg-gray-900/80 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
           />
-          <div className="mt-2 flex flex-wrap gap-2">
-            {PREFERENCE_TAGS.map(tag => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => handleTagClick(tag)}
-                className="text-xs px-2.5 py-1 rounded-md bg-gray-900/40 border border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300 transition cursor-pointer"
-              >
-                + {tag}
-              </button>
+          <div className="mt-3 space-y-2.5">
+            {PREFERENCE_GROUPS.map(group => (
+              <div key={group.label}>
+                <span className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold mb-1.5 block">{group.label}</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {group.tags.map(tag => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => handleTagClick(tag)}
+                      className={`text-xs px-2.5 py-1 rounded-md border transition cursor-pointer ${
+                        formData.preferences?.includes(tag)
+                          ? 'bg-amber-500/20 border-amber-400 text-amber-300 font-semibold'
+                          : 'bg-gray-900/40 border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300'
+                      }`}
+                    >
+                      + {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -337,6 +391,26 @@ export const RecommendationForm: React.FC<FormProps> = ({ onSubmit, isLoading })
             placeholder="e.g. Prefer comfortable flat footwear for dancing, desire modest necklines, or lightweight dupatta."
             className="w-full bg-gray-900/80 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition resize-none"
           />
+          <div className="mt-2.5">
+            <span className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold mb-1.5 block">⚡ Quick Instructions</span>
+            <div className="flex flex-wrap gap-1.5">
+              {NOTE_CHIPS.map(({ emoji, label }) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => handleNoteChipClick(label)}
+                  className={`text-xs px-2.5 py-1 rounded-md border transition cursor-pointer flex items-center space-x-1 ${
+                    formData.additional_notes?.includes(label)
+                      ? 'bg-purple-500/20 border-purple-400 text-purple-300 font-semibold'
+                      : 'bg-gray-900/40 border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300'
+                  }`}
+                >
+                  <span>{emoji}</span>
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Submit Button */}
