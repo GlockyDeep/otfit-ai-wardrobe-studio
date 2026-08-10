@@ -254,6 +254,32 @@
       "styling_tip": "Ensure precision fit, dark polished accessories, and timeless styling details."
     }
   },
+  "season_rules": {
+    "Summer": {
+      "preferred_fabrics": ["100% Organic Linen", "Cotton Silk", "Chiffon", "Georgette", "Khadi Cotton"],
+      "avoid_fabrics": ["Heavy Velvet", "Thick Wool", "Heavy Brocade", "Synthetic Polyester"],
+      "color_recommendations": ["Mint Green", "Soft Ivory", "Powder Blue", "Peach Pastel", "Blush Pink", "Crisp White", "Saffron Yellow"],
+      "styling_focus": "Lightweight breathable fabrics with airy unlined cuts, pastel/light color palettes, short or half sleeves, and open sandals or Kolhapuri footwear to keep cool."
+    },
+    "Winter": {
+      "preferred_fabrics": ["Plush Micro-Velvet", "Italian Tuxedo Wool", "Pure Banarasi Silk", "Pashmina", "Rich Brocade", "Tweed"],
+      "avoid_fabrics": ["Ultra-thin Chiffon", "Sheer Net", "Unlined Linen"],
+      "color_recommendations": ["Deep Emerald Green", "Royal Navy Blue", "Wine Burgundy", "Charcoal Black", "Ruby Red", "Rich Plum"],
+      "styling_focus": "Warm, luxurious layered silhouettes (shawls, double-breasted blazers, high-neck blouses, full-sleeve sherwanis), deep rich dark jewel tones, and closed leather footwear."
+    },
+    "Monsoon": {
+      "preferred_fabrics": ["Quick-dry Rayon", "Lightweight Crepe", "Georgette", "Fine Cotton Blend"],
+      "avoid_fabrics": ["Delicate Pure Raw Silk", "Heavy Velvet", "Floor-sweeping Dupattas"],
+      "color_recommendations": ["Teal", "Mustard Yellow", "Coral", "Dark Indigo Navy", "Olive Green"],
+      "styling_focus": "Cropped ankle-length trouser/pant hem lengths to prevent mud splatters, vibrant moisture-resistant fabrics, and anti-slip block heels or treated leather footwear."
+    },
+    "Mild": {
+      "preferred_fabrics": ["Raw Silk", "Cotton-Silk Blend", "Tussar Silk", "Light Wool", "Chanderi"],
+      "avoid_fabrics": [],
+      "color_recommendations": ["Versatile Jewel Tones", "Champagne Gold", "Muted Rose", "Slate Gray", "Warm Ochre"],
+      "styling_focus": "Balanced mid-weight tailoring, comfortable multi-seasonal layering, elegant statement accessories, and versatile loafers or pumps."
+    }
+  },
   "cultures": {
     "South Asian": {
       "key_garments_female": ["Saree", "Lehenga", "Salwar Suit", "Kurta", "Anarkali Suit", "Sharara Set"],
