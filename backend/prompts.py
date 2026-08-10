@@ -16,10 +16,11 @@ except Exception:
 
 def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male") -> str:
     color_str = " ".join(colors) if colors else ""
-    gender_prefix = "handsome male model wearing" if "male" in gender.lower() and "female" not in gender.lower() else "female fashion model wearing"
-    raw_prompt = f"high fashion runway couture illustration of a {gender_prefix} {clothing_type} {fabric} {color_str} full length portrait elegant studio lighting high resolution 8k"
+    gender_prefix = "handsome male model" if "male" in gender.lower() and "female" not in gender.lower() else "elegant female fashion model"
+    raw_prompt = f"full body standing fashion croquis illustration of a {gender_prefix} wearing {clothing_type} in {fabric} {color_str}, head to toe full length portrait showing complete outfit including legs, trousers, skirt, and footwear, studio lighting, ultra detailed 8k"
     encoded = urllib.parse.quote(raw_prompt)
-    return f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true"
+    # Using FLUX model via Pollinations AI with 2:3 vertical portrait aspect ratio (800x1200) for full body standing poses
+    return f"https://image.pollinations.ai/prompt/{encoded}?model=flux&width=800&height=1200&nologo=true"
 
 # --- Pydantic Data Models (Matches Required Response Schema) ---
 
@@ -58,7 +59,7 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     color_str = ", ".join(req.colors) if req.colors else "harmonious luxury palette"
     gender_prefix = "handsome male model" if "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower() else "female model"
-    prompt = f"Bespoke haute couture fashion sketch illustration of a {gender_prefix} wearing {req.clothing_type} in {color_str}. Fabric: {req.fabric or 'luxury textile'}. Cut/Silhouette: {req.silhouette or 'structured'}. Full body high fashion runway croquis illustration, studio lighting, elegant watercolor and ink."
+    prompt = f"Bespoke full body standing fashion sketch illustration of a {gender_prefix} wearing {req.clothing_type} in {color_str}. Fabric: {req.fabric or 'luxury textile'}. Cut/Silhouette: {req.silhouette or 'structured'}. Head to toe full length portrait showing legs, trousers, and footwear, studio lighting, elegant watercolor and ink."
 
     if api_key:
         try:
@@ -79,11 +80,11 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
                 sketch_url = data["data"][0]["url"]
                 return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
         except Exception as e:
-            print(f"[WARN] DALL-E 3 sketch generation failed ({e}). Fallback to Pollinations AI generation.")
+            print(f"[WARN] DALL-E 3 sketch generation failed ({e}). Fallback to Pollinations FLUX AI generation.")
 
-    # High-resolution Pollinations AI Generation fallback (No Key required)
+    # High-resolution Pollinations FLUX Model Generation fallback (No Key required, 800x1200 2:3 vertical portrait ratio)
     encoded = urllib.parse.quote(prompt)
-    sketch_url = f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true&seed={abs(hash(req.clothing_type + (req.gender or ''))) % 100000}"
+    sketch_url = f"https://image.pollinations.ai/prompt/{encoded}?model=flux&width=800&height=1200&nologo=true&seed={abs(hash(req.clothing_type + (req.gender or ''))) % 100000}"
     return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
 
 
