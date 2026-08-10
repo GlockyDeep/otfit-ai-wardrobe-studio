@@ -11,35 +11,82 @@ interface OutfitCardProps {
   gender?: string;
 }
 
-const GARMENT_FALLBACKS: Record<string, string> = {
-  panche: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
-  veshti: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
-  dhoti: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
-  mundu: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
-  lehenga: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
-  saree: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
-  anarkali: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
-  salwar: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
-  sherwani: 'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80',
-  bandhgala: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
-  modi: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
-  nehru: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
-  tuxedo: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80',
-  suit: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80',
-  blazer: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&q=80',
-  kurta: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
-  dress: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80',
-  default: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80'
+const GARMENT_FALLBACK_GALLERIES: Record<string, string[]> = {
+  panche: [
+    'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80'
+  ],
+  veshti: [
+    'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80'
+  ],
+  dress: [
+    'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?auto=format&fit=crop&w=800&q=80'
+  ],
+  shirt: [
+    'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80'
+  ],
+  saree: [
+    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80'
+  ],
+  lehenga: [
+    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=800&q=80'
+  ],
+  sherwani: [
+    'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&q=80'
+  ],
+  tuxedo: [
+    'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?auto=format&fit=crop&w=800&q=80'
+  ],
+  default: [
+    'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?auto=format&fit=crop&w=800&q=80'
+  ]
 };
 
-const getFallbackImage = (clothingType: string) => {
+const getFallbackImageForIndex = (clothingType: string, index: number) => {
   const lower = (clothingType || '').toLowerCase();
-  for (const key in GARMENT_FALLBACKS) {
+  for (const key in GARMENT_FALLBACK_GALLERIES) {
     if (key !== 'default' && lower.includes(key)) {
-      return GARMENT_FALLBACKS[key];
+      const list = GARMENT_FALLBACK_GALLERIES[key];
+      return list[index % list.length];
     }
   }
-  return GARMENT_FALLBACKS.default;
+  const defaultList = GARMENT_FALLBACK_GALLERIES.default;
+  return defaultList[index % defaultList.length];
 };
 
 export const OutfitCard: React.FC<OutfitCardProps> = ({
@@ -51,9 +98,11 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   gender = 'Male'
 }) => {
   const [sketchUrl, setSketchUrl] = useState<string | null>(outfit.sketch_url || null);
+  
+  // Build initial 5 distinct images (using backend image_urls if provided, or 5 index-based fallbacks)
   const initialImages: string[] = outfit.image_urls && outfit.image_urls.length > 0
     ? outfit.image_urls
-    : [sketchUrl || outfit.image_url || getFallbackImage(outfit.clothing_type)];
+    : [0, 1, 2, 3, 4].map((idx) => getFallbackImageForIndex(outfit.clothing_type, idx));
 
   const [imageGallery, setImageGallery] = useState<string[]>(initialImages);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
@@ -61,14 +110,14 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   const [sketchError, setSketchError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const currentImageSrc = imageGallery[activeImageIndex] || getFallbackImage(outfit.clothing_type);
+  const currentImageSrc = imageGallery[activeImageIndex] || getFallbackImageForIndex(outfit.clothing_type, activeImageIndex);
 
   const pinterestUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(
     `${gender} ${outfit.clothing_type} ${outfit.fabric} fashion style`
   )}`;
 
   const handleImageError = () => {
-    const fallback = getFallbackImage(outfit.clothing_type);
+    const fallback = getFallbackImageForIndex(outfit.clothing_type, activeImageIndex);
     setImageGallery((prev) => {
       const updated = [...prev];
       updated[activeImageIndex] = fallback;

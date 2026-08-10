@@ -18,32 +18,38 @@ def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fa
     color_str = " ".join(colors) if colors else ""
     lower = clothing_type.lower()
     
-    # Specific prompt engineering to guarantee authentic traditional drapes vs modern western suits
     if any(k in lower for k in ["panche", "veshti", "dhoti", "mundu", "lungi"]):
-        raw_prompt = f"full body standing fashion croquis illustration of a handsome South Indian male model wearing traditional draped white silk Veshti Panche dhoti with gold zari border, white silk shirt and Angavastram shoulder stole in {color_str}, head to toe full length portrait showing authentic traditional Indian draped garment"
+        base_prompt = f"full body standing fashion croquis illustration of a handsome South Indian male model wearing traditional draped white silk Veshti Panche dhoti with gold zari border, white silk shirt and Angavastram shoulder stole in {color_str}"
     elif "saree" in lower:
-        raw_prompt = f"full body standing fashion croquis illustration of an elegant Indian female model wearing traditional draped silk saree in {color_str} with rich embroidered border and blouse, head to toe full length portrait showing draped saree pallu"
+        base_prompt = f"full body standing fashion croquis illustration of an elegant Indian female model wearing traditional draped silk saree in {color_str} with rich embroidered border and blouse"
     elif "lehenga" in lower:
-        raw_prompt = f"full body standing fashion croquis illustration of an elegant Indian female model wearing traditional flared lehenga choli with dupatta in {color_str}, head to toe full length portrait"
+        base_prompt = f"full body standing fashion croquis illustration of an elegant Indian female model wearing traditional flared lehenga choli with dupatta in {color_str}"
     elif "anarkali" in lower or "salwar" in lower:
-        raw_prompt = f"full body standing fashion croquis illustration of an elegant Indian female model wearing traditional floor length flared anarkali suit in {color_str}, head to toe full length portrait"
+        base_prompt = f"full body standing fashion croquis illustration of an elegant Indian female model wearing traditional floor length flared anarkali suit in {color_str}"
     elif "sherwani" in lower or "bandhgala" in lower:
-        raw_prompt = f"full body standing fashion croquis illustration of a handsome Indian male model wearing traditional silk sherwani jacket with churidar in {color_str}, head to toe full length portrait"
+        base_prompt = f"full body standing fashion croquis illustration of a handsome Indian male model wearing traditional silk sherwani jacket with churidar in {color_str}"
     elif "modi" in lower or "nehru" in lower:
-        raw_prompt = f"full body standing fashion croquis illustration of a handsome Indian male model wearing traditional sleeveless Modi jacket Nehru vest over kurta and trousers in {color_str}, head to toe full length portrait"
+        base_prompt = f"full body standing fashion croquis illustration of a handsome Indian male model wearing traditional sleeveless Modi jacket Nehru vest over kurta and trousers in {color_str}"
     elif "tuxedo" in lower or "suit" in lower or "blazer" in lower:
-        raw_prompt = f"full body standing fashion croquis illustration of a handsome male model wearing tailored formal tuxedo suit in {color_str}, head to toe full length portrait with trousers"
+        base_prompt = f"full body standing fashion croquis illustration of a handsome male model wearing tailored formal tuxedo suit in {color_str}"
     else:
         gender_prefix = "handsome male model" if "male" in gender.lower() and "female" not in gender.lower() else "female fashion model"
-        raw_prompt = f"full body standing fashion croquis illustration of a {gender_prefix} wearing {clothing_type} in {fabric} {color_str}, head to toe full length portrait showing complete outfit, studio lighting, ultra detailed 8k"
+        base_prompt = f"full body standing fashion croquis illustration of a {gender_prefix} wearing {clothing_type} in {fabric} {color_str}"
 
-    encoded = urllib.parse.quote(raw_prompt)
-    
-    # Generate 5 distinct AI image variations using different seeds
+    style_modifiers = [
+        "studio lighting, classic couture styling, head to toe full length portrait",
+        "runway catwalk pose, dynamic fashion angle, studio backdrop",
+        "minimalist luxury aesthetic, dramatic studio lighting, full length view",
+        "editorial fashion magazine portrait, elegant pose, studio view",
+        "haute couture fashion week croquis sketch, watercolor and ink"
+    ]
+
     base_seed = abs(hash(clothing_type + (gender or ""))) % 10000
     variations = []
     for idx in range(5):
-        seed = base_seed + (idx * 137)
+        prompt_var = f"{base_prompt}, {style_modifiers[idx]}"
+        encoded = urllib.parse.quote(prompt_var)
+        seed = base_seed + (idx * 271)
         variations.append(f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true&seed={seed}")
     return variations
 
