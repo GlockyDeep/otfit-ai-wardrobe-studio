@@ -204,10 +204,13 @@ def attach_ai_images(outfit: OutfitDetail, gender: str = "Male", card_index: int
     outfit.sketch_url = images[0]
 
 def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationResponse:
-    provider = os.getenv("AI_PROVIDER", "openai").lower()
+    provider = os.getenv("AI_PROVIDER", "gemini").lower()
     gender = context.get("gender", "Male")
     
-    if provider == "groq":
+    if provider == "gemini":
+        api_key = os.getenv("GEMINI_API_KEY", "").strip()
+        model = os.getenv("GEMINI_MODEL", "gemini-flash-latest").strip()
+    elif provider == "groq":
         api_key = os.getenv("GROQ_API_KEY", "").strip()
         model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
         base_url = "https://api.groq.com/openai/v1"
@@ -222,27 +225,37 @@ def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationRespons
 
     user_prompt = build_user_prompt(context)
 
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt}
-        ],
-        "response_format": {"type": "json_object"},
-        "temperature": 0.7
-    }
-
     try:
         with httpx.Client(timeout=30.0) as client:
-            response = client.post(f"{base_url}/chat/completions", headers=headers, json=payload)
-            response.raise_for_status()
-            res_data = response.json()
-            raw_content = res_data["choices"][0]["message"]["content"]
+            if provider == "gemini":
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+                full_prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}"
+                payload = {
+                    "contents": [{"parts": [{"text": full_prompt}]}],
+                    "generationConfig": {"responseMimeType": "application/json", "temperature": 0.7}
+                }
+                response = client.post(url, json=payload)
+                response.raise_for_status()
+                res_data = response.json()
+                raw_content = res_data["candidates"][0]["content"]["parts"][0]["text"]
+            else:
+                headers = {
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    "response_format": {"type": "json_object"},
+                    "temperature": 0.7
+                }
+                response = client.post(f"{base_url}/chat/completions", headers=headers, json=payload)
+                response.raise_for_status()
+                res_data = response.json()
+                raw_content = res_data["choices"][0]["message"]["content"]
             
             parsed_json = json.loads(raw_content)
             validated = RecommendationResponse.model_validate(parsed_json)
@@ -262,7 +275,7 @@ def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationRespons
             return validated
             
     except Exception as e:
-        print(f"[ERROR] AI Provider request failed ({e}). Returning fallback rule-engine recommendation.")
+        print(f"[ERROR] AI Provider ({provider}) request failed ({e}). Returning fallback rule-engine recommendation.")
         return generate_mock_fallback(context)
 
 
