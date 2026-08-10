@@ -16,11 +16,11 @@ except Exception:
 
 def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male") -> str:
     color_str = " ".join(colors) if colors else ""
-    gender_prefix = "handsome male model" if "male" in gender.lower() and "female" not in gender.lower() else "elegant female fashion model"
+    gender_prefix = "handsome male model" if "male" in gender.lower() and "female" not in gender.lower() else "female fashion model"
     raw_prompt = f"full body standing fashion croquis illustration of a {gender_prefix} wearing {clothing_type} in {fabric} {color_str}, head to toe full length portrait showing complete outfit including legs, trousers, skirt, and footwear, studio lighting, ultra detailed 8k"
     encoded = urllib.parse.quote(raw_prompt)
-    # Using FLUX model via Pollinations AI with 2:3 vertical portrait aspect ratio (800x1200) for full body standing poses
-    return f"https://image.pollinations.ai/prompt/{encoded}?model=flux&width=800&height=1200&nologo=true"
+    # Using reliable, instant Pollinations AI image generator URL (No model=flux timeout parameter)
+    return f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true"
 
 # --- Pydantic Data Models (Matches Required Response Schema) ---
 
@@ -80,11 +80,11 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
                 sketch_url = data["data"][0]["url"]
                 return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
         except Exception as e:
-            print(f"[WARN] DALL-E 3 sketch generation failed ({e}). Fallback to Pollinations FLUX AI generation.")
+            print(f"[WARN] DALL-E 3 sketch generation failed ({e}). Fallback to Pollinations AI generation.")
 
-    # High-resolution Pollinations FLUX Model Generation fallback (No Key required, 800x1200 2:3 vertical portrait ratio)
+    # High-resolution Pollinations AI Generation fallback (No Key required)
     encoded = urllib.parse.quote(prompt)
-    sketch_url = f"https://image.pollinations.ai/prompt/{encoded}?model=flux&width=800&height=1200&nologo=true&seed={abs(hash(req.clothing_type + (req.gender or ''))) % 100000}"
+    sketch_url = f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true&seed={abs(hash(req.clothing_type + (req.gender or ''))) % 100000}"
     return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
 
 

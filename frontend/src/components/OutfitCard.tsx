@@ -11,6 +11,33 @@ interface OutfitCardProps {
   gender?: string;
 }
 
+const GARMENT_FALLBACKS: Record<string, string> = {
+  lehenga: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+  saree: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
+  anarkali: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+  salwar: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+  sherwani: 'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80',
+  bandhgala: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+  modi: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
+  nehru: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
+  tuxedo: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80',
+  suit: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80',
+  blazer: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&q=80',
+  kurta: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
+  dress: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80',
+  default: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80'
+};
+
+const getFallbackImage = (clothingType: string) => {
+  const lower = (clothingType || '').toLowerCase();
+  for (const key in GARMENT_FALLBACKS) {
+    if (key !== 'default' && lower.includes(key)) {
+      return GARMENT_FALLBACKS[key];
+    }
+  }
+  return GARMENT_FALLBACKS.default;
+};
+
 export const OutfitCard: React.FC<OutfitCardProps> = ({
   outfit,
   title,
@@ -20,15 +47,24 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   gender = 'Male'
 }) => {
   const [sketchUrl, setSketchUrl] = useState<string | null>(outfit.sketch_url || null);
+  const [currentImageSrc, setCurrentImageSrc] = useState<string>(
+    sketchUrl || outfit.image_url || getFallbackImage(outfit.clothing_type)
+  );
   const [isGeneratingSketch, setIsGeneratingSketch] = useState(false);
   const [sketchError, setSketchError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const activeImageUrl = sketchUrl || outfit.image_url;
-
   const pinterestUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(
     `${gender} ${outfit.clothing_type} ${outfit.fabric} fashion style`
   )}`;
+
+  const handleImageError = () => {
+    // If Pollinations or custom URL fails, immediately swap to bulletproof curated Unsplash fallback
+    const fallback = getFallbackImage(outfit.clothing_type);
+    if (currentImageSrc !== fallback) {
+      setCurrentImageSrc(fallback);
+    }
+  };
 
   const handleGenerateSketch = async () => {
     setIsGeneratingSketch(true);
@@ -49,6 +85,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
       if (!response.ok) throw new Error('Sketch generation failed');
       const data = await response.json();
       setSketchUrl(data.sketch_url);
+      setCurrentImageSrc(data.sketch_url);
     } catch (err) {
       setSketchError('Could not generate sketch at this time.');
     } finally {
@@ -93,15 +130,16 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
       </div>
 
       {/* Outfit Fashion Image / AI Sketch Preview Container */}
-      {activeImageUrl && (
+      {currentImageSrc && (
         <div className="mb-6 rounded-xl overflow-hidden relative group border border-gray-800 shadow-lg bg-gray-950">
           <div
             onClick={() => setIsModalOpen(true)}
-            className="w-full min-h-[380px] max-h-[480px] overflow-hidden bg-gray-950 relative flex items-center justify-center cursor-pointer"
+            className="w-full min-h-[360px] max-h-[480px] overflow-hidden bg-gray-950 relative flex items-center justify-center cursor-pointer"
           >
             <img
-              src={activeImageUrl}
+              src={currentImageSrc}
               alt={outfit.clothing_type}
+              onError={handleImageError}
               className="w-full h-full object-contain max-h-[480px] transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
@@ -291,7 +329,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
       </div>
 
       {/* FULL SCREEN IMAGE LIGHTBOX MODAL */}
-      {isModalOpen && activeImageUrl && (
+      {isModalOpen && currentImageSrc && (
         <div className="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-md flex items-center justify-center p-4">
           <div className="relative max-w-4xl w-full max-h-[90vh] bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden flex flex-col shadow-2xl">
             {/* Modal Header */}
@@ -307,7 +345,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
 
               <div className="flex items-center space-x-3">
                 <a
-                  href={activeImageUrl}
+                  href={currentImageSrc}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold hover:bg-amber-500/20 transition flex items-center space-x-1"
@@ -328,8 +366,9 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
             {/* Modal Content / Full-Size Image */}
             <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-950">
               <img
-                src={activeImageUrl}
+                src={currentImageSrc}
                 alt={outfit.clothing_type}
+                onError={handleImageError}
                 className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl"
               />
             </div>
