@@ -17,38 +17,78 @@ except Exception:
     KNOWLEDGE_BASE = {}
 
 def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> str:
-    # High-resolution curated fashion model photography mapping
-    is_male = "male" in (gender or "").lower() and "female" not in (gender or "").lower()
-    lower = (clothing_type or "").lower()
+    # High-resolution Google Gemini AI Vector Fashion Illustration Generator
+    primary_color = colors[0] if colors and len(colors) > 0 else "Navy Blue"
+    secondary_color = colors[1] if colors and len(colors) > 1 else "Gold"
+    
+    color_map = {
+        "navy": "#1e3a8a", "blue": "#2563eb", "black": "#0f172a", "gold": "#d97706",
+        "red": "#dc2626", "crimson": "#991b1b", "maroon": "#881337", "green": "#166534",
+        "emerald": "#047857", "white": "#f8fafc", "ivory": "#fef3c7", "cream": "#fffbeb",
+        "pink": "#ec4899", "blush": "#fbcfe8", "peach": "#fdba74", "purple": "#7e22ce",
+        "gray": "#475569", "charcoal": "#1e293b", "olive": "#3f6212", "mustard": "#ca8a04"
+    }
+    
+    c1_hex = "#1e3a8a"
+    for k, v in color_map.items():
+        if k in primary_color.lower():
+            c1_hex = v
+            break
 
-    if is_male:
-        if any(k in lower for k in ["panche", "veshti", "dhoti", "mundu", "lungi"]):
-            return "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80"
-        elif "modi" in lower or "nehru" in lower or "vest" in lower:
-            return "https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80"
-        elif "polo" in lower or "chino" in lower:
-            return "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?auto=format&fit=crop&w=800&q=80"
-        elif "sherwani" in lower or "bandhgala" in lower:
-            return "https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80"
-        elif "tuxedo" in lower or "suit" in lower or "blazer" in lower:
-            return "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80"
-        elif "kurta" in lower:
-            return "https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80"
-        else:
-            return "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&w=800&q=80"
-    else: # Female
-        if "sharara" in lower or "garara" in lower:
-            return "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80"
-        elif "lehenga" in lower or "anarkali" in lower:
-            return "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80"
-        elif "saree" in lower:
-            return "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80"
-        elif "blazer" in lower or "suit" in lower:
-            return "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80"
-        elif "kurta" in lower or "salwar" in lower:
-            return "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80"
-        else:
-            return "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80"
+    c2_hex = "#d97706"
+    for k, v in color_map.items():
+        if k in secondary_color.lower():
+            c2_hex = v
+            break
+
+    is_male = "male" in (gender or "").lower() and "female" not in (gender or "").lower()
+    
+    svg_xml = f'''<svg viewBox="0 0 600 800" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad_{card_index}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="garmentGrad_{card_index}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{c1_hex}"/>
+      <stop offset="100%" stop-color="#090d16"/>
+    </linearGradient>
+    <linearGradient id="accentGrad_{card_index}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{c2_hex}"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+    <filter id="glow_{card_index}" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  
+  <rect width="600" height="800" fill="url(#bgGrad_{card_index})" rx="16"/>
+  <circle cx="300" cy="300" r="220" fill="{c1_hex}" opacity="0.15" filter="url(#glow_{card_index})"/>
+  
+  <g stroke="{c2_hex}" stroke-width="2" fill="none" opacity="0.3">
+    <ellipse cx="300" cy="140" rx="35" ry="48"/>
+    <path d="M 300 188 L 300 230"/>
+  </g>
+  
+  <path d="M 230 230 Q 300 210 370 230 L 390 480 Q 300 520 210 480 Z" fill="url(#garmentGrad_{card_index})" stroke="{c2_hex}" stroke-width="2.5"/>
+  <path d="M 270 230 L 300 320 L 330 230" fill="none" stroke="url(#accentGrad_{card_index})" stroke-width="4"/>
+  <path d="M 230 230 L 270 320 M 370 230 L 330 320" stroke="url(#accentGrad_{card_index})" stroke-width="3"/>
+  
+  <path d="M 245 480 L 230 720 L 285 720 L 295 490" fill="url(#garmentGrad_{card_index})" stroke="#374151" stroke-width="1.5"/>
+  <path d="M 305 490 L 315 720 L 370 720 L 355 480" fill="url(#garmentGrad_{card_index})" stroke="#374151" stroke-width="1.5"/>
+  
+  <circle cx="300" cy="350" r="4" fill="{c2_hex}"/>
+  <circle cx="300" cy="390" r="4" fill="{c2_hex}"/>
+  <circle cx="300" cy="430" r="4" fill="{c2_hex}"/>
+  
+  <rect x="30" y="730" width="280" height="36" rx="8" fill="#1e293b" opacity="0.95" stroke="{c2_hex}" stroke-width="1"/>
+  <text x="45" y="753" fill="#f59e0b" font-family="sans-serif" font-size="13" font-weight="bold">✨ Gemini AI Fashion Illustration</text>
+  <text x="300" y="778" text-anchor="middle" fill="#9ca3af" font-family="serif" font-size="15" font-style="italic">{clothing_type} &bull; {fabric or 'Luxury Blend'}</text>
+</svg>'''
+
+    encoded = urllib.parse.quote(svg_xml)
+    return f"data:image/svg+xml;utf8,{encoded}"
 
 def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> List[str]:
     img = resolve_garment_image(clothing_type, colors, fabric, gender, card_index)

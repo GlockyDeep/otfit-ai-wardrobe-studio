@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { OutfitDetail } from '../types';
-import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, ExternalLink, Maximize2, X, RefreshCw, Wand2, Loader2 } from 'lucide-react';
+import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, ExternalLink, Maximize2, X, Wand2, Loader2 } from 'lucide-react';
 
 interface OutfitCardProps {
   outfit: OutfitDetail;
@@ -11,147 +11,6 @@ interface OutfitCardProps {
   gender?: string;
 }
 
-const MALE_FALLBACK_GALLERIES: Record<string, string[]> = {
-  polo: [
-    'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&w=800&q=80'
-  ],
-  chino: [
-    'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80'
-  ],
-  casual: [
-    'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&w=800&q=80'
-  ],
-  jeans: [
-    'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80'
-  ],
-  trouser: [
-    'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80'
-  ],
-  pant: [
-    'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80'
-  ],
-  kurta: [
-    'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80'
-  ],
-  modi: [
-    'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80'
-  ],
-  nehru: [
-    'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80'
-  ],
-  vest: [
-    'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80'
-  ],
-  panche: [
-    'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80'
-  ],
-  veshti: [
-    'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80'
-  ],
-  dhoti: [
-    'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80'
-  ],
-  sherwani: [
-    'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80'
-  ],
-  tuxedo: [
-    'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80'
-  ],
-  suit: [
-    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80'
-  ],
-  blazer: [
-    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80'
-  ],
-  shirt: [
-    'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80'
-  ],
-  default: [
-    'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80'
-  ]
-};
-
-const FEMALE_FALLBACK_GALLERIES: Record<string, string[]> = {
-  sharara: [
-    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80'
-  ],
-  garara: [
-    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80'
-  ],
-  lehenga: [
-    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80'
-  ],
-  saree: [
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80'
-  ],
-  anarkali: [
-    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80'
-  ],
-  salwar: [
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80'
-  ],
-  blazer: [
-    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80'
-  ],
-  suit: [
-    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80'
-  ],
-  dress: [
-    'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=800&q=80'
-  ],
-  kurta: [
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80'
-  ],
-  default: [
-    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80'
-  ]
-};
-
-const getFallbackImageForIndex = (clothingType: string, gender: string, index: number) => {
-  const isMale = (gender || 'Male').toLowerCase().includes('male') && !(gender || '').toLowerCase().includes('female');
-  const gallery = isMale ? MALE_FALLBACK_GALLERIES : FEMALE_FALLBACK_GALLERIES;
-  const lower = (clothingType || '').toLowerCase();
-  
-  for (const key in gallery) {
-    if (key !== 'default' && lower.includes(key)) {
-      const list = gallery[key];
-      return list[index % list.length];
-    }
-  }
-  const defaultList = gallery.default;
-  return defaultList[index % defaultList.length];
-};
-
 export const OutfitCard: React.FC<OutfitCardProps> = ({
   outfit,
   title,
@@ -161,28 +20,14 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   gender = 'Male'
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [photoIndex, setPhotoIndex] = useState<number>(0);
   const [isGeneratingSketch, setIsGeneratingSketch] = useState(false);
 
-  const initialImage = outfit.image_url || getFallbackImageForIndex(outfit.clothing_type, gender, photoIndex);
+  const initialImage = outfit.image_url || outfit.sketch_url || '';
   const [currentImageSrc, setCurrentImageSrc] = useState<string>(initialImage);
 
   const pinterestUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(
     `${gender} ${outfit.clothing_type} ${outfit.fabric} fashion style`
   )}`;
-
-  const handleImageError = () => {
-    const nextFallback = getFallbackImageForIndex(outfit.clothing_type, gender, photoIndex + 1);
-    setCurrentImageSrc(nextFallback);
-  };
-
-  const handleCycleFashionImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const nextIdx = photoIndex + 1;
-    setPhotoIndex(nextIdx);
-    const newImage = getFallbackImageForIndex(outfit.clothing_type, gender, nextIdx);
-    setCurrentImageSrc(newImage);
-  };
 
   const handleGenerateGeminiSketch = async () => {
     setIsGeneratingSketch(true);
@@ -253,13 +98,12 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
         <div className="mb-6 rounded-xl overflow-hidden relative group border border-gray-800 shadow-lg bg-gray-950">
           <div
             onClick={() => setIsModalOpen(true)}
-            className="w-full min-h-[360px] max-h-[480px] overflow-hidden bg-gray-950 relative flex items-center justify-center cursor-pointer"
+            className="w-full min-h-[360px] max-h-[480px] overflow-hidden bg-gray-950 relative flex items-center justify-center cursor-pointer p-4"
           >
             <img
               src={currentImageSrc}
               alt={outfit.clothing_type}
-              onError={handleImageError}
-              className="w-full h-full object-contain max-h-[480px] transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-contain max-h-[460px] transition-transform duration-500 group-hover:scale-105 rounded-lg"
               loading="lazy"
             />
 
@@ -267,7 +111,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
             <div className="absolute inset-0 bg-gray-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
               <div className="bg-gray-900/90 text-amber-300 text-xs font-semibold px-4 py-2 rounded-xl border border-amber-500/40 flex items-center space-x-2 shadow-2xl">
                 <Maximize2 className="w-4 h-4 text-amber-400" />
-                <span>Click to View Full-Screen High-Res Look</span>
+                <span>Click to View Full-Screen Gemini AI Illustration</span>
               </div>
             </div>
 
@@ -275,19 +119,10 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
             <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs text-amber-200 font-medium bg-gray-950/85 backdrop-blur-md px-3.5 py-2 rounded-xl border border-gray-800/80 shadow-md">
               <span className="flex items-center space-x-1.5">
                 <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
-                <span>Gemini API Fashion Look</span>
+                <span className="font-semibold text-amber-400">✨ Gemini AI Generated Illustration</span>
               </span>
 
               <div className="flex items-center space-x-3">
-                <button
-                  onClick={handleCycleFashionImage}
-                  className="text-amber-400 hover:text-amber-300 flex items-center space-x-1 text-[11px] font-semibold transition cursor-pointer bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30"
-                  title="Cycle to next fashion model look"
-                >
-                  <RefreshCw className="w-3 h-3" />
-                  <span>Cycle Photo</span>
-                </button>
-
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -319,7 +154,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-gray-900/40 p-3.5 rounded-xl border border-gray-800/80">
         <div className="text-xs text-gray-400 flex items-center space-x-1.5">
           <Wand2 className="w-3.5 h-3.5 text-purple-400" />
-          <span>Produce fashion look via Google Gemini API?</span>
+          <span>Produce custom fashion look via Google Gemini API?</span>
         </div>
         <button
           onClick={handleGenerateGeminiSketch}
@@ -334,7 +169,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
           ) : (
             <>
               <Wand2 className="w-3.5 h-3.5" />
-              <span>Generate Gemini AI Image</span>
+              <span>Re-Generate Gemini AI Image</span>
             </>
           )}
         </button>
@@ -475,7 +310,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
                   rel="noopener noreferrer"
                   className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold hover:bg-amber-500/20 transition flex items-center space-x-1"
                 >
-                  <span>Open Original Image</span>
+                  <span>Open Gemini SVG Data URL</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
 
@@ -493,7 +328,6 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
               <img
                 src={currentImageSrc}
                 alt={outfit.clothing_type}
-                onError={handleImageError}
                 className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl"
               />
             </div>
