@@ -16,49 +16,43 @@ try:
 except Exception:
     KNOWLEDGE_BASE = {}
 
+def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> str:
+    # High-resolution curated fashion model photography mapping
+    is_male = "male" in (gender or "").lower() and "female" not in (gender or "").lower()
+    lower = (clothing_type or "").lower()
+
+    if is_male:
+        if any(k in lower for k in ["panche", "veshti", "dhoti", "mundu", "lungi"]):
+            return "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80"
+        elif "modi" in lower or "nehru" in lower or "vest" in lower:
+            return "https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80"
+        elif "polo" in lower or "chino" in lower:
+            return "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?auto=format&fit=crop&w=800&q=80"
+        elif "sherwani" in lower or "bandhgala" in lower:
+            return "https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80"
+        elif "tuxedo" in lower or "suit" in lower or "blazer" in lower:
+            return "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80"
+        elif "kurta" in lower:
+            return "https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=800&q=80"
+        else:
+            return "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&w=800&q=80"
+    else: # Female
+        if "sharara" in lower or "garara" in lower:
+            return "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80"
+        elif "lehenga" in lower or "anarkali" in lower:
+            return "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80"
+        elif "saree" in lower:
+            return "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80"
+        elif "blazer" in lower or "suit" in lower:
+            return "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80"
+        elif "kurta" in lower or "salwar" in lower:
+            return "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80"
+        else:
+            return "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80"
+
 def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> List[str]:
-    color_str = " ".join(colors) if colors else ""
-    lower = clothing_type.lower()
-    
-    if any(k in lower for k in ["panche", "veshti", "dhoti", "mundu", "lungi"]):
-        base_prompt = f"South Indian male model wearing traditional white silk Veshti Panche dhoti with gold border and shirt in {color_str}"
-    elif "modi" in lower or "nehru" in lower:
-        base_prompt = f"Indian male model wearing traditional sleeveless Modi jacket Nehru vest over silk kurta in {color_str}"
-    elif "saree" in lower:
-        base_prompt = f"Indian female model wearing traditional draped silk saree in {color_str}"
-    elif "lehenga" in lower:
-        base_prompt = f"Indian female model wearing traditional flared lehenga choli in {color_str}"
-    elif "sharara" in lower or "garara" in lower:
-        base_prompt = f"Indian female model wearing traditional flared sharara suit set in {color_str}"
-    elif "anarkali" in lower or "salwar" in lower:
-        base_prompt = f"Indian female model wearing floor length flared anarkali suit in {color_str}"
-    elif "sherwani" in lower or "bandhgala" in lower:
-        base_prompt = f"Indian male model wearing traditional silk sherwani jacket in {color_str}"
-    elif "polo" in lower or "chino" in lower:
-        base_prompt = f"handsome male model wearing stylish polo shirt and tailored chinos in {color_str}"
-    elif "tuxedo" in lower or "suit" in lower or "blazer" in lower:
-        gender_prefix = "handsome male model" if "male" in gender.lower() and "female" not in gender.lower() else "stylish female model"
-        base_prompt = f"{gender_prefix} wearing tailored formal suit blazer in {color_str}"
-    else:
-        gender_prefix = "handsome male model" if "male" in gender.lower() and "female" not in gender.lower() else "beautiful female model"
-        base_prompt = f"{gender_prefix} wearing {clothing_type} in {color_str}"
-
-    base_seed = (abs(hash(clothing_type + (gender or ""))) + (card_index * 1337)) % 10000
-
-    # Image 1: FLUX Engine Model Concept
-    prompt_1 = f"fashion studio photograph of {base_prompt}, full length editorial portrait"
-    encoded_1 = urllib.parse.quote(prompt_1)
-    url_1 = f"https://image.pollinations.ai/prompt/{encoded_1}?width=800&height=1000&nologo=true&seed={base_seed}&model=flux"
-
-    # Image 2: TURBO Engine Model Concept (Distinct rendering engine & artistic sketch style)
-    prompt_2 = f"artistic haute couture fashion croquis illustration of {base_prompt}, runway model"
-    encoded_2 = urllib.parse.quote(prompt_2)
-    url_2 = f"https://image.pollinations.ai/prompt/{encoded_2}?width=800&height=1000&nologo=true&seed={base_seed + 777}&model=turbo"
-
-    return [url_1, url_2]
-
-def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male") -> str:
-    return resolve_garment_images_list(clothing_type, colors, fabric, gender)[0]
+    img = resolve_garment_image(clothing_type, colors, fabric, gender, card_index)
+    return [img]
 
 # --- Pydantic Data Models (Matches Required Response Schema) ---
 
@@ -76,7 +70,7 @@ class OutfitDetail(BaseModel):
     rationale: str = Field(..., description="Fashion design rationale explaining why this outfit suits the occasion, culture, season, and budget")
     image_url: Optional[str] = Field(default="", description="High-resolution AI fashion illustration reference URL")
     sketch_url: Optional[str] = Field(default="", description="Bespoke AI fashion sketch URL")
-    image_urls: Optional[List[str]] = Field(default_factory=list, description="Array of 2 unique AI image URLs")
+    image_urls: Optional[List[str]] = Field(default_factory=list, description="Array of fashion image URLs")
 
 class RecommendationResponse(BaseModel):
     primary_outfit: OutfitDetail
@@ -129,12 +123,9 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
                 sketch_url = data["data"][0]["url"]
                 return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
         except Exception as e:
-            print(f"[WARN] DALL-E 3 sketch generation failed ({e}). Fallback to Pollinations AI generation.")
+            print(f"[WARN] DALL-E 3 sketch generation failed ({e}). Returning fashion reference image.")
 
-    # Option B: High-resolution FLUX Generation with dynamic seed (Guarantees unique new image every click)
-    encoded = urllib.parse.quote(prompt)
-    dynamic_seed = int(time.time() * 1000) % 1000000
-    sketch_url = f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true&seed={dynamic_seed}&model=flux"
+    sketch_url = resolve_garment_image(req.clothing_type, req.colors, req.fabric, req.gender or "Male")
     return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
 
 

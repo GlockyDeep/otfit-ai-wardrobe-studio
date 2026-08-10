@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { OutfitDetail } from '../types';
-import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, Wand2, ExternalLink, Loader2, Maximize2, X, ChevronLeft, ChevronRight, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, Wand2, ExternalLink, Loader2, Maximize2, X, RefreshCw } from 'lucide-react';
 
 interface OutfitCardProps {
   outfit: OutfitDetail;
@@ -161,56 +161,29 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   gender = 'Male'
 }) => {
   const [sketchUrl, setSketchUrl] = useState<string | null>(outfit.sketch_url || null);
-  
-  // Build initial 2 distinct image variations matching gender and garment
-  const initialImages: string[] = outfit.image_urls && outfit.image_urls.length >= 2
-    ? outfit.image_urls.slice(0, 2)
-    : [0, 1].map((idx) => getFallbackImageForIndex(outfit.clothing_type, gender, idx));
-
-  const [imageGallery, setImageGallery] = useState<string[]>(initialImages);
-  const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [isGeneratingSketch, setIsGeneratingSketch] = useState(false);
   const [sketchError, setSketchError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [fallbackStep, setFallbackStep] = useState<number>(0);
-  const [isAiTimeout, setIsAiTimeout] = useState<boolean>(false);
+  const [photoIndex, setPhotoIndex] = useState<number>(0);
 
-  const currentImageSrc = imageGallery[activeImageIndex] || getFallbackImageForIndex(outfit.clothing_type, gender, activeImageIndex + fallbackStep);
+  const initialImage = outfit.image_url || getFallbackImageForIndex(outfit.clothing_type, gender, photoIndex);
+  const [currentImageSrc, setCurrentImageSrc] = useState<string>(initialImage);
 
   const pinterestUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(
     `${gender} ${outfit.clothing_type} ${outfit.fabric} fashion style`
   )}`;
 
   const handleImageError = () => {
-    setIsAiTimeout(true);
-    const fallback = getFallbackImageForIndex(outfit.clothing_type, gender, activeImageIndex + fallbackStep + 1);
-    setImageGallery((prev) => {
-      if (prev[activeImageIndex] === fallback) return prev;
-      const updated = [...prev];
-      updated[activeImageIndex] = fallback;
-      return updated;
-    });
+    const nextFallback = getFallbackImageForIndex(outfit.clothing_type, gender, photoIndex + 1);
+    setCurrentImageSrc(nextFallback);
   };
 
   const handleCycleFashionImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setFallbackStep((prev) => prev + 1);
-    const newFallback = getFallbackImageForIndex(outfit.clothing_type, gender, activeImageIndex + fallbackStep + 1);
-    setImageGallery((prev) => {
-      const updated = [...prev];
-      updated[activeImageIndex] = newFallback;
-      return updated;
-    });
-  };
-
-  const handlePrevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setActiveImageIndex((prev) => (prev === 0 ? imageGallery.length - 1 : prev - 1));
-  };
-
-  const handleNextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setActiveImageIndex((prev) => (prev === imageGallery.length - 1 ? 0 : prev + 1));
+    const nextIdx = photoIndex + 1;
+    setPhotoIndex(nextIdx);
+    const newImage = getFallbackImageForIndex(outfit.clothing_type, gender, nextIdx);
+    setCurrentImageSrc(newImage);
   };
 
   const handleGenerateSketch = async () => {
@@ -232,10 +205,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
       if (!response.ok) throw new Error('Sketch generation failed');
       const data = await response.json();
       setSketchUrl(data.sketch_url);
-      setIsAiTimeout(false);
-      // Replace Var 2 with high-res DALL-E / FLUX sketch
-      setImageGallery((prev) => [prev[0], data.sketch_url]);
-      setActiveImageIndex(1); // Switch to Var 2 to show DALL-E / FLUX sketch
+      setCurrentImageSrc(data.sketch_url);
     } catch (err) {
       setSketchError('Could not generate sketch at this time.');
     } finally {
@@ -253,18 +223,11 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
     >
       {/* Top badges & Favorite Toggle */}
       <div className="flex items-center justify-between mb-4 relative z-20">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center space-x-2">
           {isPrimary && (
             <div className="bg-gradient-to-l from-amber-500 to-rose-500 text-gray-950 font-bold text-[10px] sm:text-xs px-3 py-1 rounded-full uppercase tracking-wider flex items-center space-x-1 shadow-md">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Primary Choice</span>
-            </div>
-          )}
-
-          {isAiTimeout && (
-            <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300 font-semibold text-[10px] sm:text-xs px-2.5 py-1 rounded-full flex items-center space-x-1 shadow-sm">
-              <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
-              <span>Pollinations AI Timed Out &bull; Showing Curated Look</span>
             </div>
           )}
         </div>
@@ -286,7 +249,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
         )}
       </div>
 
-      {/* Outfit Fashion Image Gallery Carousel */}
+      {/* Outfit Fashion Reference Image */}
       {currentImageSrc && (
         <div className="mb-6 rounded-xl overflow-hidden relative group border border-gray-800 shadow-lg bg-gray-950">
           <div
@@ -301,32 +264,11 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
               loading="lazy"
             />
 
-            {/* Left/Right Carousel Arrows */}
-            {imageGallery.length > 1 && (
-              <>
-                <button
-                  onClick={handlePrevImage}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-gray-950/75 border border-gray-800 text-gray-200 hover:text-amber-400 hover:bg-gray-900 transition shadow-xl cursor-pointer opacity-80 group-hover:opacity-100"
-                  title="Previous Variation"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-
-                <button
-                  onClick={handleNextImage}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-gray-950/75 border border-gray-800 text-gray-200 hover:text-amber-400 hover:bg-gray-900 transition shadow-xl cursor-pointer opacity-80 group-hover:opacity-100"
-                  title="Next Variation"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </>
-            )}
-
             {/* Hover Expand Overlay */}
             <div className="absolute inset-0 bg-gray-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
               <div className="bg-gray-900/90 text-amber-300 text-xs font-semibold px-4 py-2 rounded-xl border border-amber-500/40 flex items-center space-x-2 shadow-2xl">
                 <Maximize2 className="w-4 h-4 text-amber-400" />
-                <span>Click to View Full-Screen High-Res Sketch</span>
+                <span>Click to View Full-Screen High-Res Look</span>
               </div>
             </div>
 
@@ -334,11 +276,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
             <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs text-amber-200 font-medium bg-gray-950/85 backdrop-blur-md px-3.5 py-2 rounded-xl border border-gray-800/80 shadow-md">
               <span className="flex items-center space-x-1.5">
                 <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
-                <span>
-                  {activeImageIndex === 0
-                    ? 'Var 1: AI Style Concept'
-                    : 'Var 2: FLUX / DALL-E Couture'}
-                </span>
+                <span>Fashion Look Reference</span>
               </span>
 
               <div className="flex items-center space-x-3">
@@ -375,47 +313,13 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
               </div>
             </div>
           </div>
-
-          {/* 2-Variation Tab Selector Bar */}
-          {imageGallery.length > 1 && (
-            <div className="p-2 bg-gray-900/90 border-t border-gray-800 flex items-center justify-center space-x-3">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveImageIndex(0);
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer border flex items-center space-x-1.5 ${
-                  activeImageIndex === 0
-                    ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-md'
-                    : 'bg-gray-800/60 border-gray-700/60 text-gray-400 hover:text-gray-200'
-                }`}
-              >
-                <span>Var 1 (Primary Concept)</span>
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveImageIndex(1);
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer border flex items-center space-x-1.5 ${
-                  activeImageIndex === 1
-                    ? 'bg-purple-500/20 border-purple-400 text-purple-300 shadow-md'
-                    : 'bg-gray-800/60 border-gray-700/60 text-gray-400 hover:text-gray-200'
-                }`}
-              >
-                <Wand2 className="w-3 h-3 text-purple-400" />
-                <span>Var 2 (FLUX / DALL-E 3)</span>
-              </button>
-            </div>
-          )}
         </div>
       )}
 
       {/* Action: Generate AI Sketch Button */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-gray-900/40 p-3.5 rounded-xl border border-gray-800/80">
         <div className="text-xs text-gray-400">
-          <span>Render 1-of-1 DALL-E 3 / FLUX model couture sketch for Var 2?</span>
+          <span>Render 1-of-1 DALL-E 3 couture sketch for this outfit?</span>
         </div>
         <button
           onClick={handleGenerateSketch}
@@ -425,12 +329,12 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
           {isGeneratingSketch ? (
             <>
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Rendering FLUX/DALL-E...</span>
+              <span>Rendering DALL-E 3...</span>
             </>
           ) : (
             <>
               <Wand2 className="w-3.5 h-3.5" />
-              <span>{sketchUrl ? 'Re-Render FLUX / DALL-E' : 'Generate FLUX / DALL-E Couture'}</span>
+              <span>{sketchUrl ? 'Re-Render DALL-E 3' : 'Generate DALL-E 3 Couture'}</span>
             </>
           )}
         </button>
@@ -561,7 +465,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
             <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/90">
               <div>
                 <h4 className="font-serif-fashion font-bold text-lg text-gray-100">
-                  {outfit.clothing_type} ({activeImageIndex === 0 ? 'Var 1: Primary Concept' : 'Var 2: FLUX / DALL-E Couture'})
+                  {outfit.clothing_type}
                 </h4>
                 <p className="text-xs text-amber-400 font-medium">
                   {gender} &bull; {outfit.fabric} &bull; {outfit.colors.join(', ')}
