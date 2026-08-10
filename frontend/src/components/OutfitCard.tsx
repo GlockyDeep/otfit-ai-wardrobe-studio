@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { OutfitDetail } from '../types';
-import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, ExternalLink, Maximize2, X, RefreshCw } from 'lucide-react';
+import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, ExternalLink, Maximize2, X, RefreshCw, Wand2, Loader2 } from 'lucide-react';
 
 interface OutfitCardProps {
   outfit: OutfitDetail;
@@ -162,6 +162,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState<number>(0);
+  const [isGeneratingSketch, setIsGeneratingSketch] = useState(false);
 
   const initialImage = outfit.image_url || getFallbackImageForIndex(outfit.clothing_type, gender, photoIndex);
   const [currentImageSrc, setCurrentImageSrc] = useState<string>(initialImage);
@@ -181,6 +182,34 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
     setPhotoIndex(nextIdx);
     const newImage = getFallbackImageForIndex(outfit.clothing_type, gender, nextIdx);
     setCurrentImageSrc(newImage);
+  };
+
+  const handleGenerateGeminiSketch = async () => {
+    setIsGeneratingSketch(true);
+    try {
+      const response = await fetch('http://localhost:8000/generate-sketch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clothing_type: outfit.clothing_type,
+          silhouette: outfit.silhouette,
+          colors: outfit.colors,
+          fabric: outfit.fabric,
+          embroidery: outfit.embroidery_or_pattern,
+          gender: gender
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.sketch_url) {
+          setCurrentImageSrc(data.sketch_url);
+        }
+      }
+    } catch (err) {
+      console.error("Gemini sketch failed", err);
+    } finally {
+      setIsGeneratingSketch(false);
+    }
   };
 
   return (
@@ -246,7 +275,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
             <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs text-amber-200 font-medium bg-gray-950/85 backdrop-blur-md px-3.5 py-2 rounded-xl border border-gray-800/80 shadow-md">
               <span className="flex items-center space-x-1.5">
                 <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
-                <span>Fashion Look Reference</span>
+                <span>Gemini API Fashion Look</span>
               </span>
 
               <div className="flex items-center space-x-3">
@@ -286,17 +315,28 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
         </div>
       )}
 
-      {/* Action: Re-Render Fashion Look Button */}
+      {/* Action: Generate Gemini AI Look Button */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-gray-900/40 p-3.5 rounded-xl border border-gray-800/80">
-        <div className="text-xs text-gray-400">
-          <span>Want to explore another curated fashion model look for this outfit?</span>
+        <div className="text-xs text-gray-400 flex items-center space-x-1.5">
+          <Wand2 className="w-3.5 h-3.5 text-purple-400" />
+          <span>Produce fashion look via Google Gemini API?</span>
         </div>
         <button
-          onClick={handleCycleFashionImage}
-          className="py-1.5 px-3.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
+          onClick={handleGenerateGeminiSketch}
+          disabled={isGeneratingSketch}
+          className="py-1.5 px-3.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md transition-all flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Re-Render Fashion Look</span>
+          {isGeneratingSketch ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Generating with Gemini API...</span>
+            </>
+          ) : (
+            <>
+              <Wand2 className="w-3.5 h-3.5" />
+              <span>Generate Gemini AI Image</span>
+            </>
+          )}
         </button>
       </div>
 

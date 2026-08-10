@@ -89,21 +89,39 @@ class SketchResponse(BaseModel):
     prompt_used: str
 
 def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
+    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
     openai_key = os.getenv("OPENAI_API_KEY", "").strip()
     color_str = ", ".join(req.colors) if req.colors else "harmonious luxury palette"
     lower = req.clothing_type.lower()
+    gender_prefix = "male model" if "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower() else "female model"
 
-    if any(k in lower for k in ["panche", "veshti", "dhoti", "mundu", "lungi"]):
-        prompt = f"Bespoke fashion sketch illustration of South Indian male model wearing white silk Veshti Panche dhoti with gold border and shirt in {color_str}, studio lighting."
-    elif "modi" in lower or "nehru" in lower:
-        prompt = f"Bespoke fashion sketch illustration of Indian male model wearing sleeveless Modi jacket Nehru vest over silk kurta in {color_str}, studio lighting."
-    elif "polo" in lower or "chino" in lower:
-        prompt = f"Bespoke fashion sketch illustration of handsome male model wearing stylish polo shirt and tailored chinos in {color_str}, studio portrait."
-    else:
-        gender_prefix = "male model" if "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower() else "female model"
-        prompt = f"Bespoke fashion sketch illustration of {gender_prefix} wearing {req.clothing_type} in {color_str}, full length studio portrait."
+    prompt = f"Bespoke high fashion croquis illustration of {gender_prefix} wearing {req.clothing_type} in {color_str}, studio lighting, {req.silhouette} silhouette."
 
-    # Option A: OpenAI DALL-E 3
+    # Option 1: Google Gemini API Image Models
+    if gemini_key:
+        gemini_image_models = ["gemini-2.5-flash-image", "gemini-3.1-flash-image", "gemini-3-pro-image", "imagen-3.0-generate-002"]
+        for model in gemini_image_models:
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={gemini_key}"
+                payload = {
+                    "contents": [{"parts": [{"text": f"Generate a realistic high fashion croquis illustration image of: {prompt}"}]}]
+                }
+                with httpx.Client(timeout=20.0) as client:
+                    res = client.post(url, json=payload)
+                    if res.status_code == 200:
+                        data = res.json()
+                        candidates = data.get("candidates", [])
+                        if candidates:
+                            parts = candidates[0].get("content", {}).get("parts", [])
+                            for p in parts:
+                                if "inlineData" in p:
+                                    b64 = p["inlineData"]["data"]
+                                    mime = p["inlineData"].get("mimeType", "image/jpeg")
+                                    return SketchResponse(sketch_url=f"data:{mime};base64,{b64}", prompt_used=prompt)
+            except Exception as e:
+                print(f"[WARN] Gemini Image API model {model} attempt: {e}")
+
+    # Option 2: OpenAI DALL-E 3
     if openai_key:
         try:
             headers = {
