@@ -1,5 +1,6 @@
 import os
 import json
+import base64
 import urllib.parse
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
@@ -88,7 +89,8 @@ class SketchResponse(BaseModel):
     prompt_used: str
 
 def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
-    api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+    hf_token = os.getenv("HUGGINGFACE_API_KEY", "").strip() or os.getenv("HF_TOKEN", "").strip()
     color_str = ", ".join(req.colors) if req.colors else "harmonious luxury palette"
     lower = req.clothing_type.lower()
 
@@ -100,10 +102,27 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
         gender_prefix = "male model" if "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower() else "female model"
         prompt = f"Bespoke fashion sketch illustration of {gender_prefix} wearing {req.clothing_type} in {color_str}, full length studio portrait."
 
-    if api_key:
+    # Option A: Hugging Face Free Inference API (FLUX.1-schnell or SDXL)
+    if hf_token:
+        try:
+            headers = {"Authorization": f"Bearer {hf_token}"}
+            payload = {"inputs": prompt}
+            hf_model = os.getenv("HF_MODEL", "black-forest-labs/FLUX.1-schnell").strip()
+            url = f"https://api-inference.huggingface.co/models/{hf_model}"
+            with httpx.Client(timeout=35.0) as client:
+                res = client.post(url, headers=headers, json=payload)
+                res.raise_for_status()
+                img_b64 = base64.b64encode(res.content).decode("utf-8")
+                sketch_url = f"data:image/jpeg;base64,{img_b64}"
+                return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
+        except Exception as e:
+            print(f"[WARN] Hugging Face sketch generation failed ({e}). Trying fallback.")
+
+    # Option B: OpenAI DALL-E 3
+    if openai_key:
         try:
             headers = {
-                "Authorization": f"Bearer {api_key}",
+                "Authorization": f"Bearer {openai_key}",
                 "Content-Type": "application/json"
             }
             payload = {
@@ -121,7 +140,7 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
         except Exception as e:
             print(f"[WARN] DALL-E 3 sketch generation failed ({e}). Fallback to Pollinations AI generation.")
 
-    # High-resolution Pollinations AI Generation fallback (No Key required)
+    # Option C: High-resolution Pollinations AI Generation fallback (No Key required)
     encoded = urllib.parse.quote(prompt)
     sketch_url = f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true&seed={abs(hash(req.clothing_type + (req.gender or ''))) % 100000}"
     return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
@@ -445,7 +464,7 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                     accessories=["Silk pocket square in muted burgundy", "Classic leather strap watch"],
                     footwear="Polished Black Leather Oxfords",
                     hairstyle="Clean side-part fade with matte pomade",
-                    makeup="Groomed eyebrows and hydrated natural lip balm",
+                    makeup="Groomed eyebrows and natural hydrated lip balm",
                     styling_tips=[
                         "Keep Bandhgala jacket buttoned up to the neck for a sharp corporate posture.",
                         "Select a contrasting silk pocket square to add subtle personal flair without violating dress codes."
