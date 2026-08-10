@@ -91,7 +91,6 @@ class SketchResponse(BaseModel):
 
 def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
     openai_key = os.getenv("OPENAI_API_KEY", "").strip()
-    hf_token = os.getenv("HUGGINGFACE_API_KEY", "").strip() or os.getenv("HF_TOKEN", "").strip()
     color_str = ", ".join(req.colors) if req.colors else "harmonious luxury palette"
     lower = req.clothing_type.lower()
 
@@ -99,31 +98,13 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
         prompt = f"Bespoke fashion sketch illustration of South Indian male model wearing white silk Veshti Panche dhoti with gold border and shirt in {color_str}, studio lighting."
     elif "modi" in lower or "nehru" in lower:
         prompt = f"Bespoke fashion sketch illustration of Indian male model wearing sleeveless Modi jacket Nehru vest over silk kurta in {color_str}, studio lighting."
+    elif "polo" in lower or "chino" in lower:
+        prompt = f"Bespoke fashion sketch illustration of handsome male model wearing stylish polo shirt and tailored chinos in {color_str}, studio portrait."
     else:
         gender_prefix = "male model" if "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower() else "female model"
         prompt = f"Bespoke fashion sketch illustration of {gender_prefix} wearing {req.clothing_type} in {color_str}, full length studio portrait."
 
-    # Option A: Hugging Face Free Inference API (FLUX.1-schnell or SDXL)
-    if hf_token:
-        hf_model = os.getenv("HF_MODEL", "black-forest-labs/FLUX.1-schnell").strip()
-        urls_to_try = [
-            f"https://router.huggingface.co/hf-inference/v1/models/{hf_model}",
-            f"https://api-inference.huggingface.co/models/{hf_model}"
-        ]
-        headers = {"Authorization": f"Bearer {hf_token}"}
-        payload = {"inputs": prompt}
-        for url in urls_to_try:
-            try:
-                with httpx.Client(timeout=35.0) as client:
-                    res = client.post(url, headers=headers, json=payload)
-                    if res.status_code == 200:
-                        img_b64 = base64.b64encode(res.content).decode("utf-8")
-                        sketch_url = f"data:image/jpeg;base64,{img_b64}"
-                        return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
-            except Exception:
-                pass
-
-    # Option B: OpenAI DALL-E 3
+    # Option A: OpenAI DALL-E 3
     if openai_key:
         try:
             headers = {
@@ -145,7 +126,7 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
         except Exception as e:
             print(f"[WARN] DALL-E 3 sketch generation failed ({e}). Fallback to Pollinations AI generation.")
 
-    # Option C: High-resolution FLUX Generation with dynamic seed (Guarantees unique new image every click)
+    # Option B: High-resolution FLUX Generation with dynamic seed (Guarantees unique new image every click)
     encoded = urllib.parse.quote(prompt)
     dynamic_seed = int(time.time() * 1000) % 1000000
     sketch_url = f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true&seed={dynamic_seed}&model=flux"
