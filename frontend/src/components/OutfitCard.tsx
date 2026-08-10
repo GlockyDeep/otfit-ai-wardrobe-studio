@@ -8,6 +8,7 @@ interface OutfitCardProps {
   isPrimary?: boolean;
   isFavorite?: boolean;
   onToggleFavorite?: (outfit: OutfitDetail) => void;
+  gender?: string;
 }
 
 export const OutfitCard: React.FC<OutfitCardProps> = ({
@@ -15,14 +16,15 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   title,
   isPrimary = false,
   isFavorite = false,
-  onToggleFavorite
+  onToggleFavorite,
+  gender = 'Male'
 }) => {
   const [sketchUrl, setSketchUrl] = useState<string | null>(outfit.sketch_url || null);
   const [isGeneratingSketch, setIsGeneratingSketch] = useState(false);
   const [sketchError, setSketchError] = useState<string | null>(null);
 
   const pinterestUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(
-    `${outfit.clothing_type} ${outfit.fabric} fashion style`
+    `${gender} ${outfit.clothing_type} ${outfit.fabric} fashion style`
   )}`;
 
   const handleGenerateSketch = async () => {
@@ -37,7 +39,8 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
           silhouette: outfit.silhouette,
           colors: outfit.colors,
           fabric: outfit.fabric,
-          embroidery: outfit.embroidery_or_pattern
+          embroidery: outfit.embroidery_or_pattern,
+          gender: gender
         })
       });
       if (!response.ok) throw new Error('Sketch generation failed');

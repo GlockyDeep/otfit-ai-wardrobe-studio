@@ -106,6 +106,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           isPrimary={true}
           isFavorite={isFavorited(data.primary_outfit)}
           onToggleFavorite={(outfit) => onToggleFavorite(outfit, formData.occasion, formData.gender)}
+          gender={formData.gender}
         />
       </section>
 
@@ -130,6 +131,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
                   isPrimary={false}
                   isFavorite={isFavorited(alt)}
                   onToggleFavorite={(outfit) => onToggleFavorite(outfit, formData.occasion, formData.gender)}
+                  gender={formData.gender}
                 />
               </div>
             ))}

@@ -14,9 +14,10 @@ try:
 except Exception:
     KNOWLEDGE_BASE = {}
 
-def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "") -> str:
+def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male") -> str:
     color_str = " ".join(colors) if colors else ""
-    raw_prompt = f"high fashion runway couture illustration of {clothing_type} {fabric} {color_str} elegant studio lighting high resolution 8k"
+    gender_prefix = "handsome male model wearing" if "male" in gender.lower() and "female" not in gender.lower() else "female fashion model wearing"
+    raw_prompt = f"high fashion runway couture illustration of a {gender_prefix} {clothing_type} {fabric} {color_str} full length portrait elegant studio lighting high resolution 8k"
     encoded = urllib.parse.quote(raw_prompt)
     return f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true"
 
@@ -47,6 +48,7 @@ class SketchRequest(BaseModel):
     colors: Optional[List[str]] = []
     fabric: Optional[str] = ""
     embroidery: Optional[str] = ""
+    gender: Optional[str] = "Male"
 
 class SketchResponse(BaseModel):
     sketch_url: str
@@ -55,7 +57,8 @@ class SketchResponse(BaseModel):
 def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     color_str = ", ".join(req.colors) if req.colors else "harmonious luxury palette"
-    prompt = f"Bespoke haute couture fashion sketch illustration of {req.clothing_type} in {color_str}. Fabric: {req.fabric or 'luxury textile'}. Cut/Silhouette: {req.silhouette or 'structured'}. Full body high fashion runway croquis illustration, studio lighting, elegant watercolor and ink."
+    gender_prefix = "handsome male model" if "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower() else "female model"
+    prompt = f"Bespoke haute couture fashion sketch illustration of a {gender_prefix} wearing {req.clothing_type} in {color_str}. Fabric: {req.fabric or 'luxury textile'}. Cut/Silhouette: {req.silhouette or 'structured'}. Full body high fashion runway croquis illustration, studio lighting, elegant watercolor and ink."
 
     if api_key:
         try:
@@ -80,7 +83,7 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
 
     # High-resolution Pollinations AI Generation fallback (No Key required)
     encoded = urllib.parse.quote(prompt)
-    sketch_url = f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true&seed={abs(hash(req.clothing_type)) % 100000}"
+    sketch_url = f"https://image.pollinations.ai/prompt/{encoded}?width=800&height=1000&nologo=true&seed={abs(hash(req.clothing_type + (req.gender or ''))) % 100000}"
     return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
 
 
@@ -143,12 +146,13 @@ Provide your output as a JSON object with:
 }}
 """
 
-def attach_ai_images(outfit: OutfitDetail):
-    outfit.image_url = resolve_garment_image(outfit.clothing_type, outfit.colors, outfit.fabric)
+def attach_ai_images(outfit: OutfitDetail, gender: str = "Male"):
+    outfit.image_url = resolve_garment_image(outfit.clothing_type, outfit.colors, outfit.fabric, gender)
     outfit.sketch_url = outfit.image_url
 
 def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationResponse:
     provider = os.getenv("AI_PROVIDER", "openai").lower()
+    gender = context.get("gender", "Male")
     
     if provider == "groq":
         api_key = os.getenv("GROQ_API_KEY", "").strip()
@@ -197,10 +201,10 @@ def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationRespons
                 while len(validated.alternatives) < 2:
                     validated.alternatives.append(fallback_alt)
 
-            # Attach high-resolution custom AI fashion sketch images matching exact specs
-            attach_ai_images(validated.primary_outfit)
+            # Attach high-resolution custom AI fashion sketch images matching exact specs and gender
+            attach_ai_images(validated.primary_outfit, gender)
             for alt in validated.alternatives:
-                attach_ai_images(alt)
+                attach_ai_images(alt, gender)
 
             return validated
             
@@ -614,9 +618,9 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                 rationale="A versatile casual option offering low-maintenance comfort."
             )
 
-    attach_ai_images(primary)
-    attach_ai_images(alt1)
-    attach_ai_images(alt2)
+    attach_ai_images(primary, gender)
+    attach_ai_images(alt1, gender)
+    attach_ai_images(alt2, gender)
 
     return RecommendationResponse(
         primary_outfit=primary,
