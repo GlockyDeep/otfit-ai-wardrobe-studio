@@ -16,7 +16,7 @@ try:
 except Exception:
     KNOWLEDGE_BASE = {}
 
-def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male") -> List[str]:
+def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> List[str]:
     color_str = " ".join(colors) if colors else ""
     lower = clothing_type.lower()
     
@@ -28,6 +28,8 @@ def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fa
         base_prompt = f"Indian female model wearing traditional draped silk saree in {color_str}"
     elif "lehenga" in lower:
         base_prompt = f"Indian female model wearing traditional flared lehenga choli in {color_str}"
+    elif "sharara" in lower or "garara" in lower:
+        base_prompt = f"Indian female model wearing traditional flared sharara suit set in {color_str}"
     elif "anarkali" in lower or "salwar" in lower:
         base_prompt = f"Indian female model wearing floor length flared anarkali suit in {color_str}"
     elif "sherwani" in lower or "bandhgala" in lower:
@@ -38,7 +40,7 @@ def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fa
         gender_prefix = "male model" if "male" in gender.lower() and "female" not in gender.lower() else "female model"
         base_prompt = f"{gender_prefix} wearing {clothing_type} in {fabric} {color_str}"
 
-    base_seed = abs(hash(clothing_type + (gender or ""))) % 10000
+    base_seed = (abs(hash(clothing_type + (gender or ""))) + (card_index * 1337)) % 10000
 
     # Image 1: FLUX Engine Model Concept
     prompt_1 = f"fashion studio photograph of {base_prompt}, full length portrait"
@@ -192,8 +194,8 @@ Provide your output as a JSON object with:
 }}
 """
 
-def attach_ai_images(outfit: OutfitDetail, gender: str = "Male"):
-    images = resolve_garment_images_list(outfit.clothing_type, outfit.colors, outfit.fabric, gender)
+def attach_ai_images(outfit: OutfitDetail, gender: str = "Male", card_index: int = 0):
+    images = resolve_garment_images_list(outfit.clothing_type, outfit.colors, outfit.fabric, gender, card_index)
     outfit.image_urls = images
     outfit.image_url = images[0]
     outfit.sketch_url = images[0]
@@ -250,9 +252,9 @@ def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationRespons
                     validated.alternatives.append(fallback_alt)
 
             # Attach high-resolution custom AI fashion sketch images matching exact specs and gender
-            attach_ai_images(validated.primary_outfit, gender)
-            for alt in validated.alternatives:
-                attach_ai_images(alt, gender)
+            attach_ai_images(validated.primary_outfit, gender, 0)
+            for idx, alt in enumerate(validated.alternatives):
+                attach_ai_images(alt, gender, idx + 1)
 
             return validated
             
@@ -707,9 +709,9 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
             )
 
     # Attach custom high-res AI sketch images to primary and all alternatives
-    attach_ai_images(primary, gender)
-    attach_ai_images(alt1, gender)
-    attach_ai_images(alt2, gender)
+    attach_ai_images(primary, gender, 0)
+    attach_ai_images(alt1, gender, 1)
+    attach_ai_images(alt2, gender, 2)
 
     return RecommendationResponse(
         primary_outfit=primary,

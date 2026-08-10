@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { OutfitDetail } from '../types';
-import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, Wand2, ExternalLink, Loader2, Maximize2, X, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, Wand2, ExternalLink, Loader2, Maximize2, X, ChevronLeft, ChevronRight, RefreshCw, AlertTriangle } from 'lucide-react';
 
 interface OutfitCardProps {
   outfit: OutfitDetail;
@@ -91,6 +91,14 @@ const MALE_FALLBACK_GALLERIES: Record<string, string[]> = {
 };
 
 const FEMALE_FALLBACK_GALLERIES: Record<string, string[]> = {
+  sharara: [
+    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80'
+  ],
+  garara: [
+    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80'
+  ],
   lehenga: [
     'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80'
@@ -103,21 +111,25 @@ const FEMALE_FALLBACK_GALLERIES: Record<string, string[]> = {
     'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80'
   ],
+  salwar: [
+    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80'
+  ],
   dress: [
     'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=800&q=80'
   ],
   suit: [
-    'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80'
+    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80'
   ],
   kurta: [
     'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80'
   ],
   default: [
-    'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=800&q=80'
+    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80'
   ]
 };
 
@@ -157,6 +169,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   const [sketchError, setSketchError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fallbackStep, setFallbackStep] = useState<number>(0);
+  const [isAiTimeout, setIsAiTimeout] = useState<boolean>(false);
 
   const currentImageSrc = imageGallery[activeImageIndex] || getFallbackImageForIndex(outfit.clothing_type, gender, activeImageIndex + fallbackStep);
 
@@ -165,6 +178,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   )}`;
 
   const handleImageError = () => {
+    setIsAiTimeout(true);
     const fallback = getFallbackImageForIndex(outfit.clothing_type, gender, activeImageIndex + fallbackStep + 1);
     setImageGallery((prev) => {
       if (prev[activeImageIndex] === fallback) return prev;
@@ -214,6 +228,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
       if (!response.ok) throw new Error('Sketch generation failed');
       const data = await response.json();
       setSketchUrl(data.sketch_url);
+      setIsAiTimeout(false);
       // Replace Var 2 with high-res DALL-E / FLUX sketch
       setImageGallery((prev) => [prev[0], data.sketch_url]);
       setActiveImageIndex(1); // Switch to Var 2 to show DALL-E / FLUX sketch
@@ -234,11 +249,18 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
     >
       {/* Top badges & Favorite Toggle */}
       <div className="flex items-center justify-between mb-4 relative z-20">
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
           {isPrimary && (
             <div className="bg-gradient-to-l from-amber-500 to-rose-500 text-gray-950 font-bold text-[10px] sm:text-xs px-3 py-1 rounded-full uppercase tracking-wider flex items-center space-x-1 shadow-md">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Primary Choice</span>
+            </div>
+          )}
+
+          {isAiTimeout && (
+            <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300 font-semibold text-[10px] sm:text-xs px-2.5 py-1 rounded-full flex items-center space-x-1 shadow-sm">
+              <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
+              <span>Pollinations AI Timed Out &bull; Showing Curated Look</span>
             </div>
           )}
         </div>
