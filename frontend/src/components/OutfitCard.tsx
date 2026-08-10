@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { OutfitDetail } from '../types';
-import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, Wand2, ExternalLink, Loader2, Maximize2, X, RefreshCw } from 'lucide-react';
+import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, ExternalLink, Maximize2, X, RefreshCw } from 'lucide-react';
 
 interface OutfitCardProps {
   outfit: OutfitDetail;
@@ -160,9 +160,6 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   onToggleFavorite,
   gender = 'Male'
 }) => {
-  const [sketchUrl, setSketchUrl] = useState<string | null>(outfit.sketch_url || null);
-  const [isGeneratingSketch, setIsGeneratingSketch] = useState(false);
-  const [sketchError, setSketchError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState<number>(0);
 
@@ -184,33 +181,6 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
     setPhotoIndex(nextIdx);
     const newImage = getFallbackImageForIndex(outfit.clothing_type, gender, nextIdx);
     setCurrentImageSrc(newImage);
-  };
-
-  const handleGenerateSketch = async () => {
-    setIsGeneratingSketch(true);
-    setSketchError(null);
-    try {
-      const response = await fetch('http://localhost:8000/generate-sketch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clothing_type: outfit.clothing_type,
-          silhouette: outfit.silhouette,
-          colors: outfit.colors,
-          fabric: outfit.fabric,
-          embroidery: outfit.embroidery_or_pattern,
-          gender: gender
-        })
-      });
-      if (!response.ok) throw new Error('Sketch generation failed');
-      const data = await response.json();
-      setSketchUrl(data.sketch_url);
-      setCurrentImageSrc(data.sketch_url);
-    } catch (err) {
-      setSketchError('Could not generate sketch at this time.');
-    } finally {
-      setIsGeneratingSketch(false);
-    }
   };
 
   return (
@@ -316,33 +286,19 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
         </div>
       )}
 
-      {/* Action: Generate AI Sketch Button */}
+      {/* Action: Re-Render Fashion Look Button */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-gray-900/40 p-3.5 rounded-xl border border-gray-800/80">
         <div className="text-xs text-gray-400">
-          <span>Render 1-of-1 DALL-E 3 couture sketch for this outfit?</span>
+          <span>Want to explore another curated fashion model look for this outfit?</span>
         </div>
         <button
-          onClick={handleGenerateSketch}
-          disabled={isGeneratingSketch}
-          className="py-1.5 px-3.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md transition-all flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
+          onClick={handleCycleFashionImage}
+          className="py-1.5 px-3.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
         >
-          {isGeneratingSketch ? (
-            <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Rendering DALL-E 3...</span>
-            </>
-          ) : (
-            <>
-              <Wand2 className="w-3.5 h-3.5" />
-              <span>{sketchUrl ? 'Re-Render DALL-E 3' : 'Generate DALL-E 3 Couture'}</span>
-            </>
-          )}
+          <RefreshCw className="w-3.5 h-3.5" />
+          <span>Re-Render Fashion Look</span>
         </button>
       </div>
-
-      {sketchError && (
-        <p className="text-xs text-rose-400 mb-4 text-center">{sketchError}</p>
-      )}
 
       {/* Header Title */}
       <div className="mb-6">
