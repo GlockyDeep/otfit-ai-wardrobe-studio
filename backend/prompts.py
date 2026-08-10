@@ -26,6 +26,13 @@ def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fa
             f"He wears a crisp white silk button-up shirt and a gold zari bordered Angavastram shoulder stole in {color_str}. "
             f"Traditional South Indian wedding style photo"
         )
+    elif "modi" in lower or "nehru" in lower:
+        base_prompt = (
+            f"full body standing fashion portrait of a handsome Indian male model wearing an authentic traditional sleeveless Modi jacket Nehru vest. "
+            f"The jacket is a tailored sleeveless waist vest with a sharp Mandarin collar, front button placket with metallic buttons, and a silk pocket square in the breast pocket, "
+            f"layered over a long knee-length solid silk kurta and fitted trousers in {color_str}. "
+            f"South Asian formal ethnic wear photo, studio lighting"
+        )
     elif "saree" in lower:
         base_prompt = f"full body standing fashion croquis illustration of an elegant Indian female model wearing traditional draped silk saree in {color_str} with rich embroidered border and blouse"
     elif "lehenga" in lower:
@@ -34,8 +41,6 @@ def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fa
         base_prompt = f"full body standing fashion croquis illustration of an elegant Indian female model wearing traditional floor length flared anarkali suit in {color_str}"
     elif "sherwani" in lower or "bandhgala" in lower:
         base_prompt = f"full body standing fashion croquis illustration of a handsome Indian male model wearing traditional silk sherwani jacket with churidar in {color_str}"
-    elif "modi" in lower or "nehru" in lower:
-        base_prompt = f"full body standing fashion croquis illustration of a handsome Indian male model wearing traditional sleeveless Modi jacket Nehru vest over kurta and trousers in {color_str}"
     elif "tuxedo" in lower or "suit" in lower or "blazer" in lower:
         base_prompt = f"full body standing fashion croquis illustration of a handsome male model wearing tailored formal tuxedo suit in {color_str}"
     else:
@@ -104,6 +109,12 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
             f"The Veshti is an unstitched rectangular pure white silk waist drape wrapped straight around hips cascading down to ankles like a sarong with gold zari border. "
             f"He wears a crisp white silk button-up shirt and Angavastram shoulder stole in {color_str}. "
             f"No trousers, no pants, no churidar. Studio fashion croquis lighting, watercolor and ink."
+        )
+    elif "modi" in lower or "nehru" in lower:
+        prompt = (
+            f"Bespoke full body standing fashion sketch illustration of a handsome Indian male model wearing an authentic traditional sleeveless Modi jacket Nehru vest. "
+            f"The jacket is a tailored sleeveless vest with mandarin collar, metallic buttons, and pocket square over a silk kurta and trousers in {color_str}. "
+            f"Studio fashion croquis lighting, watercolor and ink."
         )
     else:
         gender_prefix = "handsome male model" if "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower() else "female model"
