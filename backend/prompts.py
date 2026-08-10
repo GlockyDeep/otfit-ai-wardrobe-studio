@@ -194,79 +194,15 @@ def attach_ai_images(outfit: OutfitDetail, gender: str = "Male", card_index: int
     outfit.sketch_url = images[0]
 
 def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationResponse:
-    provider = os.getenv("AI_PROVIDER", "gemini").lower()
     gender = context.get("gender", "Male")
+    recommendation = generate_mock_fallback(context)
     
-    if provider == "gemini":
-        api_key = os.getenv("GEMINI_API_KEY", "").strip()
-        model = os.getenv("GEMINI_MODEL", "gemini-flash-latest").strip()
-    elif provider == "groq":
-        api_key = os.getenv("GROQ_API_KEY", "").strip()
-        model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
-        base_url = "https://api.groq.com/openai/v1"
-    else:
-        api_key = os.getenv("OPENAI_API_KEY", "").strip()
-        model = os.getenv("OPENAI_MODEL", "gpt-4o-mini").strip()
-        base_url = "https://api.openai.com/v1"
+    # Generate photorealistic Replicate Flux AI model images for ALL outfits (Primary + Alternatives)
+    attach_ai_images(recommendation.primary_outfit, gender, 0)
+    for idx, alt in enumerate(recommendation.alternatives):
+        attach_ai_images(alt, gender, idx + 1)
 
-    if not api_key:
-        print(f"[INFO] No valid {provider.upper()}_API_KEY found in environment. Generating rule-based recommendation fallback.")
-        return generate_mock_fallback(context)
-
-    user_prompt = build_user_prompt(context)
-
-    try:
-        with httpx.Client(timeout=30.0) as client:
-            if provider == "gemini":
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-                full_prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}"
-                payload = {
-                    "contents": [{"parts": [{"text": full_prompt}]}],
-                    "generationConfig": {"responseMimeType": "application/json", "temperature": 0.7}
-                }
-                response = client.post(url, json=payload)
-                response.raise_for_status()
-                res_data = response.json()
-                raw_content = res_data["candidates"][0]["content"]["parts"][0]["text"]
-            else:
-                headers = {
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json"
-                }
-                payload = {
-                    "model": model,
-                    "messages": [
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": user_prompt}
-                    ],
-                    "response_format": {"type": "json_object"},
-                    "temperature": 0.7
-                }
-                response = client.post(f"{base_url}/chat/completions", headers=headers, json=payload)
-                response.raise_for_status()
-                res_data = response.json()
-                raw_content = res_data["choices"][0]["message"]["content"]
-            
-            parsed_json = json.loads(raw_content)
-            validated = RecommendationResponse.model_validate(parsed_json)
-            
-            if len(validated.alternatives) > 2:
-                validated.alternatives = validated.alternatives[:2]
-            elif len(validated.alternatives) < 2:
-                fallback_alt = generate_mock_fallback(context).alternatives[0]
-                while len(validated.alternatives) < 2:
-                    validated.alternatives.append(fallback_alt)
-
-            # Attach high-resolution custom AI fashion sketch images matching exact specs and gender
-            attach_ai_images(validated.primary_outfit, gender, 0)
-            for idx, alt in enumerate(validated.alternatives):
-                attach_ai_images(alt, gender, idx + 1)
-
-            return validated
-            
-    except Exception as e:
-        print(f"[ERROR] AI Provider ({provider}) request failed ({e}). Returning fallback rule-engine recommendation.")
-        return generate_mock_fallback(context)
+    return recommendation
 
 
 def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:

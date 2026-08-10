@@ -3,6 +3,7 @@ import sys
 import time
 from typing import Optional, Dict, List
 from fastapi import FastAPI, HTTPException, Request, status
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
@@ -25,7 +26,7 @@ from prompts import (
 
 app = FastAPI(
     title="AI-Assisted Fashion Design Recommendation API",
-    description="Backend service providing rule-guided AI fashion outfit recommendations and couture sketches.",
+    description="Backend service providing rule-guided AI fashion outfit recommendations and Replicate Flux model photos.",
     version="1.0.0"
 )
 
@@ -46,8 +47,8 @@ app.mount("/generated-svgs", StaticFiles(directory=svg_dir), name="generated-svg
 # Initialize Rule Engine instance
 rule_engine = FashionRuleEngine()
 
-# --- Simple In-Memory IP Rate Limiter ---
-RATE_LIMIT_REQUESTS = 15
+# --- Simple In-Memory IP Rate Limiter (Protects Replicate API Credits) ---
+RATE_LIMIT_REQUESTS = 10
 RATE_LIMIT_WINDOW_SECONDS = 60
 ip_request_history: Dict[str, List[float]] = {}
 
@@ -64,7 +65,7 @@ async def rate_limit_middleware(request: Request, call_next):
         if len(history) >= RATE_LIMIT_REQUESTS:
             return JSONResponse(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                content={"detail": "Rate limit exceeded (15 requests per minute). Please wait a moment before requesting another outfit."}
+                content={"detail": "Rate limit protection active (10 requests per minute). Please wait 30 seconds before generating more outfits."}
             )
         
         history.append(now)
@@ -90,14 +91,12 @@ class RecommendationRequest(BaseModel):
 @app.get("/health", status_code=status.HTTP_200_OK)
 def health_check():
     """Returns the API health status."""
-    has_openai = bool(os.getenv("OPENAI_API_KEY", "").strip())
-    has_groq = bool(os.getenv("GROQ_API_KEY", "").strip())
-    provider = os.getenv("AI_PROVIDER", "openai").lower()
+    has_replicate = bool(os.getenv("REPLICATE_API_TOKEN", "").strip())
     return {
         "status": "ok",
-        "ai_provider": provider,
-        "live_ai_configured": has_openai or has_groq,
-        "rate_limit": "15 requests/min"
+        "image_engine": "Replicate Flux 1.1 Pro / Schnell",
+        "replicate_configured": has_replicate,
+        "rate_limit": "10 requests/min"
     }
 
 
