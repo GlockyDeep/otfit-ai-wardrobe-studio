@@ -17,16 +17,17 @@ except Exception:
     KNOWLEDGE_BASE = {}
 
 def call_replicate_flux(prompt: str) -> Optional[str]:
-    """Call Replicate Flux Schnell. Polls until succeeded or failed. Returns image URL or None."""
+    """Call Replicate Flux Schnell. Handles 202 polling, 429 rate-limit retries. Returns image URL or None."""
     token = os.getenv("REPLICATE_API_TOKEN", "").strip()
     if not token:
         print("[ERROR] REPLICATE_API_TOKEN not set in .env!")
         return None
+
     url = "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
-        "Prefer": "wait=30"   # Ask Replicate to wait up to 30s before returning
+        "Prefer": "wait=30"
     }
     payload = {
         "input": {
@@ -36,37 +37,62 @@ def call_replicate_flux(prompt: str) -> Optional[str]:
             "num_outputs": 1
         }
     }
-    try:
-        with httpx.Client(timeout=60.0) as client:
-            res = client.post(url, headers=headers, json=payload)
-            print(f"[INFO] Replicate POST status: {res.status_code}")
-            if res.status_code not in [200, 201]:
-                print(f"[ERROR] Replicate API error: {res.text[:300]}")
-                return None
 
-            data = res.json()
-            poll_url = data.get("urls", {}).get("get")
+    # Retry up to 5 times on 429 throttle
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            with httpx.Client(timeout=90.0) as client:
+                res = client.post(url, headers=headers, json=payload)
+                print(f"[INFO] Replicate POST status: {res.status_code}")
 
-            # Poll until completed (up to 60 seconds)
-            attempts = 0
-            while data.get("status") in ["starting", "processing"] and poll_url and attempts < 60:
-                time.sleep(1)
-                res = client.get(poll_url, headers={"Authorization": f"Bearer {token}"})
+                # 429 rate-limited — wait and retry
+                if res.status_code == 429:
+                    try:
+                        err_data = res.json()
+                        retry_after = int(err_data.get("retry_after", 10))
+                    except Exception:
+                        retry_after = 10
+                    wait = retry_after + 1  # Add 1s buffer
+                    print(f"[WARN] Replicate 429 throttle — waiting {wait}s before retry (attempt {attempt+1}/{max_retries})...")
+                    time.sleep(wait)
+                    continue  # Retry
+
+                # 200, 201, 202 are all valid — 202 means accepted and needs polling
+                if res.status_code not in [200, 201, 202]:
+                    print(f"[ERROR] Replicate API error: {res.text[:300]}")
+                    return None
+
                 data = res.json()
-                attempts += 1
-                print(f"[INFO] Replicate poll attempt {attempts}: {data.get('status')}")
+                poll_url = data.get("urls", {}).get("get")
 
-            print(f"[INFO] Replicate final status: {data.get('status')}")
-            output = data.get("output", [])
-            if isinstance(output, list) and output:
-                print(f"[INFO] Replicate image generated: {output[0][:80]}")
-                return output[0]
-            elif isinstance(output, str) and output:
-                return output
-            else:
-                print(f"[WARN] Replicate returned no output. Full response: {data}")
-    except Exception as e:
-        print(f"[ERROR] Replicate Flux API call failed: {e}")
+                # Poll until succeeded or failed (up to 90 seconds)
+                poll_attempts = 0
+                while data.get("status") in ["starting", "processing"] and poll_url and poll_attempts < 90:
+                    time.sleep(1)
+                    poll_res = client.get(poll_url, headers={"Authorization": f"Bearer {token}"})
+                    data = poll_res.json()
+                    poll_attempts += 1
+                    if poll_attempts % 5 == 0:
+                        print(f"[INFO] Replicate poll attempt {poll_attempts}: {data.get('status')}")
+
+                print(f"[INFO] Replicate final status: {data.get('status')}")
+                output = data.get("output", [])
+                if isinstance(output, list) and output:
+                    print(f"[INFO] Replicate image generated: {output[0][:80]}")
+                    return output[0]
+                elif isinstance(output, str) and output:
+                    return output
+                else:
+                    print(f"[WARN] Replicate returned no output. Status: {data.get('status')}")
+                    return None
+
+        except Exception as e:
+            print(f"[ERROR] Replicate Flux API call failed (attempt {attempt+1}): {e}")
+            if attempt < max_retries - 1:
+                time.sleep(3)
+
+    print(f"[ERROR] Replicate failed after {max_retries} attempts.")
     return None
 
 def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> str:
@@ -198,9 +224,14 @@ def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationRespons
     gender = context.get("gender", "Male")
     recommendation = generate_mock_fallback(context)
     
-    # Generate photorealistic Replicate Flux AI model images for ALL outfits (Primary + Alternatives)
+    # Generate photorealistic Replicate Flux AI model images for ALL outfits
+    # Stagger calls by 11s to stay within Replicate's 6 req/min (1 per 10s) rate limit
+    print("[INFO] Generating primary outfit image...")
     attach_ai_images(recommendation.primary_outfit, gender, 0)
+
     for idx, alt in enumerate(recommendation.alternatives):
+        print(f"[INFO] Waiting 11s before alternative {idx+1} image to avoid rate limiting...")
+        time.sleep(11)
         attach_ai_images(alt, gender, idx + 1)
 
     return recommendation
