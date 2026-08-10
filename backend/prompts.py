@@ -520,7 +520,7 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                 clothing_type="Classic Black Tie Satin Lapel Tuxedo",
                 silhouette="Structured black-tie tuxedo silhouette",
                 colors=["Midnight Black", "White Shirt", "Black Bow Tie"],
-                fabric="Super 130s Italian Wool & Satin",
+                fabric="Fine Italian Wool & Satin",
                 embroidery_or_pattern="Satin peak lapel",
                 accessories=["Silk bow tie", "Cufflinks"],
                 footwear="Patent Leather Oxfords",
@@ -619,6 +619,7 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                 rationale="A versatile casual option offering low-maintenance comfort."
             )
 
+    # Attach custom high-res AI sketch images to primary and all alternatives
     attach_ai_images(primary, gender)
     attach_ai_images(alt1, gender)
     attach_ai_images(alt2, gender)
