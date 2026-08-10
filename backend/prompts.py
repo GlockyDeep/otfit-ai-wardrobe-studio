@@ -34,21 +34,24 @@ def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fa
         base_prompt = f"Indian female model wearing floor length flared anarkali suit in {color_str}"
     elif "sherwani" in lower or "bandhgala" in lower:
         base_prompt = f"Indian male model wearing traditional silk sherwani jacket in {color_str}"
+    elif "polo" in lower or "chino" in lower:
+        base_prompt = f"handsome male model wearing stylish polo shirt and tailored chinos in {color_str}"
     elif "tuxedo" in lower or "suit" in lower or "blazer" in lower:
-        base_prompt = f"handsome male model wearing tailored formal tuxedo suit in {color_str}"
+        gender_prefix = "handsome male model" if "male" in gender.lower() and "female" not in gender.lower() else "stylish female model"
+        base_prompt = f"{gender_prefix} wearing tailored formal suit blazer in {color_str}"
     else:
-        gender_prefix = "male model" if "male" in gender.lower() and "female" not in gender.lower() else "female model"
-        base_prompt = f"{gender_prefix} wearing {clothing_type} in {fabric} {color_str}"
+        gender_prefix = "handsome male model" if "male" in gender.lower() and "female" not in gender.lower() else "beautiful female model"
+        base_prompt = f"{gender_prefix} wearing {clothing_type} in {color_str}"
 
     base_seed = (abs(hash(clothing_type + (gender or ""))) + (card_index * 1337)) % 10000
 
     # Image 1: FLUX Engine Model Concept
-    prompt_1 = f"fashion studio photograph of {base_prompt}, full length portrait"
+    prompt_1 = f"fashion studio photograph of {base_prompt}, full length editorial portrait"
     encoded_1 = urllib.parse.quote(prompt_1)
     url_1 = f"https://image.pollinations.ai/prompt/{encoded_1}?width=800&height=1000&nologo=true&seed={base_seed}&model=flux"
 
     # Image 2: TURBO Engine Model Concept (Distinct rendering engine & artistic sketch style)
-    prompt_2 = f"artistic haute couture fashion croquis illustration of {base_prompt}, dramatic runway lighting"
+    prompt_2 = f"artistic haute couture fashion croquis illustration of {base_prompt}, runway model"
     encoded_2 = urllib.parse.quote(prompt_2)
     url_2 = f"https://image.pollinations.ai/prompt/{encoded_2}?width=800&height=1000&nologo=true&seed={base_seed + 777}&model=turbo"
 
