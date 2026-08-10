@@ -111,7 +111,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
             <div className="absolute inset-0 bg-gray-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
               <div className="bg-gray-900/90 text-amber-300 text-xs font-semibold px-4 py-2 rounded-xl border border-amber-500/40 flex items-center space-x-2 shadow-2xl">
                 <Maximize2 className="w-4 h-4 text-amber-400" />
-                <span>Click to View Full-Screen Gemini AI Illustration</span>
+                <span>Click to View Full-Screen High-Res Model Photo</span>
               </div>
             </div>
 
@@ -119,7 +119,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
             <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs text-amber-200 font-medium bg-gray-950/85 backdrop-blur-md px-3.5 py-2 rounded-xl border border-gray-800/80 shadow-md">
               <span className="flex items-center space-x-1.5">
                 <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
-                <span className="font-semibold text-amber-400">✨ Gemini AI Generated Illustration</span>
+                <span className="font-semibold text-amber-400">✨ Real Fashion Model Look</span>
               </span>
 
               <div className="flex items-center space-x-3">
@@ -305,22 +305,12 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
 
               <div className="flex items-center space-x-3">
                 <a
-                  href="http://localhost:8000/generated-svgs/latest_outfit.svg"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold hover:bg-indigo-500/20 transition flex items-center space-x-1"
-                >
-                  <span>Open Local SVG File</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-
-                <a
                   href={currentImageSrc}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold hover:bg-amber-500/20 transition flex items-center space-x-1"
                 >
-                  <span>Open Base64 Data URL</span>
+                  <span>Open High-Res Model Photo</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
 

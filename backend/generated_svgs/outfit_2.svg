@@ -6,7 +6,7 @@
       <stop offset="100%" stop-color="#050811"/>
     </linearGradient>
     <linearGradient id="primaryGrad_2" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#dc2626"/>
+      <stop offset="0%" stop-color="#fdba74"/>
       <stop offset="100%" stop-color="#0b1329"/>
     </linearGradient>
     <linearGradient id="accentGrad_2" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -20,7 +20,7 @@
   </defs>
 
   <rect width="600" height="850" fill="url(#bgGrad_2)" rx="16"/>
-  <circle cx="300" cy="340" r="230" fill="#dc2626" opacity="0.12" filter="url(#glow_2)"/>
+  <circle cx="300" cy="340" r="230" fill="#fdba74" opacity="0.12" filter="url(#glow_2)"/>
 
   <path d="M 280 110 Q 300 70 320 110 Q 330 140 320 160 Q 300 170 280 160 Z" fill="#1e293b" stroke="#d97706" stroke-width="1.5" opacity="0.8"/>
   <path d="M 293 160 L 293 195 L 240 215 L 360 215 L 307 195 L 307 160 Z" fill="#1e293b" opacity="0.6"/>
@@ -39,5 +39,5 @@
 
   <rect x="30" y="780" width="310" height="38" rx="8" fill="#1e293b" opacity="0.95" stroke="#d97706" stroke-width="1"/>
   <text x="45" y="804" fill="#f59e0b" font-family="sans-serif" font-size="13" font-weight="bold">✨ High-Fashion Couture Illustration</text>
-  <text x="300" y="830" text-anchor="middle" fill="#9ca3af" font-family="serif" font-size="14" font-style="italic">Sharara Set • Cotton Silk</text>
+  <text x="300" y="830" text-anchor="middle" fill="#9ca3af" font-family="serif" font-size="14" font-style="italic">Anarkali Suit • Fine Pure Georgette</text>
 </svg>
