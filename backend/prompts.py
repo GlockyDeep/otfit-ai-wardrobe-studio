@@ -17,15 +17,44 @@ except Exception:
     KNOWLEDGE_BASE = {}
 
 def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> str:
-    # Realistic AI Model Photography Generator (Powered by Pollinations Flux AI)
-    color_str = ", ".join(colors) if colors else "harmonious palette"
+    # Hyper-Realistic AI Model Photography Generator (Replicate Flux & Pollinations Fallback)
+    replicate_token = os.getenv("REPLICATE_API_TOKEN", "").strip()
+    color_str = ", ".join(colors) if colors else "harmonious luxury palette"
     is_male = "male" in (gender or "").lower() and "female" not in (gender or "").lower()
     gender_str = "handsome male model" if is_male else "elegant female model"
     
-    prompt = f"Full length professional studio fashion photography of an {gender_str} wearing {clothing_type} in {color_str}, high fashion magazine editorial, luxury background, 8k resolution"
+    prompt = f"Full length professional studio fashion photography of an {gender_str} wearing {clothing_type} in {color_str}, fabric {fabric or 'luxury blend'}, high fashion magazine editorial style, luxury studio background, 8k resolution"
+
+    if replicate_token:
+        try:
+            url = "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions"
+            headers = {
+                "Authorization": f"Bearer {replicate_token}",
+                "Content-Type": "application/json",
+                "Prefer": "wait"
+            }
+            payload = {
+                "input": {
+                    "prompt": prompt,
+                    "aspect_ratio": "3:4",
+                    "output_format": "webp"
+                }
+            }
+            with httpx.Client(timeout=20.0) as client:
+                res = client.post(url, headers=headers, json=payload)
+                if res.status_code in [200, 201]:
+                    data = res.json()
+                    output = data.get("output", [])
+                    if isinstance(output, list) and output:
+                        return output[0]
+                    elif isinstance(output, str) and output:
+                        return output
+        except Exception as e:
+            print(f"[WARN] Replicate API image generation attempt: {e}")
+
+    # Fallback: Pollinations Flux AI
     encoded_prompt = urllib.parse.quote(prompt)
     seed = (card_index * 257 + len(clothing_type) * 19 + 42) % 999999
-    
     return f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=800&height=1000&seed={seed}&nologo=true&model=flux"
 
 def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> List[str]:
@@ -68,14 +97,41 @@ class SketchResponse(BaseModel):
 
 def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
     import random
+    replicate_token = os.getenv("REPLICATE_API_TOKEN", "").strip()
     color_str = ", ".join(req.colors) if req.colors else "harmonious luxury palette"
     is_male = "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower()
     gender_prefix = "handsome male model" if is_male else "elegant female model"
 
     prompt_text = f"Full length professional studio fashion photography of an {gender_prefix} wearing {req.clothing_type} in {color_str}, silhouette {req.silhouette}, fabric {req.fabric}, high fashion magazine editorial style, luxury background, 8k resolution"
+
+    if replicate_token:
+        try:
+            url = "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions"
+            headers = {
+                "Authorization": f"Bearer {replicate_token}",
+                "Content-Type": "application/json",
+                "Prefer": "wait"
+            }
+            payload = {
+                "input": {
+                    "prompt": prompt_text,
+                    "aspect_ratio": "3:4",
+                    "output_format": "webp"
+                }
+            }
+            with httpx.Client(timeout=20.0) as client:
+                res = client.post(url, headers=headers, json=payload)
+                if res.status_code in [200, 201]:
+                    data = res.json()
+                    output = data.get("output", [])
+                    img_url = output[0] if isinstance(output, list) and output else output
+                    if img_url:
+                        return SketchResponse(sketch_url=img_url, prompt_used=prompt_text)
+        except Exception as e:
+            print(f"[WARN] Replicate API sketch generation attempt: {e}")
+
     encoded_prompt = urllib.parse.quote(prompt_text)
     random_seed = random.randint(1000, 999999)
-
     sketch_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=800&height=1000&seed={random_seed}&nologo=true&model=flux"
     return SketchResponse(sketch_url=sketch_url, prompt_used=prompt_text)
 
