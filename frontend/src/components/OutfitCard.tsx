@@ -57,7 +57,7 @@ const GARMENT_FALLBACK_GALLERIES: Record<string, string[]> = {
     'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80'
   ],
   default: [
-    'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=800&q=80'
   ]
 };
@@ -104,6 +104,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   const handleImageError = () => {
     const fallback = getFallbackImageForIndex(outfit.clothing_type, activeImageIndex);
     setImageGallery((prev) => {
+      if (prev[activeImageIndex] === fallback) return prev;
       const updated = [...prev];
       updated[activeImageIndex] = fallback;
       return updated;

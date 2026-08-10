@@ -19,43 +19,32 @@ def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fa
     lower = clothing_type.lower()
     
     if any(k in lower for k in ["panche", "veshti", "dhoti", "mundu", "lungi"]):
-        base_prompt = (
-            f"full body standing fashion portrait of a handsome South Indian male model wearing authentic traditional South Indian white silk Veshti Panche. "
-            f"The Veshti is an unstitched rectangular pure white silk waist drape wrapped straight around the hips cascading straight down to the ankles like a sarong, "
-            f"with a prominent golden zari border along the vertical hem. "
-            f"He wears a crisp white silk button-up shirt and a gold zari bordered Angavastram shoulder stole in {color_str}. "
-            f"Traditional South Indian wedding style photo"
-        )
+        base_prompt = f"South Indian male model wearing traditional white silk Veshti Panche dhoti with gold border and shirt in {color_str}"
     elif "modi" in lower or "nehru" in lower:
-        base_prompt = (
-            f"full body standing fashion portrait of a handsome Indian male model wearing an authentic traditional sleeveless Modi jacket Nehru vest. "
-            f"The jacket is a tailored sleeveless waist vest with a sharp Mandarin collar, front button placket with metallic buttons, and a silk pocket square in the breast pocket, "
-            f"layered over a long knee-length solid silk kurta and fitted trousers in {color_str}. "
-            f"South Asian formal ethnic wear photo, studio lighting"
-        )
+        base_prompt = f"Indian male model wearing traditional sleeveless Modi jacket Nehru vest over silk kurta in {color_str}"
     elif "saree" in lower:
-        base_prompt = f"full body standing fashion croquis illustration of an elegant Indian female model wearing traditional draped silk saree in {color_str} with rich embroidered border and blouse"
+        base_prompt = f"Indian female model wearing traditional draped silk saree in {color_str}"
     elif "lehenga" in lower:
-        base_prompt = f"full body standing fashion croquis illustration of an elegant Indian female model wearing traditional flared lehenga choli with dupatta in {color_str}"
+        base_prompt = f"Indian female model wearing traditional flared lehenga choli in {color_str}"
     elif "anarkali" in lower or "salwar" in lower:
-        base_prompt = f"full body standing fashion croquis illustration of an elegant Indian female model wearing traditional floor length flared anarkali suit in {color_str}"
+        base_prompt = f"Indian female model wearing floor length flared anarkali suit in {color_str}"
     elif "sherwani" in lower or "bandhgala" in lower:
-        base_prompt = f"full body standing fashion croquis illustration of a handsome Indian male model wearing traditional silk sherwani jacket with churidar in {color_str}"
+        base_prompt = f"Indian male model wearing traditional silk sherwani jacket in {color_str}"
     elif "tuxedo" in lower or "suit" in lower or "blazer" in lower:
-        base_prompt = f"full body standing fashion croquis illustration of a handsome male model wearing tailored formal tuxedo suit in {color_str}"
+        base_prompt = f"handsome male model wearing tailored formal tuxedo suit in {color_str}"
     else:
-        gender_prefix = "handsome male model" if "male" in gender.lower() and "female" not in gender.lower() else "female fashion model"
-        base_prompt = f"full body standing fashion croquis illustration of a {gender_prefix} wearing {clothing_type} in {fabric} {color_str}"
+        gender_prefix = "male model" if "male" in gender.lower() and "female" not in gender.lower() else "female model"
+        base_prompt = f"{gender_prefix} wearing {clothing_type} in {fabric} {color_str}"
 
     base_seed = abs(hash(clothing_type + (gender or ""))) % 10000
 
-    # Image 1: Pollinations AI Primary Concept Sketch
-    prompt_1 = f"{base_prompt}, studio lighting, classic couture styling, head to toe full length portrait"
+    # Image 1: Pollinations AI Primary Concept Sketch (Fast & Clean)
+    prompt_1 = f"fashion illustration of {base_prompt}, full length studio portrait"
     encoded_1 = urllib.parse.quote(prompt_1)
     url_1 = f"https://image.pollinations.ai/prompt/{encoded_1}?width=800&height=1000&nologo=true&seed={base_seed}"
 
     # Image 2: FLUX / DALL-E Couture Model Sketch
-    prompt_2 = f"{base_prompt}, haute couture runway pose, dramatic studio lighting, ultra detailed fashion sketch"
+    prompt_2 = f"couture fashion sketch of {base_prompt}, runway studio pose"
     encoded_2 = urllib.parse.quote(prompt_2)
     url_2 = f"https://image.pollinations.ai/prompt/{encoded_2}?width=800&height=1000&nologo=true&seed={base_seed + 999}"
 
@@ -104,21 +93,12 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
     lower = req.clothing_type.lower()
 
     if any(k in lower for k in ["panche", "veshti", "dhoti", "mundu", "lungi"]):
-        prompt = (
-            f"Bespoke full body standing fashion sketch illustration of a handsome South Indian male model wearing authentic traditional South Indian white silk Veshti Panche. "
-            f"The Veshti is an unstitched rectangular pure white silk waist drape wrapped straight around hips cascading down to ankles like a sarong with gold zari border. "
-            f"He wears a crisp white silk button-up shirt and Angavastram shoulder stole in {color_str}. "
-            f"No trousers, no pants, no churidar. Studio fashion croquis lighting, watercolor and ink."
-        )
+        prompt = f"Bespoke fashion sketch illustration of South Indian male model wearing white silk Veshti Panche dhoti with gold border and shirt in {color_str}, studio lighting."
     elif "modi" in lower or "nehru" in lower:
-        prompt = (
-            f"Bespoke full body standing fashion sketch illustration of a handsome Indian male model wearing an authentic traditional sleeveless Modi jacket Nehru vest. "
-            f"The jacket is a tailored sleeveless vest with mandarin collar, metallic buttons, and pocket square over a silk kurta and trousers in {color_str}. "
-            f"Studio fashion croquis lighting, watercolor and ink."
-        )
+        prompt = f"Bespoke fashion sketch illustration of Indian male model wearing sleeveless Modi jacket Nehru vest over silk kurta in {color_str}, studio lighting."
     else:
-        gender_prefix = "handsome male model" if "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower() else "female model"
-        prompt = f"Bespoke full body standing fashion sketch illustration of a {gender_prefix} wearing {req.clothing_type} in {color_str}. Fabric: {req.fabric or 'luxury textile'}. Cut/Silhouette: {req.silhouette or 'structured'}. Head to toe full length portrait, studio lighting, elegant watercolor and ink."
+        gender_prefix = "male model" if "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower() else "female model"
+        prompt = f"Bespoke fashion sketch illustration of {gender_prefix} wearing {req.clothing_type} in {color_str}, full length studio portrait."
 
     if api_key:
         try:
