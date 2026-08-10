@@ -17,66 +17,68 @@ except Exception:
     KNOWLEDGE_BASE = {}
 
 def call_replicate_flux(prompt: str) -> Optional[str]:
+    """Call Replicate Flux Schnell. Polls until succeeded or failed. Returns image URL or None."""
     token = os.getenv("REPLICATE_API_TOKEN", "").strip()
     if not token:
+        print("[ERROR] REPLICATE_API_TOKEN not set in .env!")
         return None
     url = "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
-        "Prefer": "wait=5"
+        "Prefer": "wait=30"   # Ask Replicate to wait up to 30s before returning
     }
     payload = {
         "input": {
             "prompt": prompt,
             "aspect_ratio": "3:4",
-            "output_format": "webp"
+            "output_format": "webp",
+            "num_outputs": 1
         }
     }
     try:
-        with httpx.Client(timeout=25.0) as client:
+        with httpx.Client(timeout=60.0) as client:
             res = client.post(url, headers=headers, json=payload)
-            if res.status_code in [200, 201]:
+            print(f"[INFO] Replicate POST status: {res.status_code}")
+            if res.status_code not in [200, 201]:
+                print(f"[ERROR] Replicate API error: {res.text[:300]}")
+                return None
+
+            data = res.json()
+            poll_url = data.get("urls", {}).get("get")
+
+            # Poll until completed (up to 60 seconds)
+            attempts = 0
+            while data.get("status") in ["starting", "processing"] and poll_url and attempts < 60:
+                time.sleep(1)
+                res = client.get(poll_url, headers={"Authorization": f"Bearer {token}"})
                 data = res.json()
-                poll_url = data.get("urls", {}).get("get")
-                attempts = 0
-                while data.get("status") in ["starting", "processing"] and poll_url and attempts < 10:
-                    time.sleep(1)
-                    res = client.get(poll_url, headers={"Authorization": f"Bearer {token}"})
-                    data = res.json()
-                    attempts += 1
-                
-                output = data.get("output", [])
-                if isinstance(output, list) and output:
-                    return output[0]
-                elif isinstance(output, str) and output:
-                    return output
+                attempts += 1
+                print(f"[INFO] Replicate poll attempt {attempts}: {data.get('status')}")
+
+            print(f"[INFO] Replicate final status: {data.get('status')}")
+            output = data.get("output", [])
+            if isinstance(output, list) and output:
+                print(f"[INFO] Replicate image generated: {output[0][:80]}")
+                return output[0]
+            elif isinstance(output, str) and output:
+                return output
+            else:
+                print(f"[WARN] Replicate returned no output. Full response: {data}")
     except Exception as e:
-        print(f"[WARN] Replicate Flux API call failed: {e}")
+        print(f"[ERROR] Replicate Flux API call failed: {e}")
     return None
 
 def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> str:
-    # Exclusive Replicate Flux AI 8k Studio Photography Generator
+    # Exclusive Replicate Flux AI 8k Studio Photography Generator — NO external fallbacks
     color_str = ", ".join(colors) if colors else "harmonious luxury palette"
     is_male = "male" in (gender or "").lower() and "female" not in (gender or "").lower()
     gender_str = "handsome male model" if is_male else "elegant female model"
     
-    prompt = f"Full length professional studio fashion photography of an {gender_str} wearing {clothing_type} in {color_str}, fabric {fabric or 'luxury blend'}, high fashion magazine editorial style, luxury studio background, 8k resolution"
+    prompt = f"Full length professional studio fashion photography of a {gender_str} wearing {clothing_type} in {color_str}, {fabric or 'luxury blend'} fabric, high fashion magazine editorial style, luxury studio background, soft box lighting, 8k ultra resolution"
 
     img = call_replicate_flux(prompt)
-    if img:
-        return img
-
-    # Ultra-High-Definition Curated Model Photography Fallback
-    lower = (clothing_type or "").lower()
-    if is_male:
-        if any(k in lower for k in ["kurta", "sherwani", "nehru", "modi"]):
-            return "https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=1000&q=80"
-        return "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1000&q=80"
-    else:
-        if any(k in lower for k in ["saree", "lehenga", "sharara"]):
-            return "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80"
-        return "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80"
+    return img or ""   # Return empty string — frontend shows skeleton loader, never Unsplash
 
 def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> List[str]:
     img = resolve_garment_image(clothing_type, colors, fabric, gender, card_index)
@@ -121,14 +123,10 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
     is_male = "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower()
     gender_prefix = "handsome male model" if is_male else "elegant female model"
 
-    prompt_text = f"Full length professional studio fashion photography of an {gender_prefix} wearing {req.clothing_type} in {color_str}, silhouette {req.silhouette}, fabric {req.fabric}, high fashion magazine editorial style, luxury background, 8k resolution"
+    prompt_text = f"Full length professional studio fashion photography of a {gender_prefix} wearing {req.clothing_type} in {color_str}, {req.fabric or 'luxury blend'} fabric, {req.silhouette} silhouette, high fashion magazine editorial style, luxury background, soft box lighting, 8k ultra resolution"
 
     img = call_replicate_flux(prompt_text)
-    if img:
-        return SketchResponse(sketch_url=img, prompt_used=prompt_text)
-
-    fallback_img = resolve_garment_image(req.clothing_type, req.colors, req.fabric, req.gender or "Male")
-    return SketchResponse(sketch_url=fallback_img, prompt_used=prompt_text)
+    return SketchResponse(sketch_url=img or "", prompt_used=prompt_text)
 
 
 SYSTEM_PROMPT = """You are an expert AI Fashion Designer and Personal Stylist.

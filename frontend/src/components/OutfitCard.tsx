@@ -57,25 +57,9 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
     }
   };
 
+  // When image fails to load — clear src so skeleton loader shows instead (NO external fallback images)
   const handleImageError = () => {
-    const isMale = (gender || 'Male').toLowerCase().includes('male') && !(gender || '').toLowerCase().includes('female');
-    const lower = (outfit.clothing_type || '').toLowerCase();
-    
-    let fallback = 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&w=1000&q=80';
-    if (isMale) {
-      if (lower.includes('kurta') || lower.includes('sherwani') || lower.includes('nehru') || lower.includes('modi')) {
-        fallback = 'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=1000&q=80';
-      } else if (lower.includes('suit') || lower.includes('tuxedo') || lower.includes('blazer')) {
-        fallback = 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1000&q=80';
-      }
-    } else {
-      if (lower.includes('saree') || lower.includes('lehenga') || lower.includes('sharara')) {
-        fallback = 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80';
-      } else {
-        fallback = 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80';
-      }
-    }
-    setCurrentImageSrc(fallback);
+    setCurrentImageSrc('');
   };
 
   return (
@@ -114,9 +98,9 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
         )}
       </div>
 
-      {/* Outfit Fashion Reference Image */}
-      {currentImageSrc && (
-        <div className="mb-6 rounded-xl overflow-hidden relative group border border-gray-800 shadow-lg bg-gray-950">
+      {/* Outfit Fashion Reference Image — Always shown: skeleton while loading or if no URL */}
+      <div className="mb-6 rounded-xl overflow-hidden relative group border border-gray-800 shadow-lg bg-gray-950">
+        {currentImageSrc ? (
           <div
             onClick={() => setIsModalOpen(true)}
             className="w-full min-h-[360px] max-h-[480px] overflow-hidden bg-gray-950 relative flex items-center justify-center cursor-pointer p-4"
@@ -169,8 +153,24 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
               </div>
             </div>
           </div>
-        </div>
-      )}
+        ) : (
+          /* Animated Skeleton Loader — shown while Replicate Flux is generating */
+          <div className="w-full min-h-[360px] flex flex-col items-center justify-center bg-gray-950 p-8 space-y-5">
+            <div className="relative w-24 h-24 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border-4 border-amber-500/20 animate-ping" />
+              <div className="absolute inset-2 rounded-full border-4 border-t-amber-400 border-r-rose-400 border-b-purple-400 border-l-transparent animate-spin" />
+              <ImageIcon className="w-8 h-8 text-amber-400/60" />
+            </div>
+            <div className="text-center space-y-2">
+              <p className="text-amber-300 text-sm font-semibold tracking-wide">⚡ Generating your AI model image...</p>
+              <p className="text-gray-500 text-xs">Replicate Flux AI · 8k studio photography</p>
+            </div>
+            <div className="w-48 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-amber-500 via-rose-500 to-purple-500 rounded-full animate-[shimmer_2s_ease-in-out_infinite]" style={{width:'60%', animation: 'shimmer 2s ease-in-out infinite'}} />
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Action: Generate Gemini AI Look Button */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-gray-900/40 p-3.5 rounded-xl border border-gray-800/80">
