@@ -27,9 +27,18 @@ export interface OutfitDetail {
   styling_tips: string[];
   rationale: string;
   image_url?: string;
+  sketch_url?: string;
 }
 
 export interface RecommendationResponse {
   primary_outfit: OutfitDetail;
   alternatives: OutfitDetail[];
+}
+
+export interface FavoriteOutfit {
+  id: string;
+  saved_at: string;
+  occasion: string;
+  gender: string;
+  outfit: OutfitDetail;
 }

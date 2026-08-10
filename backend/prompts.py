@@ -56,10 +56,52 @@ class OutfitDetail(BaseModel):
     styling_tips: List[str] = Field(..., description="Actionable styling tips for wearing this outfit")
     rationale: str = Field(..., description="Fashion design rationale explaining why this outfit suits the occasion, culture, season, and budget")
     image_url: Optional[str] = Field(default="", description="Curated high-resolution fashion reference image URL")
+    sketch_url: Optional[str] = Field(default="", description="AI-generated fashion sketch URL if created")
 
 class RecommendationResponse(BaseModel):
     primary_outfit: OutfitDetail
     alternatives: List[OutfitDetail]
+
+class SketchRequest(BaseModel):
+    clothing_type: str
+    silhouette: Optional[str] = ""
+    colors: Optional[List[str]] = []
+    fabric: Optional[str] = ""
+    embroidery: Optional[str] = ""
+
+class SketchResponse(BaseModel):
+    sketch_url: str
+    prompt_used: str
+
+def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
+    api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    color_str = ", ".join(req.colors) if req.colors else "harmonious luxury palette"
+    prompt = f"Bespoke haute couture fashion sketch illustration of {req.clothing_type} in {color_str}. Fabric: {req.fabric or 'luxury textile'}. Cut/Silhouette: {req.silhouette or 'structured'}. Full body high fashion runway croquis illustration, studio lighting, elegant watercolor and ink."
+
+    if api_key:
+        try:
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "dall-e-3",
+                "prompt": prompt,
+                "n": 1,
+                "size": "1024x1024"
+            }
+            with httpx.Client(timeout=30.0) as client:
+                res = client.post("https://api.openai.com/v1/images/generations", headers=headers, json=payload)
+                res.raise_for_status()
+                data = res.json()
+                sketch_url = data["data"][0]["url"]
+                return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
+        except Exception as e:
+            print(f"[WARN] DALL-E 3 sketch generation failed ({e}). Returning high-res curated reference image.")
+    
+    # Fallback image when no key present or on API error
+    sketch_url = resolve_garment_image(req.clothing_type)
+    return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
 
 
 SYSTEM_PROMPT = """You are an expert AI Fashion Designer and Personal Stylist.
@@ -186,10 +228,6 @@ def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationRespons
 
 
 def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
-    """
-    Rule-engine powered deterministic fashion generator when offline or API key is not present.
-    Strictly aligns garment choices with occasion formality, culture, gender, season, and budget.
-    """
     gender = context.get("gender", "Female")
     occasion = context.get("occasion", "Business Meeting")
     culture = context.get("culture", "South Asian")

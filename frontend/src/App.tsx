@@ -1,18 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { RecommendationForm } from './components/RecommendationForm';
 import { LoadingOverlay } from './components/LoadingOverlay';
 import { ResultsView } from './components/ResultsView';
-import type { RecommendationFormData, RecommendationResponse } from './types';
+import { FavoritesDrawer } from './components/FavoritesDrawer';
+import type { RecommendationFormData, RecommendationResponse, OutfitDetail, FavoriteOutfit } from './types';
 import { AlertCircle } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const STORAGE_KEY = 'couture_saved_favorites';
 
 export const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [recommendation, setRecommendation] = useState<RecommendationResponse | null>(null);
   const [currentFormData, setCurrentFormData] = useState<RecommendationFormData | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Favorites Wardrobe State
+  const [favorites, setFavorites] = useState<FavoriteOutfit[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+    } catch (e) {
+      console.error('Failed to persist favorites to localStorage', e);
+    }
+  }, [favorites]);
+
+  const handleToggleFavorite = (outfit: OutfitDetail, occasion: string = 'Design Spec', gender: string = 'Unisex') => {
+    setFavorites(prev => {
+      const exists = prev.some(f => f.outfit.clothing_type === outfit.clothing_type);
+      if (exists) {
+        return prev.filter(f => f.outfit.clothing_type !== outfit.clothing_type);
+      } else {
+        const newFav: FavoriteOutfit = {
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          saved_at: new Date().toLocaleDateString(),
+          occasion: currentFormData?.occasion || occasion,
+          gender: currentFormData?.gender || gender,
+          outfit
+        };
+        return [newFav, ...prev];
+      }
+    });
+  };
+
+  const handleRemoveFavorite = (id: string) => {
+    setFavorites(prev => prev.filter(f => f.id !== id));
+  };
 
   const handleFormSubmit = async (formData: RecommendationFormData) => {
     setLoading(true);
@@ -52,7 +95,10 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-gray-100 flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200">
-      <Header />
+      <Header
+        favoritesCount={favorites.length}
+        onOpenFavorites={() => setIsFavoritesOpen(true)}
+      />
 
       <main className="flex-1 pb-16">
         {errorMessage && (
@@ -70,13 +116,26 @@ export const App: React.FC = () => {
         {loading ? (
           <LoadingOverlay />
         ) : recommendation && currentFormData ? (
-          <ResultsView data={recommendation} formData={currentFormData} onReset={handleReset} />
+          <ResultsView
+            data={recommendation}
+            formData={currentFormData}
+            onReset={handleReset}
+            favorites={favorites}
+            onToggleFavorite={handleToggleFavorite}
+          />
         ) : (
           <RecommendationForm onSubmit={handleFormSubmit} isLoading={loading} />
         )}
       </main>
 
-      <footer className="border-t border-gray-800/80 py-6 text-center text-xs text-gray-500">
+      <FavoritesDrawer
+        isOpen={isFavoritesOpen}
+        onClose={() => setIsFavoritesOpen(false)}
+        favorites={favorites}
+        onRemoveFavorite={handleRemoveFavorite}
+      />
+
+      <footer className="border-t border-gray-800/80 py-6 text-center text-xs text-gray-500 print:hidden">
         <p>CoutureAI • Final Year B.Tech Project MVP • Rule-Guided Fashion Recommendation Engine</p>
       </footer>
     </div>

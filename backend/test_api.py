@@ -12,7 +12,8 @@ client = TestClient(app)
 def test_health_endpoint():
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    res_json = response.json()
+    assert res_json.get("status") == "ok"
     print("Health check endpoint test PASSED!")
 
 def test_recommend_endpoint():
@@ -47,6 +48,22 @@ def test_recommend_endpoint():
     
     print("Recommend endpoint test PASSED!")
 
+def test_sketch_endpoint():
+    payload = {
+        "clothing_type": "Banarasi Silk Saree",
+        "silhouette": "Classic Drape",
+        "colors": ["Emerald Green", "Gold"],
+        "fabric": "Banarasi Silk",
+        "embroidery": "Zari Weave"
+    }
+    response = client.post("/generate-sketch", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert "sketch_url" in data
+    assert "prompt_used" in data
+    print("Generate sketch endpoint test PASSED!")
+
 if __name__ == "__main__":
     test_health_endpoint()
     test_recommend_endpoint()
+    test_sketch_endpoint()

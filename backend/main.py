@@ -10,13 +10,19 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from rules import FashionRuleEngine
-from prompts import generate_recommendation_ai, RecommendationResponse
+from prompts import (
+    generate_recommendation_ai,
+    generate_fashion_sketch,
+    RecommendationResponse,
+    SketchRequest,
+    SketchResponse
+)
 
 # --- FastAPI App Initialization ---
 
 app = FastAPI(
     title="AI-Assisted Fashion Design Recommendation API",
-    description="Backend service providing rule-guided AI fashion outfit recommendations.",
+    description="Backend service providing rule-guided AI fashion outfit recommendations and couture sketches.",
     version="1.0.0"
 )
 
@@ -49,7 +55,14 @@ class RecommendationRequest(BaseModel):
 @app.get("/health", status_code=status.HTTP_200_OK)
 def health_check():
     """Returns the API health status."""
-    return {"status": "ok"}
+    has_openai = bool(os.getenv("OPENAI_API_KEY", "").strip())
+    has_groq = bool(os.getenv("GROQ_API_KEY", "").strip())
+    provider = os.getenv("AI_PROVIDER", "openai").lower()
+    return {
+        "status": "ok",
+        "ai_provider": provider,
+        "live_ai_configured": has_openai or has_groq
+    }
 
 
 @app.post(
@@ -66,7 +79,6 @@ def get_fashion_recommendation(request: RecommendationRequest):
     3. AI prompt building & LLM completion call (with deterministic fallback)
     4. Schema validation and response formatting
     """
-    # 1. Input Validation Checks
     if not request.gender or not request.occasion or not request.culture:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -74,7 +86,6 @@ def get_fashion_recommendation(request: RecommendationRequest):
         )
 
     try:
-        # 2. Process inputs through Rule Engine
         fashion_context = rule_engine.evaluate(
             gender=request.gender,
             occasion=request.occasion,
@@ -86,7 +97,6 @@ def get_fashion_recommendation(request: RecommendationRequest):
             additional_notes=request.additional_notes or ""
         )
 
-        # 3. Generate AI Recommendation (or rule fallback if no API key)
         recommendation = generate_recommendation_ai(fashion_context)
         return recommendation
 
@@ -95,6 +105,26 @@ def get_fashion_recommendation(request: RecommendationRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate fashion recommendation: {str(e)}"
+        )
+
+
+@app.post(
+    "/generate-sketch",
+    response_model=SketchResponse,
+    status_code=status.HTTP_200_OK
+)
+def create_fashion_sketch(request: SketchRequest):
+    """
+    Generates a bespoke AI fashion sketch illustration.
+    Uses DALL-E 3 if OPENAI_API_KEY is present, or a high-res fashion reference illustration fallback.
+    """
+    try:
+        return generate_fashion_sketch(request)
+    except Exception as e:
+        print(f"[ERROR] Sketch generation failed: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate sketch: {str(e)}"
         )
 
 
