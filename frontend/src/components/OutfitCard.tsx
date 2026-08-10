@@ -57,6 +57,27 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
     }
   };
 
+  const handleImageError = () => {
+    const isMale = (gender || 'Male').toLowerCase().includes('male') && !(gender || '').toLowerCase().includes('female');
+    const lower = (outfit.clothing_type || '').toLowerCase();
+    
+    let fallback = 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&w=1000&q=80';
+    if (isMale) {
+      if (lower.includes('kurta') || lower.includes('sherwani') || lower.includes('nehru') || lower.includes('modi')) {
+        fallback = 'https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=1000&q=80';
+      } else if (lower.includes('suit') || lower.includes('tuxedo') || lower.includes('blazer')) {
+        fallback = 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1000&q=80';
+      }
+    } else {
+      if (lower.includes('saree') || lower.includes('lehenga') || lower.includes('sharara')) {
+        fallback = 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80';
+      } else {
+        fallback = 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80';
+      }
+    }
+    setCurrentImageSrc(fallback);
+  };
+
   return (
     <div
       className={`rounded-2xl transition-all duration-300 ${
@@ -103,6 +124,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
             <img
               src={currentImageSrc}
               alt={outfit.clothing_type}
+              onError={handleImageError}
               className="w-full h-full object-contain max-h-[460px] transition-transform duration-500 group-hover:scale-105 rounded-lg"
               loading="lazy"
             />

@@ -17,59 +17,16 @@ except Exception:
     KNOWLEDGE_BASE = {}
 
 def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> str:
-    # High-Definition Fashion Model Photography Mapping
+    # Realistic AI Model Photography Generator (Powered by Pollinations Flux AI)
+    color_str = ", ".join(colors) if colors else "harmonious palette"
     is_male = "male" in (gender or "").lower() and "female" not in (gender or "").lower()
-    lower = (clothing_type or "").lower()
-
-    if is_male:
-        if any(k in lower for k in ["panche", "veshti", "dhoti", "mundu", "lungi"]):
-            photos = [
-                "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=1000&q=80",
-                "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80"
-            ]
-        elif any(k in lower for k in ["modi", "nehru", "vest"]):
-            photos = [
-                "https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=1000&q=80",
-                "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1000&q=80"
-            ]
-        elif any(k in lower for k in ["sherwani", "bandhgala", "kurta"]):
-            photos = [
-                "https://images.unsplash.com/photo-1597983073493-88cd35cf06b0?auto=format&fit=crop&w=1000&q=80",
-                "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=1000&q=80"
-            ]
-        elif any(k in lower for k in ["tuxedo", "suit", "blazer"]):
-            photos = [
-                "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1000&q=80",
-                "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1000&q=80"
-            ]
-        else: # Casual / Shirts
-            photos = [
-                "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&w=1000&q=80",
-                "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?auto=format&fit=crop&w=1000&q=80"
-            ]
-    else: # Female
-        if any(k in lower for k in ["saree", "sari"]):
-            photos = [
-                "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80",
-                "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80"
-            ]
-        elif any(k in lower for k in ["lehenga", "sharara", "anarkali", "garara"]):
-            photos = [
-                "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80",
-                "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=1000&q=80"
-            ]
-        elif any(k in lower for k in ["blazer", "suit"]):
-            photos = [
-                "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1000&q=80",
-                "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=1000&q=80"
-            ]
-        else: # Kurta / Dress / Casual
-            photos = [
-                "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80",
-                "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80"
-            ]
-
-    return photos[card_index % len(photos)]
+    gender_str = "handsome male model" if is_male else "elegant female model"
+    
+    prompt = f"Full length professional studio fashion photography of an {gender_str} wearing {clothing_type} in {color_str}, high fashion magazine editorial, luxury background, 8k resolution"
+    encoded_prompt = urllib.parse.quote(prompt)
+    seed = (card_index * 257 + len(clothing_type) * 19 + 42) % 999999
+    
+    return f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=800&height=1000&seed={seed}&nologo=true&model=flux"
 
 def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0) -> List[str]:
     img = resolve_garment_image(clothing_type, colors, fabric, gender, card_index)
@@ -110,62 +67,17 @@ class SketchResponse(BaseModel):
     prompt_used: str
 
 def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
-    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
-    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+    import random
     color_str = ", ".join(req.colors) if req.colors else "harmonious luxury palette"
-    lower = req.clothing_type.lower()
-    gender_prefix = "male model" if "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower() else "female model"
+    is_male = "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower()
+    gender_prefix = "handsome male model" if is_male else "elegant female model"
 
-    prompt = f"Bespoke high fashion croquis illustration of {gender_prefix} wearing {req.clothing_type} in {color_str}, studio lighting, {req.silhouette} silhouette."
+    prompt_text = f"Full length professional studio fashion photography of an {gender_prefix} wearing {req.clothing_type} in {color_str}, silhouette {req.silhouette}, fabric {req.fabric}, high fashion magazine editorial style, luxury background, 8k resolution"
+    encoded_prompt = urllib.parse.quote(prompt_text)
+    random_seed = random.randint(1000, 999999)
 
-    # Option 1: Google Gemini API Image Models
-    if gemini_key:
-        gemini_image_models = ["gemini-2.5-flash-image", "gemini-3.1-flash-image", "gemini-3-pro-image", "imagen-3.0-generate-002"]
-        for model in gemini_image_models:
-            try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={gemini_key}"
-                payload = {
-                    "contents": [{"parts": [{"text": f"Generate a realistic high fashion croquis illustration image of: {prompt}"}]}]
-                }
-                with httpx.Client(timeout=20.0) as client:
-                    res = client.post(url, json=payload)
-                    if res.status_code == 200:
-                        data = res.json()
-                        candidates = data.get("candidates", [])
-                        if candidates:
-                            parts = candidates[0].get("content", {}).get("parts", [])
-                            for p in parts:
-                                if "inlineData" in p:
-                                    b64 = p["inlineData"]["data"]
-                                    mime = p["inlineData"].get("mimeType", "image/jpeg")
-                                    return SketchResponse(sketch_url=f"data:{mime};base64,{b64}", prompt_used=prompt)
-            except Exception as e:
-                print(f"[WARN] Gemini Image API model {model} attempt: {e}")
-
-    # Option 2: OpenAI DALL-E 3
-    if openai_key:
-        try:
-            headers = {
-                "Authorization": f"Bearer {openai_key}",
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "model": "dall-e-3",
-                "prompt": prompt,
-                "n": 1,
-                "size": "1024x1024"
-            }
-            with httpx.Client(timeout=30.0) as client:
-                res = client.post("https://api.openai.com/v1/images/generations", headers=headers, json=payload)
-                res.raise_for_status()
-                data = res.json()
-                sketch_url = data["data"][0]["url"]
-                return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
-        except Exception as e:
-            print(f"[WARN] DALL-E 3 sketch generation failed ({e}). Returning fashion reference image.")
-
-    sketch_url = resolve_garment_image(req.clothing_type, req.colors, req.fabric, req.gender or "Male")
-    return SketchResponse(sketch_url=sketch_url, prompt_used=prompt)
+    sketch_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=800&height=1000&seed={random_seed}&nologo=true&model=flux"
+    return SketchResponse(sketch_url=sketch_url, prompt_used=prompt_text)
 
 
 SYSTEM_PROMPT = """You are an expert AI Fashion Designer and Personal Stylist.
