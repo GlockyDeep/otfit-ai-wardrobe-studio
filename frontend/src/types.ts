@@ -33,7 +33,22 @@ export interface OutfitDetail {
 export interface RecommendationResponse {
   primary_outfit: OutfitDetail;
   alternatives: OutfitDetail[];
+  image_job_id?: string;   // Poll /image-status/{image_job_id} for alternative images
 }
+
+export interface ImageJobStatus {
+  job_id: string;
+  status: 'pending' | 'done';
+  total: number;
+  completed: number;
+  alternatives: {
+    index: number;
+    image_url: string;
+    image_urls: string[];
+    sketch_url: string;
+  }[];
+}
+
 
 export interface FavoriteOutfit {
   id: string;

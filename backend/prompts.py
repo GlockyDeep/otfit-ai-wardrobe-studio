@@ -131,6 +131,8 @@ class OutfitDetail(BaseModel):
 class RecommendationResponse(BaseModel):
     primary_outfit: OutfitDetail
     alternatives: List[OutfitDetail]
+    image_job_id: Optional[str] = None   # Poll /image-status/{image_job_id} for alternative images
+
 
 class SketchRequest(BaseModel):
     clothing_type: str
@@ -223,16 +225,12 @@ def attach_ai_images(outfit: OutfitDetail, gender: str = "Male", card_index: int
 def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationResponse:
     gender = context.get("gender", "Male")
     recommendation = generate_mock_fallback(context)
-    
-    # Generate photorealistic Replicate Flux AI model images for ALL outfits
-    # Stagger calls by 11s to stay within Replicate's 6 req/min (1 per 10s) rate limit
+
+    # Generate ONLY the primary outfit image here (fast ~10s)
+    # Alternative images are handled by a background thread in main.py
     print("[INFO] Generating primary outfit image...")
     attach_ai_images(recommendation.primary_outfit, gender, 0)
-
-    for idx, alt in enumerate(recommendation.alternatives):
-        print(f"[INFO] Waiting 11s before alternative {idx+1} image to avoid rate limiting...")
-        time.sleep(11)
-        attach_ai_images(alt, gender, idx + 1)
+    print("[INFO] Primary image done — returning response (alternatives will be generated in background)")
 
     return recommendation
 

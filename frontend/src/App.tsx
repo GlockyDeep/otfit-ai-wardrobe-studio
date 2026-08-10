@@ -1,20 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Header } from './components/Header';
 import { RecommendationForm } from './components/RecommendationForm';
 import { LoadingOverlay } from './components/LoadingOverlay';
 import { ResultsView } from './components/ResultsView';
 import { FavoritesDrawer } from './components/FavoritesDrawer';
-import type { RecommendationFormData, RecommendationResponse, OutfitDetail, FavoriteOutfit } from './types';
+import type { RecommendationFormData, RecommendationResponse, OutfitDetail, FavoriteOutfit, ImageJobStatus } from './types';
 import { AlertCircle } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const STORAGE_KEY = 'couture_saved_favorites';
+const POLL_INTERVAL_MS = 2500;   // Poll every 2.5s for alternative images
 
 export const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [recommendation, setRecommendation] = useState<RecommendationResponse | null>(null);
   const [currentFormData, setCurrentFormData] = useState<RecommendationFormData | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Favorites Wardrobe State
   const [favorites, setFavorites] = useState<FavoriteOutfit[]>(() => {
@@ -34,6 +36,58 @@ export const App: React.FC = () => {
       console.error('Failed to persist favorites to localStorage', e);
     }
   }, [favorites]);
+
+  // Stop polling when component unmounts
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    };
+  }, []);
+
+  /** Poll /image-status/{job_id} and patch alternative images into recommendation state as they arrive */
+  const startPollingAlternativeImages = useCallback((jobId: string) => {
+    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+
+    pollTimerRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/image-status/${jobId}`);
+        if (!res.ok) {
+          clearInterval(pollTimerRef.current!);
+          return;
+        }
+        const job: ImageJobStatus = await res.json();
+
+        // Patch in images for alternatives that have completed
+        if (job.alternatives.length > 0) {
+          setRecommendation(prev => {
+            if (!prev) return prev;
+            const updatedAlts = [...prev.alternatives];
+            for (const completed of job.alternatives) {
+              const idx = completed.index;
+              if (idx < updatedAlts.length) {
+                updatedAlts[idx] = {
+                  ...updatedAlts[idx],
+                  image_url: completed.image_url || updatedAlts[idx].image_url,
+                  image_urls: completed.image_urls.length > 0 ? completed.image_urls : updatedAlts[idx].image_urls,
+                  sketch_url: completed.sketch_url || updatedAlts[idx].sketch_url,
+                };
+              }
+            }
+            return { ...prev, alternatives: updatedAlts };
+          });
+        }
+
+        // All done — stop polling
+        if (job.status === 'done') {
+          clearInterval(pollTimerRef.current!);
+          console.log('[INFO] All alternative images loaded!');
+        }
+      } catch (err) {
+        console.error('[POLL ERROR]', err);
+        clearInterval(pollTimerRef.current!);
+      }
+    }, POLL_INTERVAL_MS);
+  }, []);
 
   const handleToggleFavorite = (outfit: OutfitDetail, occasion: string = 'Design Spec', gender: string = 'Unisex') => {
     setFavorites(prev => {
@@ -61,13 +115,12 @@ export const App: React.FC = () => {
     setLoading(true);
     setErrorMessage(null);
     setCurrentFormData(formData);
+    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
 
     try {
       const response = await fetch(`${API_BASE_URL}/recommend`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -78,6 +131,11 @@ export const App: React.FC = () => {
 
       const data: RecommendationResponse = await response.json();
       setRecommendation(data);
+
+      // If backend returned a job_id, start polling for alternative images
+      if (data.image_job_id) {
+        startPollingAlternativeImages(data.image_job_id);
+      }
     } catch (err: any) {
       console.error('API Error:', err);
       setErrorMessage(
@@ -89,6 +147,7 @@ export const App: React.FC = () => {
   };
 
   const handleReset = () => {
+    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
     setRecommendation(null);
     setErrorMessage(null);
   };
