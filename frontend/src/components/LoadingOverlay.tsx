@@ -5,7 +5,7 @@ const STEPS = [
   'Evaluating event formality and cultural heritage...',
   'Filtering compatible fabrics and seasonal materials...',
   'Synthesizing color palette harmonies and motifs...',
-  'Crafting primary couture ensemble and alternative designs...',
+  'Crafting your primary outfit ensemble and alternative designs...',
   'Generating styling rationale and accessories checklist...'
 ];
 
@@ -41,7 +41,7 @@ export const LoadingOverlay: React.FC = () => {
             Designing Your Custom Ensemble
           </h3>
           <p className="text-xs text-gray-400 mb-8 uppercase tracking-widest font-semibold">
-            Couture AI Studio • In Progress
+            ŌTFIT — AI Wardrobe Studio • In Progress
           </p>
 
           {/* Design Progress Checklist */}

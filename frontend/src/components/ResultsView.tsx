@@ -21,7 +21,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   const [copied, setCopied] = useState(false);
 
   const handleCopySummary = () => {
-    const summaryText = `CoutureAI Outfit Recommendation for ${formData.occasion} (${formData.culture}):\n\n` +
+    const summaryText = `ŌTFIT Outfit Recommendation for ${formData.occasion} (${formData.culture}):\n\n` +
       `PRIMARY: ${data.primary_outfit.clothing_type}\n` +
       `Fabric: ${data.primary_outfit.fabric}\n` +
       `Colors: ${data.primary_outfit.colors.join(', ')}\n\n` +
@@ -91,7 +91,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         </div>
 
         <h2 className="font-serif-fashion text-3xl sm:text-5xl font-bold bg-gradient-to-r from-amber-200 via-rose-100 to-purple-200 bg-clip-text text-transparent mb-2 print:text-black print:bg-none">
-          CoutureAI Bespoke Lookbook
+          ŌTFIT Bespoke Lookbook
         </h2>
         <p className="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto print:text-gray-700 print:m-0">
           Tailored for {formData.season} climate and your selected style preferences.

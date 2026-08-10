@@ -18,7 +18,7 @@ export const Header: React.FC<HeaderProps> = ({ favoritesCount = 0, onOpenFavori
           </div>
           <div>
             <h1 className="font-serif-fashion text-xl font-bold tracking-tight bg-gradient-to-r from-amber-200 via-rose-100 to-purple-200 bg-clip-text text-transparent">
-              CoutureAI Studio
+              ŌTFIT — AI Wardrobe Studio
             </h1>
             <p className="text-xs text-gray-400 font-medium">AI-Assisted Fashion Design Recommendation System</p>
           </div>
@@ -42,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({ favoritesCount = 0, onOpenFavori
 
           <div className="hidden sm:flex items-center space-x-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-full">
             <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
-            <span className="text-xs font-semibold text-amber-300">Rule-Guided AI Studio</span>
+            <span className="text-xs font-semibold text-amber-300">AI-Powered Styling</span>
           </div>
         </div>
       </div>

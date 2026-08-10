@@ -8,7 +8,7 @@ import type { RecommendationFormData, RecommendationResponse, OutfitDetail, Favo
 import { AlertCircle } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const STORAGE_KEY = 'couture_saved_favorites';
+const STORAGE_KEY = 'otfit_saved_favorites';
 const POLL_INTERVAL_MS = 2500;   // Poll every 2.5s for alternative images
 
 export const App: React.FC = () => {
@@ -139,7 +139,7 @@ export const App: React.FC = () => {
     } catch (err: any) {
       console.error('API Error:', err);
       setErrorMessage(
-        err.message || 'Failed to connect to CoutureAI server. Please ensure the backend service is running on port 8000.'
+        err.message || 'Failed to connect to ŌTFIT server. Please ensure the backend service is running on port 8000.'
       );
     } finally {
       setLoading(false);
@@ -193,10 +193,6 @@ export const App: React.FC = () => {
         favorites={favorites}
         onRemoveFavorite={handleRemoveFavorite}
       />
-
-      <footer className="border-t border-gray-800/80 py-6 text-center text-xs text-gray-500 print:hidden">
-        <p>CoutureAI • Final Year B.Tech Project MVP • Rule-Guided Fashion Recommendation Engine</p>
-      </footer>
     </div>
   );
 };
