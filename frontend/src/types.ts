@@ -34,6 +34,8 @@ export interface RecommendationResponse {
   primary_outfit: OutfitDetail;
   alternatives: OutfitDetail[];
   image_job_id?: string;   // Poll /image-status/{image_job_id} for alternative images
+  engine?: string;         // "openai:gpt-4o-mini", "groq:llama-3.3-70b-versatile" or "rules"
+  engine_note?: string;    // Why the rule-based fallback was used
 }
 
 export interface ImageJobStatus {

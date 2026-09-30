@@ -1,0 +1,15 @@
+{
+  "include": [
+    "backend"
+  ],
+  "extraPaths": [
+    "backend",
+    "./backend",
+    "C:/Users/GOUTHAM/AppData/Roaming/Python/Python314/site-packages",
+    "C:/Python314/Lib/site-packages"
+  ],
+  "pythonVersion": "3.14",
+  "pythonPlatform": "Windows",
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none"
+}

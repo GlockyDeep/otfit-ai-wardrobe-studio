@@ -1,3 +1,4 @@
+import { OutfitVisual } from './illustrations/OutfitVisual';
 import React from 'react';
 import type { FavoriteOutfit } from '../types';
 import { X, Trash2, Heart, ExternalLink, Calendar, User } from 'lucide-react';
@@ -63,20 +64,14 @@ export const FavoritesDrawer: React.FC<FavoritesDrawerProps> = ({
                     className="glass-card rounded-2xl border border-gray-800 p-5 space-y-4 relative group"
                   >
                     {/* Image Preview */}
-                    {(fav.outfit.sketch_url || fav.outfit.image_url) && (
-                      <div className="h-44 w-full rounded-xl overflow-hidden bg-gray-950 relative border border-gray-800">
-                        <img
-                          src={fav.outfit.sketch_url || fav.outfit.image_url}
-                          alt={fav.outfit.clothing_type}
-                          className="w-full h-full object-cover object-top"
-                        />
-                        {fav.outfit.sketch_url && (
-                          <div className="absolute top-2 left-2 bg-purple-900/80 backdrop-blur-sm text-purple-200 text-[10px] font-bold px-2 py-0.5 rounded border border-purple-700/50">
-                            🎨 AI Sketch
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <div className="h-48 w-full rounded-xl overflow-hidden bg-gradient-to-b from-white/[0.04] to-transparent relative border border-gray-800">
+                      <OutfitVisual
+                        outfit={fav.outfit}
+                        gender={fav.gender}
+                        className="w-full h-full p-3"
+                        imgClassName="w-full h-full object-cover object-top"
+                      />
+                    </div>
 
                     {/* Metadata */}
                     <div className="flex items-center justify-between text-xs text-amber-400 font-medium">

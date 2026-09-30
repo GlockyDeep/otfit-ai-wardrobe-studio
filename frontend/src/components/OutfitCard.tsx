@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import type { OutfitDetail } from '../types';
-import { Sparkles, Palette, Feather, Layers, Scissors, Check, Heart, Lightbulb, Compass, Image as ImageIcon, ExternalLink, Maximize2, X, Wand2, Loader2 } from 'lucide-react';
+import {
+  Sparkles, Feather, Scissors, Check, Heart, Lightbulb, Compass, ExternalLink, Maximize2, X, Wand2,
+  Loader2, Footprints, Brush, Gem, PenTool, Image as ImageIcon,
+} from 'lucide-react';
+import { OutfitVisual } from './illustrations/OutfitVisual';
+import { colorNameToHex } from '../lib/colors';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 interface OutfitCardProps {
   outfit: OutfitDetail;
@@ -9,30 +16,48 @@ interface OutfitCardProps {
   isFavorite?: boolean;
   onToggleFavorite?: (outfit: OutfitDetail) => void;
   gender?: string;
+  /** The backend is still rendering an AI photo for this outfit */
+  imagePending?: boolean;
 }
 
+const Spec: React.FC<{ icon: React.ElementType; label: string; tint: string; children: React.ReactNode }> = ({ icon: Icon, label, tint, children }) => (
+  <div className="rounded-xl bg-gray-950/40 border border-white/5 p-3.5">
+    <div className={`flex items-center gap-2 text-[11px] uppercase tracking-[0.12em] font-semibold mb-1.5 ${tint}`}>
+      <Icon className="w-3.5 h-3.5" />
+      {label}
+    </div>
+    <p className="text-sm text-gray-200 leading-snug">{children}</p>
+  </div>
+);
+
 export const OutfitCard: React.FC<OutfitCardProps> = ({
-  outfit,
+  outfit: initialOutfit,
   title,
   isPrimary = false,
   isFavorite = false,
   onToggleFavorite,
-  gender = 'Male'
+  gender = 'Male',
+  imagePending = false,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isGeneratingSketch, setIsGeneratingSketch] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateFailed, setGenerateFailed] = useState(false);
+  const [sketchOverride, setSketchOverride] = useState<string>('');
+  const [hasPhoto, setHasPhoto] = useState(false);
+  const onPhotoState = useCallback((v: boolean) => setHasPhoto(v), []);
 
-  const initialImage = outfit.image_url || outfit.sketch_url || '';
-  const [currentImageSrc, setCurrentImageSrc] = useState<string>(initialImage);
+  const outfit: OutfitDetail = sketchOverride ? { ...initialOutfit, image_url: sketchOverride } : initialOutfit;
+  const photoSrc = outfit.image_url || outfit.sketch_url || '';
 
   const pinterestUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(
     `${gender} ${outfit.clothing_type} ${outfit.fabric} fashion style`
   )}`;
 
-  const handleGenerateGeminiSketch = async () => {
-    setIsGeneratingSketch(true);
+  const handleGeneratePhoto = async () => {
+    setIsGenerating(true);
+    setGenerateFailed(false);
     try {
-      const response = await fetch('http://localhost:8000/generate-sketch', {
+      const response = await fetch(`${API_BASE_URL}/generate-sketch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -41,321 +66,200 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
           colors: outfit.colors,
           fabric: outfit.fabric,
           embroidery: outfit.embroidery_or_pattern,
-          gender: gender
-        })
+          gender,
+        }),
       });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.sketch_url) {
-          setCurrentImageSrc(data.sketch_url);
-        }
-      }
+      const data = response.ok ? await response.json() : null;
+      if (data?.sketch_url) setSketchOverride(data.sketch_url);
+      else setGenerateFailed(true);
     } catch (err) {
-      console.error("Gemini sketch failed", err);
+      console.error('AI photo generation failed', err);
+      setGenerateFailed(true);
     } finally {
-      setIsGeneratingSketch(false);
+      setIsGenerating(false);
     }
   };
 
-  // When image fails to load — clear src so skeleton loader shows instead (NO external fallback images)
-  const handleImageError = () => {
-    setCurrentImageSrc('');
-  };
+  const showPending = imagePending && !hasPhoto;
 
   return (
-    <div
-      className={`rounded-2xl transition-all duration-300 ${
+    <article
+      className={`rounded-3xl overflow-hidden transition-all duration-300 ${
         isPrimary
-          ? 'glass-panel border-2 border-amber-500/30 p-6 sm:p-8 shadow-2xl shadow-amber-500/5 relative overflow-hidden'
-          : 'glass-card border border-gray-800 p-6 shadow-xl hover:border-gray-700'
+          ? 'glass-panel ring-1 ring-amber-400/30 shadow-2xl shadow-amber-500/5'
+          : 'glass-card shadow-xl hover:ring-1 hover:ring-white/10'
       }`}
     >
-      {/* Top badges & Favorite Toggle */}
-      <div className="flex items-center justify-between mb-4 relative z-20">
-        <div className="flex items-center space-x-2">
-          {isPrimary && (
-            <div className="bg-gradient-to-l from-amber-500 to-rose-500 text-gray-950 font-bold text-[10px] sm:text-xs px-3 py-1 rounded-full uppercase tracking-wider flex items-center space-x-1 shadow-md">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Primary Choice</span>
-            </div>
-          )}
-        </div>
-
-        {/* Favorite Save Button */}
-        {onToggleFavorite && (
+      <div className={isPrimary ? 'grid lg:grid-cols-[400px_minmax(0,1fr)]' : ''}>
+        {/* ================= VISUAL ================= */}
+        <div className={`relative flex flex-col bg-[#2a2b2f] ${isPrimary ? 'lg:h-full ' : ''}${isPrimary ? 'lg:border-r border-b lg:border-b-0' : 'border-b'} border-white/5`}>
           <button
-            onClick={() => onToggleFavorite(outfit)}
-            className={`p-2.5 rounded-full border transition-all cursor-pointer flex items-center space-x-1.5 text-xs font-semibold ${
-              isFavorite
-                ? 'bg-rose-500/20 border-rose-500 text-rose-300 shadow-lg shadow-rose-500/20'
-                : 'bg-gray-900/80 border-gray-800 text-gray-400 hover:text-rose-300 hover:border-gray-700'
-            }`}
-            title={isFavorite ? 'Saved to Wardrobe' : 'Save to Wardrobe'}
+            type="button"
+            onClick={() => hasPhoto && setIsModalOpen(true)}
+            className={`group flex items-center justify-center w-full ${isPrimary ? 'h-[560px] lg:h-auto lg:flex-1 lg:min-h-[560px]' : 'h-[460px]'} pt-12 pb-3 ${hasPhoto ? 'cursor-zoom-in' : 'cursor-default'}`}
+            aria-label={hasPhoto ? 'View full-size photo' : undefined}
           >
-            <Heart className={`w-4 h-4 ${isFavorite ? 'fill-rose-500 text-rose-500' : ''}`} />
-            <span className="hidden sm:inline">{isFavorite ? 'Saved' : 'Save'}</span>
-          </button>
-        )}
-      </div>
-
-      {/* Outfit Fashion Reference Image — Always shown: skeleton while loading or if no URL */}
-      <div className="mb-6 rounded-xl overflow-hidden relative group border border-gray-800 shadow-lg bg-gray-950">
-        {currentImageSrc ? (
-          <div
-            onClick={() => setIsModalOpen(true)}
-            className="w-full min-h-[360px] max-h-[480px] overflow-hidden bg-gray-950 relative flex items-center justify-center cursor-pointer p-4"
-          >
-            <img
-              src={currentImageSrc}
-              alt={outfit.clothing_type}
-              onError={handleImageError}
-              className="w-full h-full object-contain max-h-[460px] transition-transform duration-500 group-hover:scale-105 rounded-lg"
-              loading="lazy"
+            <OutfitVisual
+              outfit={outfit}
+              gender={gender}
+              pending={showPending}
+              onPhotoState={onPhotoState}
+              className="w-full h-full p-6"
+              imgClassName="w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
             />
+          </button>
 
-            {/* Hover Expand Overlay */}
-            <div className="absolute inset-0 bg-gray-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-              <div className="bg-gray-900/90 text-amber-300 text-xs font-semibold px-4 py-2 rounded-xl border border-amber-500/40 flex items-center space-x-2 shadow-2xl">
-                <Maximize2 className="w-4 h-4 text-amber-400" />
-                <span>Click to View Full-Screen High-Res Model Photo</span>
-              </div>
-            </div>
-
-            {/* Bottom Caption Bar */}
-            <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs text-amber-200 font-medium bg-gray-950/85 backdrop-blur-md px-3.5 py-2 rounded-xl border border-gray-800/80 shadow-md">
-              <span className="flex items-center space-x-1.5">
-                <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
-                <span className="font-semibold text-amber-400">✨ Real Fashion Model Look</span>
+          {/* top-left badge */}
+          <div className="absolute top-4 left-4 flex items-center gap-2">
+            {isPrimary && (
+              <span className="bg-gradient-to-r from-amber-400 to-rose-500 text-gray-950 font-bold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-md">
+                <Sparkles className="w-3.5 h-3.5" /> Top pick
               </span>
-
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsModalOpen(true);
-                  }}
-                  className="text-cyan-400 hover:text-cyan-300 flex items-center space-x-1 text-[11px] font-semibold transition cursor-pointer"
-                >
-                  <Maximize2 className="w-3 h-3" />
-                  <span>Full Screen</span>
-                </button>
-
-                <a
-                  href={pinterestUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-amber-400 hover:text-amber-300 flex items-center space-x-1 text-[11px] font-semibold transition"
-                >
-                  <span>Pinterest</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
+            )}
           </div>
-        ) : (
-          /* Animated Skeleton Loader — shown while Replicate Flux is generating */
-          <div className="w-full min-h-[360px] flex flex-col items-center justify-center bg-gray-950 p-8 space-y-5">
-            <div className="relative w-24 h-24 flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full border-4 border-amber-500/20 animate-ping" />
-              <div className="absolute inset-2 rounded-full border-4 border-t-amber-400 border-r-rose-400 border-b-purple-400 border-l-transparent animate-spin" />
-              <ImageIcon className="w-8 h-8 text-amber-400/60" />
-            </div>
-            <div className="text-center space-y-2">
-              <p className="text-amber-300 text-sm font-semibold tracking-wide">⚡ Generating your AI model image...</p>
-              <p className="text-gray-500 text-xs">Replicate Flux AI · 8k studio photography</p>
-            </div>
-            <div className="w-48 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-amber-500 via-rose-500 to-purple-500 rounded-full animate-[shimmer_2s_ease-in-out_infinite]" style={{width:'60%', animation: 'shimmer 2s ease-in-out infinite'}} />
-            </div>
-          </div>
-        )}
-      </div>
 
-      {/* Action: Generate Gemini AI Look Button */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-gray-900/40 p-3.5 rounded-xl border border-gray-800/80">
-        <div className="text-xs text-gray-400 flex items-center space-x-1.5">
-          <Wand2 className="w-3.5 h-3.5 text-purple-400" />
-          <span>Produce custom fashion look via Google Gemini API?</span>
-        </div>
-        <button
-          onClick={handleGenerateGeminiSketch}
-          disabled={isGeneratingSketch}
-          className="py-1.5 px-3.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md transition-all flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
-        >
-          {isGeneratingSketch ? (
-            <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Generating with Gemini API...</span>
-            </>
-          ) : (
-            <>
-              <Wand2 className="w-3.5 h-3.5" />
-              <span>Re-Generate Gemini AI Image</span>
-            </>
+          {/* favourite */}
+          {onToggleFavorite && (
+            <button
+              onClick={() => onToggleFavorite(initialOutfit)}
+              className={`absolute top-4 right-4 p-2.5 rounded-full border backdrop-blur-md transition cursor-pointer print:hidden ${
+                isFavorite ? 'bg-rose-500/25 border-rose-400 text-rose-300' : 'bg-gray-950/60 border-white/10 text-gray-300 hover:text-rose-300'
+              }`}
+              title={isFavorite ? 'Saved to Wardrobe' : 'Save to Wardrobe'}
+            >
+              <Heart className={`w-4 h-4 ${isFavorite ? 'fill-rose-500 text-rose-500' : ''}`} />
+            </button>
           )}
-        </button>
-      </div>
 
-      {/* Header Title */}
-      <div className="mb-6">
-        <span className="text-xs uppercase font-semibold tracking-wider text-amber-400 block mb-1">
-          {title}
-        </span>
-        <h3 className={`font-serif-fashion font-bold ${isPrimary ? 'text-2xl sm:text-3xl text-gray-100' : 'text-xl text-gray-200'}`}>
-          {outfit.clothing_type}
-        </h3>
-        <p className="text-xs sm:text-sm text-gray-400 mt-1 flex items-center space-x-1">
-          <Compass className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-          <span>Cut & Silhouette: <strong className="text-gray-300 font-medium">{outfit.silhouette}</strong></span>
-        </p>
-      </div>
-
-      {/* Grid Specs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 text-xs sm:text-sm">
-        {/* Colors */}
-        <div className="bg-gray-900/60 p-3.5 rounded-xl border border-gray-800">
-          <div className="flex items-center space-x-2 text-amber-300 font-semibold mb-2">
-            <Palette className="w-4 h-4" />
-            <span>Color Palette</span>
+          {/* bottom caption */}
+          <div className="flex items-center justify-between gap-2 text-[11px] bg-gray-950/60 px-4 py-2.5 border-t border-white/5 print:hidden">
+            <span className="flex items-center gap-1.5 text-gray-300 min-w-0">
+              {hasPhoto ? <ImageIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" /> : <PenTool className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+              <span className="truncate">
+                {hasPhoto ? 'AI model photo' : showPending ? 'Reference look · AI photo on the way…' : 'Reference look'}
+              </span>
+              {showPending && <Loader2 className="w-3 h-3 animate-spin text-amber-400 shrink-0" />}
+            </span>
+            <span className="flex items-center gap-3 shrink-0">
+              {hasPhoto && (
+                <button onClick={() => setIsModalOpen(true)} className="text-cyan-300 hover:text-cyan-200 flex items-center gap-1 font-semibold cursor-pointer">
+                  <Maximize2 className="w-3 h-3" /> Zoom
+                </button>
+              )}
+              <a href={pinterestUrl} target="_blank" rel="noopener noreferrer" className="text-amber-300 hover:text-amber-200 flex items-center gap-1 font-semibold">
+                Inspiration <ExternalLink className="w-3 h-3" />
+              </a>
+            </span>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            {outfit.colors.map((color, i) => (
-              <span
-                key={i}
-                className="px-2.5 py-1 rounded-md bg-gray-800 text-gray-200 text-xs font-medium border border-gray-700/80 flex items-center space-x-1"
+        </div>
+
+        {/* ================= DETAILS ================= */}
+        <div className={`${isPrimary ? 'p-6 sm:p-8' : 'p-5 sm:p-6'} space-y-6`}>
+          <header>
+            <span className="text-[11px] uppercase font-semibold tracking-[0.16em] text-amber-400">{title}</span>
+            <h3 className={`font-serif-fashion font-bold mt-1 text-gray-50 ${isPrimary ? 'text-2xl sm:text-3xl' : 'text-xl'}`}>
+              {outfit.clothing_type}
+            </h3>
+            <p className="text-sm text-gray-400 mt-2 flex items-start gap-1.5">
+              <Compass className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+              <span>{outfit.silhouette}</span>
+            </p>
+          </header>
+
+          {/* Palette with real swatches */}
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-2">Color palette</div>
+            <div className="flex flex-wrap gap-2">
+              {outfit.colors.map((color, i) => (
+                <span key={i} className="flex items-center gap-2 rounded-full bg-gray-950/50 border border-white/5 pl-1 pr-3 py-1">
+                  <span className="w-6 h-6 rounded-full ring-2 ring-white/10" style={{ background: colorNameToHex(color) }} />
+                  <span className="text-xs text-gray-200">{color}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className={`grid gap-3 ${isPrimary ? 'sm:grid-cols-2' : ''}`}>
+            <Spec icon={Feather} label="Fabric" tint="text-rose-300">{outfit.fabric}</Spec>
+            <Spec icon={Scissors} label="Embroidery & motifs" tint="text-purple-300">{outfit.embroidery_or_pattern}</Spec>
+            <Spec icon={Footprints} label="Footwear" tint="text-cyan-300">{outfit.footwear}</Spec>
+            <Spec icon={Brush} label="Hair & grooming" tint="text-emerald-300">
+              {outfit.hairstyle}
+              <span className="block text-gray-400 text-xs mt-1">{outfit.makeup}</span>
+            </Spec>
+          </div>
+
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-2 flex items-center gap-1.5">
+              <Gem className="w-3.5 h-3.5 text-amber-400" /> Accessories
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {outfit.accessories.map((acc, idx) => (
+                <span key={idx} className="px-2.5 py-1 rounded-lg bg-amber-400/5 text-amber-100/90 text-xs border border-amber-400/15">{acc}</span>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.12em] font-semibold text-gray-500 mb-2 flex items-center gap-1.5">
+              <Lightbulb className="w-3.5 h-3.5 text-amber-400" /> Styling tips
+            </div>
+            <ul className="space-y-2 text-sm text-gray-300">
+              {outfit.styling_tips.map((tip, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <span>{tip}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <blockquote className="border-l-2 border-amber-400/60 bg-amber-400/5 rounded-r-xl px-4 py-3 text-sm text-gray-300 italic leading-relaxed">
+            {outfit.rationale}
+          </blockquote>
+
+          {!hasPhoto && !showPending && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-white/10 p-3.5 print:hidden">
+              <span className="text-xs text-gray-400">
+                {generateFailed ? "Couldn't create a photo. Check the image API key in backend/.env." : 'Want a photo of a model wearing this outfit?'}
+              </span>
+              <button
+                onClick={handleGeneratePhoto}
+                disabled={isGenerating}
+                className="py-2 px-3.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:brightness-110 text-white shadow-md transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
               >
-                <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-amber-400 to-rose-400 inline-block" />
-                <span>{color}</span>
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Fabric */}
-        <div className="bg-gray-900/60 p-3.5 rounded-xl border border-gray-800">
-          <div className="flex items-center space-x-2 text-rose-300 font-semibold mb-1">
-            <Feather className="w-4 h-4" />
-            <span>Fabric & Texture</span>
-          </div>
-          <p className="text-gray-300 font-medium">{outfit.fabric}</p>
-        </div>
-
-        {/* Embroidery / Pattern */}
-        <div className="bg-gray-900/60 p-3.5 rounded-xl border border-gray-800">
-          <div className="flex items-center space-x-2 text-purple-300 font-semibold mb-1">
-            <Scissors className="w-4 h-4" />
-            <span>Embroidery & Motifs</span>
-          </div>
-          <p className="text-gray-300">{outfit.embroidery_or_pattern}</p>
-        </div>
-
-        {/* Footwear */}
-        <div className="bg-gray-900/60 p-3.5 rounded-xl border border-gray-800">
-          <div className="flex items-center space-x-2 text-cyan-300 font-semibold mb-1">
-            <Layers className="w-4 h-4" />
-            <span>Footwear</span>
-          </div>
-          <p className="text-gray-300">{outfit.footwear}</p>
+                {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+                {isGenerating ? 'Generating…' : 'Generate AI photo'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Grooming & Accessories */}
-      <div className="bg-gray-900/40 p-4 rounded-xl border border-gray-800/80 mb-6 space-y-3 text-xs sm:text-sm">
-        <div className="flex flex-wrap gap-4">
-          <div>
-            <span className="text-gray-500 block text-xs">Hairstyle:</span>
-            <span className="text-gray-300 font-medium">{outfit.hairstyle}</span>
-          </div>
-          <div>
-            <span className="text-gray-500 block text-xs">Makeup / Grooming:</span>
-            <span className="text-gray-300 font-medium">{outfit.makeup}</span>
-          </div>
-        </div>
-
-        <div>
-          <span className="text-gray-500 block text-xs mb-1.5">Recommended Accessories:</span>
-          <div className="flex flex-wrap gap-1.5">
-            {outfit.accessories.map((acc, idx) => (
-              <span key={idx} className="px-2.5 py-1 rounded-lg bg-gray-900 text-gray-300 text-xs border border-gray-800">
-                • {acc}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Styling Tips */}
-      <div className="mb-6">
-        <h4 className="text-xs uppercase font-semibold text-amber-400 mb-2 flex items-center space-x-1.5">
-          <Lightbulb className="w-4 h-4 text-amber-400" />
-          <span>Styling Tips</span>
-        </h4>
-        <ul className="space-y-2 text-xs sm:text-sm text-gray-300">
-          {outfit.styling_tips.map((tip, i) => (
-            <li key={i} className="flex items-start space-x-2">
-              <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <span>{tip}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Fashion Rationale */}
-      <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl text-xs sm:text-sm">
-        <div className="flex items-center space-x-2 text-amber-300 font-semibold mb-1">
-          <Heart className="w-4 h-4 text-amber-400" />
-          <span>Design Rationale</span>
-        </div>
-        <p className="text-gray-300 leading-relaxed italic">{outfit.rationale}</p>
-      </div>
-
-      {/* FULL SCREEN IMAGE LIGHTBOX MODAL */}
-      {isModalOpen && currentImageSrc && (
-        <div className="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="relative max-w-4xl w-full max-h-[90vh] bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden flex flex-col shadow-2xl">
-            {/* Modal Header */}
-            <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/90">
-              <div>
-                <h4 className="font-serif-fashion font-bold text-lg text-gray-100">
-                  {outfit.clothing_type}
-                </h4>
-                <p className="text-xs text-amber-400 font-medium">
-                  {gender} • {outfit.fabric} • {outfit.colors.join(', ')}
-                </p>
+      {/* ================= LIGHTBOX ================= */}
+      {isModalOpen && photoSrc && (
+        <div className="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setIsModalOpen(false)}>
+          <div className="relative max-w-4xl w-full max-h-[90vh] bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-gray-800 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h4 className="font-serif-fashion font-bold text-lg text-gray-100 truncate">{outfit.clothing_type}</h4>
+                <p className="text-xs text-amber-400 truncate">{gender} • {outfit.fabric}</p>
               </div>
-
-              <div className="flex items-center space-x-3">
-                <a
-                  href={currentImageSrc}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold hover:bg-amber-500/20 transition flex items-center space-x-1"
-                >
-                  <span>Open High-Res Model Photo</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-2 shrink-0">
+                <a href={photoSrc} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold flex items-center gap-1">
+                  Open original <ExternalLink className="w-3.5 h-3.5" />
                 </a>
-
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="p-2 rounded-xl text-gray-400 hover:text-gray-100 hover:bg-gray-800 transition cursor-pointer"
-                >
-                  <X className="w-6 h-6" />
+                <button onClick={() => setIsModalOpen(false)} className="p-2 rounded-xl text-gray-400 hover:text-gray-100 hover:bg-gray-800 transition cursor-pointer">
+                  <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
-
-            {/* Modal Content / Full-Size Image */}
             <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-950">
-              <img
-                src={currentImageSrc}
-                alt={outfit.clothing_type}
-                className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl"
-              />
+              <img src={photoSrc} alt={outfit.clothing_type} className="max-w-full max-h-[75vh] object-contain rounded-lg" />
             </div>
           </div>
         </div>
       )}
-    </div>
+    </article>
   );
 };

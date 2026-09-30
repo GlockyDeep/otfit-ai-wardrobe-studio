@@ -9,6 +9,7 @@ interface ResultsViewProps {
   onReset: () => void;
   favorites: FavoriteOutfit[];
   onToggleFavorite: (outfit: OutfitDetail, occasion: string, gender: string) => void;
+  altImagesPending?: boolean;
 }
 
 export const ResultsView: React.FC<ResultsViewProps> = ({
@@ -16,7 +17,8 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   formData,
   onReset,
   favorites,
-  onToggleFavorite
+  onToggleFavorite,
+  altImagesPending = false
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -42,7 +44,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   };
 
   return (
-    <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 space-y-12 print:p-0 print:m-0 print:max-w-none">
+    <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 space-y-12 print:p-0 print:m-0 print:max-w-none">
       {/* Top Nav Action (Hidden in Print) */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 glass-panel p-4 rounded-xl border border-gray-800 print:hidden">
         <button
@@ -86,15 +88,15 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         <div className="inline-flex items-center space-x-2 bg-amber-500/10 border border-amber-500/20 px-4 py-1.5 rounded-full mb-3 print:border-black print:text-black">
           <Sparkles className="w-4 h-4 text-amber-400 print:hidden" />
           <span className="text-xs font-semibold text-amber-300 print:text-black">
-            {formData.gender} &bull; {formData.occasion} &bull; {formData.culture}
+            {formData.gender} &bull; {formData.occasion} &bull; {formData.season}
           </span>
         </div>
 
         <h2 className="font-serif-fashion text-3xl sm:text-5xl font-bold bg-gradient-to-r from-amber-200 via-rose-100 to-purple-200 bg-clip-text text-transparent mb-2 print:text-black print:bg-none">
-          ŌTFIT Bespoke Lookbook
+          Your Bespoke Lookbook
         </h2>
         <p className="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto print:text-gray-700 print:m-0">
-          Tailored for {formData.season} climate and your selected style preferences.
+          Styled for {formData.season.toLowerCase()} weather{formData.preferences ? <> with a focus on <span className="text-gray-300">{formData.preferences}</span></> : null}.
         </p>
       </div>
 
@@ -122,7 +124,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-1 print:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start print:grid-cols-1 print:gap-8">
             {data.alternatives.map((alt, idx) => (
               <div key={idx} className="print:break-inside-avoid">
                 <OutfitCard
@@ -132,6 +134,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
                   isFavorite={isFavorited(alt)}
                   onToggleFavorite={(outfit) => onToggleFavorite(outfit, formData.occasion, formData.gender)}
                   gender={formData.gender}
+                  imagePending={altImagesPending}
                 />
               </div>
             ))}

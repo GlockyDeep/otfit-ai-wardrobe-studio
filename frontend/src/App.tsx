@@ -16,6 +16,7 @@ export const App: React.FC = () => {
   const [recommendation, setRecommendation] = useState<RecommendationResponse | null>(null);
   const [currentFormData, setCurrentFormData] = useState<RecommendationFormData | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [altImagesPending, setAltImagesPending] = useState<boolean>(false);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Favorites Wardrobe State
@@ -47,12 +48,14 @@ export const App: React.FC = () => {
   /** Poll /image-status/{job_id} and patch alternative images into recommendation state as they arrive */
   const startPollingAlternativeImages = useCallback((jobId: string) => {
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    setAltImagesPending(true);
 
     pollTimerRef.current = setInterval(async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/image-status/${jobId}`);
         if (!res.ok) {
           clearInterval(pollTimerRef.current!);
+          setAltImagesPending(false);
           return;
         }
         const job: ImageJobStatus = await res.json();
@@ -80,11 +83,12 @@ export const App: React.FC = () => {
         // All done — stop polling
         if (job.status === 'done') {
           clearInterval(pollTimerRef.current!);
-          console.log('[INFO] All alternative images loaded!');
+          setAltImagesPending(false);
         }
       } catch (err) {
         console.error('[POLL ERROR]', err);
         clearInterval(pollTimerRef.current!);
+        setAltImagesPending(false);
       }
     }, POLL_INTERVAL_MS);
   }, []);
@@ -131,6 +135,7 @@ export const App: React.FC = () => {
 
       const data: RecommendationResponse = await response.json();
       setRecommendation(data);
+      window.scrollTo({ top: 0 });
 
       // If backend returned a job_id, start polling for alternative images
       if (data.image_job_id) {
@@ -148,18 +153,28 @@ export const App: React.FC = () => {
 
   const handleReset = () => {
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    setAltImagesPending(false);
     setRecommendation(null);
     setErrorMessage(null);
+    window.scrollTo({ top: 0 });
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-gray-100 flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200">
+    <div className="relative min-h-screen bg-[#0b0f19] text-gray-100 flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200">
+      {/* Ambient background glow */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden print:hidden" aria-hidden="true">
+        <div className="absolute -top-40 -left-32 w-[36rem] h-[36rem] rounded-full bg-amber-500/[0.07] blur-3xl" />
+        <div className="absolute top-1/3 -right-40 w-[40rem] h-[40rem] rounded-full bg-fuchsia-600/[0.07] blur-3xl" />
+        <div className="absolute -bottom-40 left-1/4 w-[32rem] h-[32rem] rounded-full bg-rose-500/[0.05] blur-3xl" />
+      </div>
+
       <Header
         favoritesCount={favorites.length}
         onOpenFavorites={() => setIsFavoritesOpen(true)}
+        onHome={handleReset}
       />
 
-      <main className="flex-1 pb-16">
+      <main className="relative flex-1 pb-16">
         {errorMessage && (
           <div className="max-w-4xl mx-auto mt-6 px-4">
             <div className="bg-rose-500/10 border border-rose-500/30 p-4 rounded-xl text-rose-300 text-sm flex items-start space-x-3 shadow-lg">
@@ -181,6 +196,7 @@ export const App: React.FC = () => {
             onReset={handleReset}
             favorites={favorites}
             onToggleFavorite={handleToggleFavorite}
+            altImagesPending={altImagesPending}
           />
         ) : (
           <RecommendationForm onSubmit={handleFormSubmit} isLoading={loading} />

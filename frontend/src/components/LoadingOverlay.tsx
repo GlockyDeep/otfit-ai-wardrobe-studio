@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles, Scissors, Layers, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Layers, CheckCircle2 } from 'lucide-react';
+import { modelPhoto } from '../data/modelPhotos';
+
+const SHOWCASE = [
+  modelPhoto('Female', 'Lehenga Choli'), modelPhoto('Male', 'Sherwani'), modelPhoto('Female', 'Banarasi Silk Saree'),
+  modelPhoto('Male', 'Tuxedo'), modelPhoto('Female', 'Anarkali Suit'), modelPhoto('Other', 'Co-ord Set'),
+].filter(Boolean) as string[];
 
 const STEPS = [
   'Evaluating event formality and cultural heritage...',
@@ -28,12 +34,18 @@ export const LoadingOverlay: React.FC = () => {
         <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col items-center">
-          {/* Studio Icon Spinner */}
-          <div className="relative w-20 h-20 mb-6">
-            <div className="absolute inset-0 rounded-full border-2 border-amber-500/20 animate-ping" />
-            <div className="absolute inset-0 rounded-full border-t-2 border-r-2 border-amber-400 animate-spin" />
-            <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center border border-gray-800">
-              <Scissors className="w-8 h-8 text-amber-400 animate-bounce" />
+          {/* Cycling garment illustrations */}
+          <div className="relative w-40 aspect-[2/3] mb-6">
+            <div className="absolute -inset-1 rounded-[1.7rem] border-t-2 border-r-2 border-amber-400/70 animate-spin [animation-duration:3s]" />
+            <div className="absolute inset-0 rounded-3xl overflow-hidden border border-amber-400/20 bg-[#2a2b2f]">
+              {SHOWCASE.map((src, i) => (
+                <img
+                  key={src}
+                  src={src}
+                  alt=""
+                  className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-700 ${i === currentStep % SHOWCASE.length ? 'opacity-100' : 'opacity-0'}`}
+                />
+              ))}
             </div>
           </div>
 

@@ -7,6 +7,16 @@ from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 import httpx
 
+try:
+    from backend.designer import design_outfits
+except ImportError:
+    from designer import design_outfits
+
+try:
+    from backend.palette import apply_user_palette, image_colour_instruction, is_mono, palette_from_preferences
+except ImportError:
+    from palette import apply_user_palette, image_colour_instruction, is_mono, palette_from_preferences
+
 # Load Knowledge Base for Garment Mapping
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 KB_PATH = os.path.join(BASE_DIR, "knowledge_base.json")
@@ -32,7 +42,7 @@ def call_replicate_flux(prompt: str) -> Optional[str]:
     payload = {
         "input": {
             "prompt": prompt,
-            "aspect_ratio": "3:4",
+            "aspect_ratio": "2:3",
             "output_format": "webp",
             "num_outputs": 1
         }
@@ -95,6 +105,139 @@ def call_replicate_flux(prompt: str) -> Optional[str]:
     print(f"[ERROR] Replicate failed after {max_retries} attempts.")
     return None
 
+# ---------------------------------------------------------------------------
+# Nano Banana (Google Gemini 2.5 Flash Image) — keeps the same model faces as
+# the first-page photos by passing backend/reference_faces/* as references.
+# ---------------------------------------------------------------------------
+REFERENCE_FACES_DIR = os.path.join(BASE_DIR, "reference_faces")
+
+FULL_BODY_FRAMING = (
+    "Photorealistic full-length fashion catalogue photograph. The person stands upright facing the camera, arms "
+    "relaxed. The ENTIRE body is in frame from the top of the head down to the soles of the shoes, with clear empty "
+    "space above the head and below the feet; the footwear must be fully visible and not cropped. Plain seamless dark "
+    "charcoal-grey studio backdrop and floor, soft even studio lighting, sharp focus. Single person, no text, no watermark."
+)
+
+
+def _reference_for(gender: str) -> List[str]:
+    g = (gender or "").lower()
+    name = "female" if "female" in g or "woman" in g else "male" if "male" in g or "man" in g else "other"
+    path = os.path.join(REFERENCE_FACES_DIR, f"{name}.jpg")
+    if not os.path.exists(path):
+        return []
+    with open(path, "rb") as f:
+        return ["data:image/jpeg;base64," + base64.b64encode(f.read()).decode()]
+
+
+def call_nano_banana(prompt: str, image_input: List[str]) -> Optional[str]:
+    """Run google/nano-banana on Replicate. Returns an image URL or None."""
+    token = os.getenv("REPLICATE_API_TOKEN", "").strip()
+    if not token:
+        return None
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "Prefer": "wait=60"}
+    payload = {"input": {"prompt": prompt, "image_input": image_input, "aspect_ratio": "2:3", "output_format": "jpg"}}
+    try:
+        with httpx.Client(timeout=120.0) as client:
+            for attempt in range(4):
+                res = client.post("https://api.replicate.com/v1/models/google/nano-banana/predictions", headers=headers, json=payload)
+                if res.status_code == 429:
+                    wait = int(res.json().get("retry_after", 10)) + 1
+                    print(f"[WARN] Nano Banana 429 — waiting {wait}s")
+                    time.sleep(wait)
+                    continue
+                if res.status_code not in (200, 201, 202):
+                    print(f"[ERROR] Nano Banana API error {res.status_code}: {res.text[:200]}")
+                    return None
+                data = res.json()
+                polls = 0
+                while data.get("status") in ("starting", "processing") and polls < 90:
+                    time.sleep(1.5)
+                    data = client.get(data["urls"]["get"], headers=headers).json()
+                    polls += 1
+                output = data.get("output")
+                url = output[0] if isinstance(output, list) and output else output
+                if data.get("status") == "succeeded" and isinstance(url, str) and url:
+                    print(f"[INFO] Nano Banana image generated: {url[:80]}")
+                    return url
+                print(f"[WARN] Nano Banana finished with status {data.get('status')}: {data.get('error')}")
+                return None
+    except Exception as e:
+        print(f"[ERROR] Nano Banana call failed: {e}")
+    return None
+
+
+GENERATED_DIR = os.path.join(BASE_DIR, "generated_images")
+
+
+def _trim_white_bars(im):
+    """Remove the white letterbox bars image models occasionally add around the photo."""
+    g = im.convert("L")
+    w, h = g.size
+    px = g.load()
+
+    def white_col(x):
+        vals = [px[x, y] for y in range(0, h, 4)]
+        return sum(v > 235 for v in vals) / len(vals) > 0.97
+
+    def white_row(y):
+        vals = [px[x, y] for x in range(0, w, 4)]
+        return sum(v > 235 for v in vals) / len(vals) > 0.97
+
+    left, right, top, bottom = 0, w, 0, h
+    while left < w // 4 and white_col(left):
+        left += 1
+    while right > w * 3 // 4 and white_col(right - 1):
+        right -= 1
+    while top < h // 4 and white_row(top):
+        top += 1
+    while bottom > h * 3 // 4 and white_row(bottom - 1):
+        bottom -= 1
+    if (left, top, right, bottom) != (0, 0, w, h):
+        print(f"[INFO] Trimmed white bars from generated image: {(left, top, w - right, h - bottom)}")
+        return im.crop((left + 2 if left else 0, top + 2 if top else 0, right - 2 if right < w else w, bottom - 2 if bottom < h else h))
+    return im
+
+
+def store_image(url: Optional[str]) -> str:
+    """Download a generated image, trim white bars and serve it from this backend.
+    Replicate delivery links expire after ~1 hour, which would break saved wardrobe items."""
+    if not url:
+        return ""
+    try:
+        from PIL import Image
+        import io
+        import uuid
+        raw = httpx.get(url, timeout=60.0).content
+        im = _trim_white_bars(Image.open(io.BytesIO(raw)).convert("RGB"))
+        os.makedirs(GENERATED_DIR, exist_ok=True)
+        name = f"{uuid.uuid4().hex}.webp"
+        im.save(os.path.join(GENERATED_DIR, name), "WEBP", quality=88)
+        base = os.getenv("PUBLIC_BASE_URL", f"http://localhost:{os.getenv('PORT', '8000')}").rstrip("/")
+        return f"{base}/generated-images/{name}"
+    except Exception as e:
+        print(f"[WARN] Could not store image locally ({e}); using the provider URL")
+        return url
+
+
+def generate_look_image(outfit_prompt: str, gender: str) -> str:
+    """Full-body model photo for an outfit. IMAGE_ENGINE=nano-banana (default) or flux."""
+    engine = os.getenv("IMAGE_ENGINE", "nano-banana").strip().lower()
+    refs = _reference_for(gender)
+    if engine != "flux":
+        who = ("The model is the same person as in the reference photo — keep the face, skin tone and hair identical. "
+               if refs else "")
+        url = call_nano_banana(f"{FULL_BODY_FRAMING} {who}Outfit: {outfit_prompt}.", refs)
+        if url:
+            return store_image(url)
+        print("[WARN] Falling back to Flux for this image")
+    is_male = "male" in (gender or "").lower() and "female" not in (gender or "").lower()
+    person = "handsome male model" if is_male else "elegant female model"
+    flux_prompt = (f"Full body shot, head to toe, of a {person} standing on a studio floor, shoes and feet fully visible, "
+                   f"wide framing with space below the feet, wearing {outfit_prompt}, dark charcoal studio backdrop, "
+                   f"soft box lighting, photorealistic, 8k")
+    return store_image(call_replicate_flux(flux_prompt))
+
+
 # Strong color keywords that override the LLM-generated palette and enforce strict color in the image prompt
 _STRICT_COLOR_KEYWORDS = {
     "all-white":   ["pure white", "ivory white"],
@@ -130,19 +273,11 @@ def resolve_garment_image(clothing_type: str, colors: List[str] = None, fabric: 
     is_male = "male" in (gender or "").lower() and "female" not in (gender or "").lower()
     gender_str = "handsome male model" if is_male else "elegant female model"
 
-    # Strict color override: if user explicitly chose palette chips, enforce them in the image prompt
-    strict_colors = _extract_strict_colors(user_preferences)
-    if strict_colors:
-        color_str = " and ".join(strict_colors)
-        color_instruction = f"STRICT COLOR REQUIREMENT: the outfit must be ONLY {color_str} — absolutely no other colors"
-    else:
-        color_str = ", ".join(colors) if colors else "harmonious luxury palette"
-        color_instruction = f"in {color_str}"
-
-    prompt = f"Full length professional studio fashion photography of a {gender_str} wearing {clothing_type} {color_instruction}, {fabric or 'luxury blend'} fabric, high fashion magazine editorial style, luxury studio background, soft box lighting, 8k ultra resolution"
-
-    img = call_replicate_flux(prompt)
-    return img or ""   # Return empty string — frontend shows skeleton loader, never Unsplash
+    # outfit.colors already follows the user's palette (see palette.apply_user_palette),
+    # so the photo uses exactly the colours printed on the card.
+    color_instruction = image_colour_instruction(colors or [], is_mono(user_preferences))
+    outfit_prompt = f"{clothing_type}, {fabric or 'luxury blend'} fabric, with matching footwear. {color_instruction}"
+    return generate_look_image(outfit_prompt, gender)
 
 def resolve_garment_images_list(clothing_type: str, colors: List[str] = None, fabric: str = "", gender: str = "Male", card_index: int = 0, user_preferences: str = "") -> List[str]:
     img = resolve_garment_image(clothing_type, colors, fabric, gender, card_index, user_preferences)
@@ -170,6 +305,8 @@ class RecommendationResponse(BaseModel):
     primary_outfit: OutfitDetail
     alternatives: List[OutfitDetail]
     image_job_id: Optional[str] = None   # Poll /image-status/{image_job_id} for alternative images
+    engine: Optional[str] = None         # e.g. "openai:gpt-4o-mini" or "rules" — which engine wrote the text
+    engine_note: Optional[str] = None    # Why the rule-based fallback was used, if it was
 
 
 class SketchRequest(BaseModel):
@@ -189,10 +326,50 @@ def generate_fashion_sketch(req: SketchRequest) -> SketchResponse:
     is_male = "male" in (req.gender or "").lower() and "female" not in (req.gender or "").lower()
     gender_prefix = "handsome male model" if is_male else "elegant female model"
 
-    prompt_text = f"Full length professional studio fashion photography of a {gender_prefix} wearing {req.clothing_type} in {color_str}, {req.fabric or 'luxury blend'} fabric, {req.silhouette} silhouette, high fashion magazine editorial style, luxury background, soft box lighting, 8k ultra resolution"
-
-    img = call_replicate_flux(prompt_text)
+    prompt_text = f"{req.clothing_type} in {color_str}, {req.fabric or 'luxury blend'} fabric, {req.silhouette} silhouette, with matching footwear"
+    img = generate_look_image(prompt_text, req.gender or "")
     return SketchResponse(sketch_url=img or "", prompt_used=prompt_text)
+
+
+class PreviewLookRequest(BaseModel):
+    image: str                      # data URI of the base model photo shown in the live preview
+    garment: Optional[str] = ""
+    colors: Optional[List[str]] = []
+    fabric: Optional[str] = ""
+    moods: Optional[List[str]] = []
+    season: Optional[str] = ""
+
+
+class PreviewLookResponse(BaseModel):
+    image_url: str
+
+
+def generate_preview_look(req: PreviewLookRequest) -> PreviewLookResponse:
+    """Restyle the live-preview model photo in the user's chosen colours / fabric / mood with Nano Banana."""
+    changes = []
+    colours = palette_from_preferences(", ".join(req.colors or []))[:3]
+    if colours:
+        changes.append(image_colour_instruction(colours, is_mono(", ".join(req.colors or []))).rstrip("."))
+    if req.fabric:
+        changes.append(f"make the fabric look like {req.fabric.lower()}")
+    if req.moods:
+        changes.append(f"style it with a {', '.join(m.lower() for m in req.moods)} mood through small accessory details")
+    season = (req.season or "").lower()
+    if season == "winter":
+        changes.append("add a matching warm shawl or stole for winter")
+    elif season == "monsoon":
+        changes.append("make it monsoon-ready with lighter layers and water-friendly footwear")
+    elif season == "summer":
+        changes.append("keep it light and breathable for summer")
+    if not changes:
+        changes.append("keep the outfit as it is but refine the lighting")
+    prompt = (
+        "Edit this photo. Keep exactly the same person, face, pose, camera framing, background and the same garment type"
+        f"{f' ({req.garment})' if req.garment else ''}. Changes: " + "; ".join(changes) + ". "
+        "The full body must remain visible from head to toe with the shoes fully in frame. Photorealistic."
+    )
+    url = store_image(call_nano_banana(prompt, [req.image]))
+    return PreviewLookResponse(image_url=url or "")
 
 
 SYSTEM_PROMPT = """You are an expert AI Fashion Designer and Personal Stylist.
@@ -261,10 +438,98 @@ def attach_ai_images(outfit: OutfitDetail, gender: str = "Male", card_index: int
     outfit.image_url = images[0]
     outfit.sketch_url = images[0]
 
+def get_llm_config() -> Dict[str, str]:
+    """Resolve provider, key and model from .env (AI_PROVIDER = openai | groq)."""
+    provider = os.getenv("AI_PROVIDER", "openai").strip().lower() or "openai"
+    if provider == "groq":
+        return {
+            "provider": "groq",
+            "api_key": os.getenv("GROQ_API_KEY", "").strip(),
+            "model": os.getenv("GROQ_MODEL", "").strip() or "llama-3.3-70b-versatile",
+            "base_url": "https://api.groq.com/openai/v1",
+        }
+    return {
+        "provider": "openai",
+        "api_key": os.getenv("OPENAI_API_KEY", "").strip(),
+        "model": os.getenv("OPENAI_MODEL", "").strip() or "gpt-4o-mini",
+        "base_url": "",
+    }
+
+
+def call_llm_recommendation(context: Dict[str, Any]) -> RecommendationResponse:
+    """Ask OpenAI / Groq for the outfit design. Raises on any failure so the caller can fall back."""
+    cfg = get_llm_config()
+    if not cfg["api_key"]:
+        key_name = "GROQ_API_KEY" if cfg["provider"] == "groq" else "OPENAI_API_KEY"
+        raise RuntimeError(f"{key_name} is empty in backend/.env")
+
+    from openai import OpenAI
+    client = OpenAI(api_key=cfg["api_key"], base_url=cfg["base_url"] or None, timeout=60.0, max_retries=1)
+    completion = client.chat.completions.create(
+        model=cfg["model"],
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": build_user_prompt(context)},
+        ],
+        response_format={"type": "json_object"},
+        temperature=0.8,
+    )
+    raw = completion.choices[0].message.content or ""
+    data = json.loads(raw)
+
+    def _normalise(item: Dict[str, Any]) -> OutfitDetail:
+        for list_key in ("colors", "accessories", "styling_tips"):
+            val = item.get(list_key)
+            if isinstance(val, str):
+                item[list_key] = [v.strip() for v in val.split(",") if v.strip()]
+        item.pop("image_url", None)
+        item.pop("sketch_url", None)
+        item.pop("image_urls", None)
+        return OutfitDetail(**item)
+
+    primary = _normalise(data["primary_outfit"])
+    alternatives = [_normalise(a) for a in data.get("alternatives", [])][:2]
+    if len(alternatives) < 2:
+        raise ValueError(f"LLM returned {len(alternatives)} alternatives, expected 2")
+    return RecommendationResponse(
+        primary_outfit=primary,
+        alternatives=alternatives,
+        engine=f"{cfg['provider']}:{cfg['model']}",
+    )
+
+
+def generate_rule_based(context: Dict[str, Any]) -> RecommendationResponse:
+    """Catalogue-based designer: honours the chosen garment, occasion, season and colours."""
+    outfits = [OutfitDetail(**o) for o in design_outfits(context)]
+    return RecommendationResponse(primary_outfit=outfits[0], alternatives=outfits[1:], engine="rules")
+
+
 def generate_recommendation_ai(context: Dict[str, Any]) -> RecommendationResponse:
     gender = context.get("gender", "Male")
     user_preferences = context.get("user_preferences", "") or context.get("preferences", "") or ""
-    recommendation = generate_mock_fallback(context)
+
+    # 1. Try the real LLM; 2. fall back to the deterministic rule-based designer
+    try:
+        recommendation = call_llm_recommendation(context)
+        print(f"[INFO] Recommendation generated by {recommendation.engine}")
+    except Exception as e:
+        name = type(e).__name__
+        safe = {
+            "AuthenticationError": "API key was rejected by the provider (401). Check the key in backend/.env.",
+            "PermissionDeniedError": "API key has no access to this model (403).",
+            "RateLimitError": "Provider rate limit or quota exceeded (429). Check your billing / credits.",
+            "NotFoundError": "Model not found. Check OPENAI_MODEL / GROQ_MODEL in backend/.env.",
+            "APIConnectionError": "Could not reach the AI provider (network error).",
+            "APITimeoutError": "AI provider timed out.",
+        }
+        reason = safe.get(name, f"{name}: {e}")
+        print(f"[WARN] LLM unavailable ({reason}) — using rule-based fallback")
+        recommendation = generate_rule_based(context)
+        recommendation.engine_note = reason[:300]
+
+    # The user's colour choice wins over whatever the LLM picked (the rule-based designer already uses it)
+    if recommendation.engine != "rules":
+        apply_user_palette(recommendation, user_preferences, rewrite_text=False)
 
     # Generate ONLY the primary outfit image here (fast ~10s)
     # Alternative images are handled by a background thread in main.py
@@ -722,11 +987,8 @@ def generate_mock_fallback(context: Dict[str, Any]) -> RecommendationResponse:
                 rationale="A versatile casual option offering low-maintenance comfort."
             )
 
-    # Attach custom high-res AI sketch images to primary and all alternatives
-    attach_ai_images(primary, gender, 0)
-    attach_ai_images(alt1, gender, 1)
-    attach_ai_images(alt2, gender, 2)
-
+    # Images are attached by generate_recommendation_ai (primary) and the
+    # background job in main.py (alternatives) — don't generate them here too.
     return RecommendationResponse(
         primary_outfit=primary,
         alternatives=[alt1, alt2]

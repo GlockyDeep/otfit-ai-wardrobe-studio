@@ -11,19 +11,45 @@ from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from fastapi.staticfiles import StaticFiles
 
+# Ensure backend directory is in sys.path
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
 # Load environment variables
+load_dotenv(os.path.join(backend_dir, ".env"))
 load_dotenv()
 
-from rules import FashionRuleEngine
-from prompts import (
-    generate_recommendation_ai,
-    generate_fashion_sketch,
-    attach_ai_images,
-    RecommendationResponse,
-    SketchRequest,
-    SketchResponse,
-    OutfitDetail
-)
+try:
+    from backend.rules import FashionRuleEngine
+    from backend.prompts import (
+        generate_recommendation_ai,
+        generate_fashion_sketch,
+        attach_ai_images,
+        RecommendationResponse,
+        SketchRequest,
+        SketchResponse,
+        OutfitDetail,
+        get_llm_config,
+        generate_preview_look,
+        PreviewLookRequest,
+        PreviewLookResponse
+    )
+except ImportError:
+    from rules import FashionRuleEngine
+    from prompts import (
+        generate_recommendation_ai,
+        generate_fashion_sketch,
+        attach_ai_images,
+        RecommendationResponse,
+        SketchRequest,
+        SketchResponse,
+        OutfitDetail,
+        get_llm_config,
+        generate_preview_look,
+        PreviewLookRequest,
+        PreviewLookResponse
+    )
 
 # --- FastAPI App Initialization ---
 
@@ -47,6 +73,11 @@ svg_dir = os.path.join(os.path.dirname(__file__), "generated_svgs")
 os.makedirs(svg_dir, exist_ok=True)
 app.mount("/generated-svgs", StaticFiles(directory=svg_dir), name="generated-svgs")
 
+# Generated model photos (downloaded from Replicate so links never expire)
+images_dir = os.path.join(os.path.dirname(__file__), "generated_images")
+os.makedirs(images_dir, exist_ok=True)
+app.mount("/generated-images", StaticFiles(directory=images_dir), name="generated-images")
+
 # Initialize Rule Engine instance
 rule_engine = FashionRuleEngine()
 
@@ -57,7 +88,7 @@ ip_request_history: Dict[str, List[float]] = {}
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    if request.url.path in ["/recommend", "/generate-sketch"]:
+    if request.url.path in ["/recommend", "/generate-sketch", "/preview-look"]:
         client_ip = request.client.host if request.client else "127.0.0.1"
         now = time.time()
         history = ip_request_history.get(client_ip, [])
@@ -124,9 +155,13 @@ class RecommendationRequest(BaseModel):
 def health_check():
     """Returns the API health status."""
     has_replicate = bool(os.getenv("REPLICATE_API_TOKEN", "").strip())
+    llm = get_llm_config()
     return {
         "status": "ok",
-        "image_engine": "Replicate Flux Schnell",
+        "ai_provider": llm["provider"],
+        "ai_model": llm["model"],
+        "ai_key_configured": bool(llm["api_key"]),
+        "image_engine": os.getenv("IMAGE_ENGINE", "nano-banana"),
         "replicate_configured": has_replicate,
         "rate_limit": "10 requests/min",
         "mode": "progressive_image_loading"
@@ -192,7 +227,7 @@ def get_fashion_recommendation(request: RecommendationRequest):
         return recommendation
 
     except Exception as e:
-        print(f"[ERROR] Recommendation failed: {str(e)}]")
+        print(f"[ERROR] Recommendation failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate fashion recommendation: {str(e)}"
@@ -230,14 +265,27 @@ def create_fashion_sketch(request: SketchRequest):
     try:
         return generate_fashion_sketch(request)
     except Exception as e:
-        print(f"[ERROR] Sketch generation failed: {str(e)}]")
+        print(f"[ERROR] Sketch generation failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate sketch: {str(e)}"
         )
 
 
+@app.post("/preview-look", response_model=PreviewLookResponse, status_code=status.HTTP_200_OK)
+def preview_look(request: PreviewLookRequest):
+    """Restyle the live-preview model photo in the chosen colours / fabric / mood (Nano Banana image edit)."""
+    if not request.image.startswith("data:image/"):
+        raise HTTPException(status_code=400, detail="image must be a data URI")
+    if len(request.image) > 3_000_000:
+        raise HTTPException(status_code=413, detail="image too large")
+    result = generate_preview_look(request)
+    if not result.image_url:
+        raise HTTPException(status_code=502, detail="Image generation failed. Check REPLICATE_API_TOKEN and credits.")
+    return result
+
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True, app_dir=backend_dir)

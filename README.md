@@ -132,25 +132,34 @@ fashion-ai-mvp/
 
 ### One-Click Launch
 
-Double-click **[start.bat](file:///c:/Myfinaltry/fashion-ai-mvp/start.bat)** in Windows File Explorer to automatically launch both backend and frontend servers in separate windows.
+Double-click **`start.bat`** in the project root directory in Windows File Explorer to automatically launch both backend and frontend servers in separate terminal windows.
 
 ---
 
 ### Manual Launch
 
 #### 1. Backend Setup
+Navigate into the `backend` folder (or open terminal in `backend`):
 ```powershell
-cd c:\Myfinaltry\fashion-ai-mvp
-pip install -r backend/requirements.txt
-python backend/main.py
+cd backend
+pip install -r requirements.txt
+python main.py
 ```
-Backend runs at `http://localhost:8000`. Swagger API docs at `http://localhost:8000/docs`.
+*(Or from the project root: `pip install -r backend/requirements.txt` then `python backend/main.py`)*
+
+Backend runs at `http://localhost:8000`. Interactive Swagger API docs are available at `http://localhost:8000/docs`.
 
 #### 2. Frontend Setup
+Open another terminal in the project root directory:
 ```powershell
-cd c:\Myfinaltry\fashion-ai-mvp\frontend
-npm.cmd install
-npm.cmd run dev
+# Navigate into the frontend folder
+cd frontend
+
+# Install frontend dependencies
+npm install
+
+# Start Vite development server
+npm run dev
 ```
 Frontend runs at `http://localhost:5173`.
 
