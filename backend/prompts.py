@@ -8,6 +8,11 @@ from pydantic import BaseModel, Field
 import httpx
 
 try:
+    from backend.tryon_utils import mask_model_head, looks_like_failed_try_on
+except ImportError:
+    from tryon_utils import mask_model_head, looks_like_failed_try_on
+
+try:
     from backend.designer import design_outfits
 except ImportError:
     from designer import design_outfits
@@ -370,6 +375,78 @@ def generate_preview_look(req: PreviewLookRequest) -> PreviewLookResponse:
     )
     url = store_image(call_nano_banana(prompt, [req.image]))
     return PreviewLookResponse(image_url=url or "")
+
+
+# ---------------------------------------------------------------------------
+# Virtual try-on: put the user (from a camera / uploaded photo) into the
+# generated outfit. Nothing is written to disk except the final result image.
+# ---------------------------------------------------------------------------
+class TryOnRequest(BaseModel):
+    person_image: str               # data URI of the user's photo (camera capture or upload)
+    outfit_image: str               # data URI of the generated outfit photo shown on the card
+    clothing_type: Optional[str] = ""
+    colors: Optional[List[str]] = []
+    fabric: Optional[str] = ""
+    footwear: Optional[str] = ""
+
+
+class TryOnResponse(BaseModel):
+    image_url: str
+
+
+def generate_virtual_try_on(req: TryOnRequest) -> TryOnResponse:
+    """Nano Banana: image 1 = the user, image 2 = the outfit. Returns the user wearing that outfit, head to toe."""
+    details = []
+    if req.clothing_type:
+        details.append(f"garment: {req.clothing_type}")
+    if req.colors:
+        details.append(f"colours: {', '.join(req.colors)}")
+    if req.fabric:
+        details.append(f"fabric: {req.fabric}")
+    if req.footwear:
+        details.append(f"footwear: {req.footwear}")
+    prompt = (
+        "Virtual try-on. Image 1 is a photo of a real person — this is the ONLY person who may appear in the result. "
+        "Image 2 is a clothing reference only: the mannequin's head has been hidden, use it just for the clothes. "
+        "Image 2 may still show strands of the mannequin's hair on the shoulders or back — ignore them completely; "
+        "the hair in the result must have exactly the length and style shown in image 1 (short hair stays short). "
+        "Create one photorealistic full-length photo of the person from image 1 wearing exactly the outfit from "
+        "image 2 — the same garment, cut, colours, fabric, embroidery, accessories and footwear"
+        + (f" ({'; '.join(details)})" if details else "") + ". "
+        "The face, head, hair (length, colour and style), skin tone and body proportions must all come from image 1 "
+        "and stay recognisably the same person. Never invent a different face or hairstyle. "
+        "The person stands upright facing the camera with the ENTIRE body visible from the top of the head to the "
+        "soles of the shoes, footwear fully in frame. Plain seamless dark charcoal-grey studio backdrop, soft even "
+        "studio lighting, sharp focus. Single person, no text, no watermark."
+    )
+    try:
+        outfit_ref = mask_model_head(req.outfit_image)
+    except Exception as e:  # never block the try-on on the masking step
+        print(f"[WARN] Could not mask outfit model head ({e}); sending the photo as-is")
+        outfit_ref = req.outfit_image
+    # The image model occasionally echoes the outfit photo back instead of dressing the user:
+    # check every result and regenerate (max 3 attempts) before showing anything.
+    from PIL import Image
+    import io
+    last_url = None
+    for attempt in range(1, 4):
+        url = call_nano_banana(prompt, [req.person_image, outfit_ref])
+        if not url:
+            continue
+        last_url = url
+        try:
+            result = Image.open(io.BytesIO(httpx.get(url, timeout=60.0).content)).convert("RGB")
+            problem = looks_like_failed_try_on(result, outfit_ref)
+        except Exception as e:
+            print(f"[WARN] Could not check try-on result ({e}); accepting it")
+            problem = ""
+        if not problem:
+            return TryOnResponse(image_url=store_image(url))
+        print(f"[WARN] Try-on attempt {attempt} rejected: {problem}; regenerating")
+    # Every attempt looked wrong: better to report failure than show someone else's face
+    if last_url:
+        print("[WARN] All try-on attempts were rejected")
+    return TryOnResponse(image_url="")
 
 
 SYSTEM_PROMPT = """You are an expert AI Fashion Designer and Personal Stylist.

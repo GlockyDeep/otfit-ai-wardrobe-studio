@@ -1,10 +1,14 @@
 import React, { useCallback, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { OutfitDetail } from '../types';
 import {
   Sparkles, Feather, Scissors, Check, Heart, Lightbulb, Compass, ExternalLink, Maximize2, X, Wand2,
-  Loader2, Footprints, Brush, Gem, PenTool, Image as ImageIcon,
+  Loader2, Footprints, Brush, Gem, PenTool, Image as ImageIcon, ScanFace,
 } from 'lucide-react';
 import { OutfitVisual } from './illustrations/OutfitVisual';
+import { garmentKindFromText } from './illustrations/GarmentIllustration';
+import { modelPhotoForKind } from '../data/modelPhotos';
+import { VirtualTryOn } from './VirtualTryOn';
 import { colorNameToHex } from '../lib/colors';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -44,6 +48,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   const [generateFailed, setGenerateFailed] = useState(false);
   const [sketchOverride, setSketchOverride] = useState<string>('');
   const [hasPhoto, setHasPhoto] = useState(false);
+  const [tryOnOpen, setTryOnOpen] = useState(false);
   const onPhotoState = useCallback((v: boolean) => setHasPhoto(v), []);
 
   const outfit: OutfitDetail = sketchOverride ? { ...initialOutfit, image_url: sketchOverride } : initialOutfit;
@@ -81,6 +86,8 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   };
 
   const showPending = imagePending && !hasPhoto;
+  // The photo currently on the card: the AI photo, or the closest reference model photo while it renders
+  const tryOnSource = hasPhoto ? photoSrc : modelPhotoForKind(gender, garmentKindFromText(outfit.clothing_type, gender));
 
   return (
     <article
@@ -130,6 +137,18 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
               <Heart className={`w-4 h-4 ${isFavorite ? 'fill-rose-500 text-rose-500' : ''}`} />
             </button>
           )}
+
+          {/* virtual try-on */}
+          <div className="px-4 pt-1 pb-3 print:hidden">
+            <button
+              type="button"
+              onClick={() => setTryOnOpen(true)}
+              disabled={!tryOnSource}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 text-white shadow-lg shadow-rose-500/20 hover:brightness-110 transition cursor-pointer disabled:opacity-50"
+            >
+              <ScanFace className="w-4 h-4" /> Virtual Try-On
+            </button>
+          </div>
 
           {/* bottom caption */}
           <div className="flex items-center justify-between gap-2 text-[11px] bg-gray-950/60 px-4 py-2.5 border-t border-white/5 print:hidden">
@@ -236,8 +255,10 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
         </div>
       </div>
 
+      <VirtualTryOn open={tryOnOpen} onClose={() => setTryOnOpen(false)} outfit={outfit} outfitImageSrc={tryOnSource} />
+
       {/* ================= LIGHTBOX ================= */}
-      {isModalOpen && photoSrc && (
+      {isModalOpen && photoSrc && createPortal(
         <div className="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setIsModalOpen(false)}>
           <div className="relative max-w-4xl w-full max-h-[90vh] bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="p-4 border-b border-gray-800 flex items-center justify-between gap-3">
@@ -259,7 +280,7 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
     </article>
   );
 };

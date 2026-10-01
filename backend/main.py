@@ -33,7 +33,10 @@ try:
         get_llm_config,
         generate_preview_look,
         PreviewLookRequest,
-        PreviewLookResponse
+        PreviewLookResponse,
+        generate_virtual_try_on,
+        TryOnRequest,
+        TryOnResponse
     )
 except ImportError:
     from rules import FashionRuleEngine
@@ -48,7 +51,10 @@ except ImportError:
         get_llm_config,
         generate_preview_look,
         PreviewLookRequest,
-        PreviewLookResponse
+        PreviewLookResponse,
+        generate_virtual_try_on,
+        TryOnRequest,
+        TryOnResponse
     )
 
 # --- FastAPI App Initialization ---
@@ -88,7 +94,7 @@ ip_request_history: Dict[str, List[float]] = {}
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    if request.url.path in ["/recommend", "/generate-sketch", "/preview-look"]:
+    if request.url.path in ["/recommend", "/generate-sketch", "/preview-look", "/virtual-try-on"]:
         client_ip = request.client.host if request.client else "127.0.0.1"
         now = time.time()
         history = ip_request_history.get(client_ip, [])
@@ -282,6 +288,20 @@ def preview_look(request: PreviewLookRequest):
     result = generate_preview_look(request)
     if not result.image_url:
         raise HTTPException(status_code=502, detail="Image generation failed. Check REPLICATE_API_TOKEN and credits.")
+    return result
+
+
+@app.post("/virtual-try-on", response_model=TryOnResponse, status_code=status.HTTP_200_OK)
+def virtual_try_on(request: TryOnRequest):
+    """Show the user (camera / uploaded photo) wearing a generated outfit, head to toe."""
+    for name, value in (("person_image", request.person_image), ("outfit_image", request.outfit_image)):
+        if not value.startswith("data:image/"):
+            raise HTTPException(status_code=400, detail=f"{name} must be an image data URI")
+        if len(value) > 6_000_000:
+            raise HTTPException(status_code=413, detail=f"{name} is too large (max ~4 MB)")
+    result = generate_virtual_try_on(request)
+    if not result.image_url:
+        raise HTTPException(status_code=502, detail="Try-on generation failed. Check REPLICATE_API_TOKEN and credits.")
     return result
 
 
