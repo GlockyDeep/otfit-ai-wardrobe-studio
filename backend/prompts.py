@@ -8,9 +8,9 @@ from pydantic import BaseModel, Field
 import httpx
 
 try:
-    from backend.tryon_utils import mask_model_head, looks_like_failed_try_on
+    from backend.tryon_utils import mask_model_head, mask_model_head_with_box, looks_like_failed_try_on
 except ImportError:
-    from tryon_utils import mask_model_head, looks_like_failed_try_on
+    from tryon_utils import mask_model_head, mask_model_head_with_box, looks_like_failed_try_on
 
 try:
     from backend.designer import design_outfits
@@ -392,6 +392,7 @@ class TryOnRequest(BaseModel):
 
 class TryOnResponse(BaseModel):
     image_url: str
+    error: Optional[str] = None     # user-facing reason when no image could be produced
 
 
 def generate_virtual_try_on(req: TryOnRequest) -> TryOnResponse:
@@ -415,12 +416,14 @@ def generate_virtual_try_on(req: TryOnRequest) -> TryOnResponse:
         + (f" ({'; '.join(details)})" if details else "") + ". "
         "The face, head, hair (length, colour and style), skin tone and body proportions must all come from image 1 "
         "and stay recognisably the same person. Never invent a different face or hairstyle. "
+        "Completely replace whatever the person is wearing in image 1 — none of their own clothes or shoes may remain. "
         "The person stands upright facing the camera with the ENTIRE body visible from the top of the head to the "
         "soles of the shoes, footwear fully in frame. Plain seamless dark charcoal-grey studio backdrop, soft even "
         "studio lighting, sharp focus. Single person, no text, no watermark."
     )
+    head_box = None
     try:
-        outfit_ref = mask_model_head(req.outfit_image)
+        outfit_ref, head_box = mask_model_head_with_box(req.outfit_image)
     except Exception as e:  # never block the try-on on the masking step
         print(f"[WARN] Could not mask outfit model head ({e}); sending the photo as-is")
         outfit_ref = req.outfit_image
@@ -436,7 +439,7 @@ def generate_virtual_try_on(req: TryOnRequest) -> TryOnResponse:
         last_url = url
         try:
             result = Image.open(io.BytesIO(httpx.get(url, timeout=60.0).content)).convert("RGB")
-            problem = looks_like_failed_try_on(result, outfit_ref)
+            problem = looks_like_failed_try_on(result, outfit_ref, head_box, req.person_image)
         except Exception as e:
             print(f"[WARN] Could not check try-on result ({e}); accepting it")
             problem = ""
@@ -446,7 +449,11 @@ def generate_virtual_try_on(req: TryOnRequest) -> TryOnResponse:
     # Every attempt looked wrong: better to report failure than show someone else's face
     if last_url:
         print("[WARN] All try-on attempts were rejected")
-    return TryOnResponse(image_url="")
+        return TryOnResponse(image_url="", error=(
+            "The AI couldn't dress you in this outfit this time. Try again, or use a clearer, well-lit photo "
+            "that shows your face (full body works best)."))
+    return TryOnResponse(image_url="", error=(
+        "The image service didn't return a picture. Check REPLICATE_API_TOKEN and your Replicate credits."))
 
 
 SYSTEM_PROMPT = """You are an expert AI Fashion Designer and Personal Stylist.

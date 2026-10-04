@@ -50,10 +50,15 @@ def find_head_box(im: Image.Image):
 
 def mask_model_head(data_uri: str) -> str:
     """Return the outfit photo with the model's head replaced by backdrop colour."""
+    return mask_model_head_with_box(data_uri)[0]
+
+
+def mask_model_head_with_box(data_uri: str):
+    """Like mask_model_head, but also return the (x0, y0, x1, y1) box that was covered (or None)."""
     im = _decode(data_uri)
     box = find_head_box(im)
     if not box:
-        return data_uri
+        return data_uri, None
     x0, y0, x1, y1 = box
     a = np.asarray(im)
     sample = np.concatenate([a[y0:y1, : max(4, im.width // 25)].reshape(-1, 3), a[y0:y1, -max(4, im.width // 25):].reshape(-1, 3)])
@@ -62,24 +67,34 @@ def mask_model_head(data_uri: str) -> str:
     ImageDraw.Draw(cover).rounded_rectangle(box, radius=int((x1 - x0) * 0.35), fill=255)
     cover = cover.filter(ImageFilter.GaussianBlur(max(2, im.width // 200)))
     im.paste(Image.new("RGB", im.size, colour), (0, 0), cover)
-    return _encode(im)
+    return _encode(im), box
 
 
-def looks_like_failed_try_on(result: Image.Image, outfit_ref_uri: str) -> str:
-    """Return a reason if the image model just echoed the (head-masked) outfit photo back.
+def looks_like_failed_try_on(result: Image.Image, outfit_ref_uri: str, head_box=None, person_uri: str = "") -> str:
+    """Return a reason if the image model echoed the head-masked outfit photo instead of dressing the user.
 
-    Two checks: the result is nearly identical to the masked outfit reference, or the head area
-    is a flat blob of backdrop colour (the mask survived)."""
+    A correct try-on keeps the same garment, pose and backdrop as the outfit photo, so the two images are
+    very similar overall. The only reliable signal is the head: in an echo the masked area is still the
+    flat backdrop-coloured blob; in a real try-on it contains a face and hair."""
+    # Echo of the PERSON photo (still in their own clothes): measured ~0.8 for echoes vs 12-22 for real try-ons
+    if person_uri:
+        g = lambda im: np.asarray(im.convert("L").resize((128, 192)), dtype=np.int16)  # noqa: E731
+        if np.abs(g(result) - g(_decode(person_uri))).mean() < 4:
+            return "the person photo was returned unchanged (clothes not replaced)"
     ref = _decode(outfit_ref_uri)
-    small = lambda im: np.asarray(im.convert("L").resize((64, 96)), dtype=np.int16)  # noqa: E731
-    if np.abs(small(result) - small(ref)).mean() < 3:  # near pixel-identical (echo); real try-ons measure ~8+
-        return "result is a copy of the outfit photo"
-    box = find_head_box(result)
-    if box:
-        x0, y0, x1, y1 = box
-        cx, cy = (x0 + x1) // 2, (y0 + y1) // 2
-        q = (x1 - x0) // 4
-        face = np.asarray(result.convert("L").crop((cx - q, cy - q, cx + q, cy + q)), dtype=np.float32)
-        if face.size and face.std() < 7:
-            return "head area is blank"
+    res = result.convert("RGB").resize(ref.size)
+    if head_box:
+        x0, y0, x1, y1 = head_box
+        # inner part of the masked box (the blurred edge is excluded)
+        mx, my = (x1 - x0) // 5, (y1 - y0) // 5
+        inner = (x0 + mx, y0 + my, x1 - mx, y1 - my)
+        r = np.asarray(res.convert("L").crop(inner), dtype=np.float32)
+        m = np.asarray(ref.convert("L").crop(inner), dtype=np.float32)
+        if r.size and np.abs(r - m).mean() < 12 and r.std() < 12:
+            return "the head area is still the blank mask (outfit photo returned unchanged)"
+        return ""
+    # No mask was applied: only reject a near pixel-perfect copy of the outfit photo
+    big = lambda im: np.asarray(im.convert("L").resize((256, 384)), dtype=np.int16)  # noqa: E731
+    if np.abs(big(res) - big(ref)).mean() < 1.5:
+        return "the outfit photo was returned unchanged"
     return ""

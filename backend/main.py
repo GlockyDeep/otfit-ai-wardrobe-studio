@@ -84,6 +84,16 @@ images_dir = os.path.join(os.path.dirname(__file__), "generated_images")
 os.makedirs(images_dir, exist_ok=True)
 app.mount("/generated-images", StaticFiles(directory=images_dir), name="generated-images")
 
+# Saved try-ons (My looks / What Others)
+try:
+    from backend import community
+    from backend.prompts import call_nano_banana, store_image
+except ImportError:
+    import community
+    from prompts import call_nano_banana, store_image
+os.makedirs(community.GALLERY_DIR, exist_ok=True)
+app.mount("/gallery-images", StaticFiles(directory=community.GALLERY_DIR), name="gallery-images")
+
 # Initialize Rule Engine instance
 rule_engine = FashionRuleEngine()
 
@@ -94,7 +104,7 @@ ip_request_history: Dict[str, List[float]] = {}
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    if request.url.path in ["/recommend", "/generate-sketch", "/preview-look", "/virtual-try-on"]:
+    if request.url.path in ["/recommend", "/generate-sketch", "/preview-look", "/virtual-try-on", "/tryon-pattern"]:
         client_ip = request.client.host if request.client else "127.0.0.1"
         now = time.time()
         history = ip_request_history.get(client_ip, [])
@@ -301,8 +311,71 @@ def virtual_try_on(request: TryOnRequest):
             raise HTTPException(status_code=413, detail=f"{name} is too large (max ~4 MB)")
     result = generate_virtual_try_on(request)
     if not result.image_url:
-        raise HTTPException(status_code=502, detail="Try-on generation failed. Check REPLICATE_API_TOKEN and credits.")
+        raise HTTPException(status_code=502, detail=result.error or "Try-on generation failed. Please try again.")
     return result
+
+
+# --- Try-on pattern designer, saved looks and trends ---
+
+@app.post("/tryon-pattern", response_model=community.PatternResponse)
+def tryon_pattern(request: community.PatternRequest):
+    """Restyle the fabric pattern of a generated try-on photo (Nano Banana image edit)."""
+    if request.pattern not in community.PATTERNS:
+        raise HTTPException(status_code=400, detail="Unknown pattern.")
+    if not community.generated_file_from_url(request.image_url):
+        raise HTTPException(status_code=400, detail="This try-on image is no longer available. Generate it again.")
+    result = community.apply_pattern(request, call_nano_banana, store_image)
+    if not result.image_url:
+        raise HTTPException(status_code=502, detail=result.error or "Pattern generation failed.")
+    return result
+
+
+@app.get("/patterns")
+def list_patterns():
+    return [{"name": k, "description": v} for k, v in community.PATTERNS.items()]
+
+
+@app.post("/tryons", response_model=community.TryOnEntry)
+def save_tryon(request: community.SaveTryOnRequest):
+    """Save a try-on privately ("My looks") or share it on What Others (requires consent)."""
+    if not community.valid_owner(request.owner_id):
+        raise HTTPException(status_code=400, detail="Invalid owner id.")
+    try:
+        return community.save_try_on(request)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/tryons", response_model=List[community.TryOnEntry])
+def list_tryons(owner_id: str = "", scope: str = "shared"):
+    """scope=shared -> everyone's shared looks; scope=mine -> this browser's saved looks."""
+    if scope not in ("shared", "mine"):
+        raise HTTPException(status_code=400, detail="scope must be 'shared' or 'mine'")
+    if scope == "mine" and not community.valid_owner(owner_id):
+        raise HTTPException(status_code=400, detail="Invalid owner id.")
+    return community.list_try_ons(owner_id, scope)
+
+
+@app.delete("/tryons/{item_id}")
+def delete_tryon(item_id: str, owner_id: str):
+    if not community.valid_owner(owner_id) or not community.delete_try_on(item_id, owner_id):
+        raise HTTPException(status_code=404, detail="Saved look not found.")
+    return {"deleted": item_id}
+
+
+class DiscardRequest(BaseModel):
+    image_urls: List[str]
+
+
+@app.post("/tryons/discard")
+def discard_tryon(request: DiscardRequest):
+    """'Don't save': delete the generated try-on images from this server."""
+    return {"deleted": community.discard_generated(request.image_urls)}
+
+
+@app.get("/trends")
+def get_trends():
+    return community.trends_payload()
 
 
 if __name__ == "__main__":

@@ -1,13 +1,15 @@
 import React from 'react';
-import { Sparkles, Shirt, Heart } from 'lucide-react';
+import { Shirt, Heart, Users } from 'lucide-react';
 
 interface HeaderProps {
   favoritesCount?: number;
   onOpenFavorites?: () => void;
   onHome?: () => void;
+  onOpenCommunity?: () => void;
+  communityActive?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ favoritesCount = 0, onOpenFavorites, onHome }) => {
+export const Header: React.FC<HeaderProps> = ({ favoritesCount = 0, onOpenFavorites, onHome, onOpenCommunity, communityActive = false }) => {
   return (
     <header className="border-b border-white/5 bg-[#0b0f19]/80 backdrop-blur-xl sticky top-0 z-40 print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
@@ -26,10 +28,20 @@ export const Header: React.FC<HeaderProps> = ({ favoritesCount = 0, onOpenFavori
         </button>
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <div className="hidden md:flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-full">
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <span className="text-xs font-semibold text-amber-300">AI-Powered Styling</span>
-          </div>
+          {onOpenCommunity && (
+            <button
+              onClick={onOpenCommunity}
+              aria-pressed={communityActive}
+              className={`flex items-center gap-1.5 border text-xs px-3 py-2 rounded-xl transition cursor-pointer ${
+                communityActive
+                  ? 'bg-amber-400 border-amber-400 text-gray-950'
+                  : 'bg-amber-500/10 border-amber-500/30 text-amber-200 hover:border-amber-400'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span className="font-semibold hidden sm:inline">What Others</span>
+            </button>
+          )}
           {onOpenFavorites && (
             <button
               onClick={onOpenFavorites}

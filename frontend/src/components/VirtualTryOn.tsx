@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  Camera, Upload, X, RefreshCw, Download, Loader2, Timer, SwitchCamera, Sparkles, ShieldCheck, AlertCircle, ArrowLeft,
+  Camera, Upload, X, RefreshCw, Loader2, Timer, SwitchCamera, Sparkles, ShieldCheck, AlertCircle, ArrowLeft,
 } from 'lucide-react';
 import type { OutfitDetail } from '../types';
+import { TryOnResultPanel } from './TryOnResultPanel';
+import { postJson } from '../lib/owner';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const MAX_SIDE = 1024;
@@ -62,6 +64,18 @@ export const VirtualTryOn: React.FC<Props> = ({ open, onClose, outfit, outfitIma
   const streamRef = useRef<MediaStream | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const timersRef = useRef<number[]>([]);
+  // Try-on images generated in this session; deleted from the server unless the user saves
+  const generatedRef = useRef<string[]>([]);
+  const savedRef = useRef(false);
+
+  const discardUnsaved = useCallback(() => {
+    const urls = generatedRef.current;
+    if (urls.length && !savedRef.current) {
+      postJson('/tryons/discard', { image_urls: urls }).catch(() => undefined);
+    }
+    generatedRef.current = [];
+    savedRef.current = false;
+  }, []);
 
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach(t => t.stop());
@@ -75,6 +89,7 @@ export const VirtualTryOn: React.FC<Props> = ({ open, onClose, outfit, outfitIma
   };
 
   const reset = useCallback(() => {
+    discardUnsaved();
     stopCamera();
     timersRef.current.forEach(id => window.clearTimeout(id));
     timersRef.current = [];
@@ -83,7 +98,7 @@ export const VirtualTryOn: React.FC<Props> = ({ open, onClose, outfit, outfitIma
     setError(null);
     setPersonPhoto('');
     setResultUrl('');
-  }, [stopCamera]);
+  }, [stopCamera, discardUnsaved]);
 
   const close = useCallback(() => {
     reset();
@@ -208,6 +223,8 @@ export const VirtualTryOn: React.FC<Props> = ({ open, onClose, outfit, outfitIma
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || `Try-on failed (${res.status})`);
       const data = await res.json();
+      generatedRef.current = [data.image_url];
+      savedRef.current = false;
       setResultUrl(data.image_url);
       setStep('result');
     } catch (err) {
@@ -216,19 +233,6 @@ export const VirtualTryOn: React.FC<Props> = ({ open, onClose, outfit, outfitIma
     }
   };
 
-  const download = async () => {
-    try {
-      const blob = await (await fetch(resultUrl)).blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `otfit-try-on-${outfit.clothing_type.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40)}.webp`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      window.open(resultUrl, '_blank', 'noopener');
-    }
-  };
 
   if (!open) return null;
 
@@ -387,36 +391,17 @@ export const VirtualTryOn: React.FC<Props> = ({ open, onClose, outfit, outfitIma
               </div>
             )}
 
-            {/* ---------- result ---------- */}
+            {/* ---------- result: pattern designer + save / don't save ---------- */}
             {step === 'result' && resultUrl && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <figure>
-                    <figcaption className="text-[11px] uppercase tracking-[0.14em] text-gray-500 font-semibold mb-2">Your photo</figcaption>
-                    <div className="rounded-2xl overflow-hidden bg-black aspect-[2/3]">
-                      <img src={personPhoto} alt="Your photo" className="w-full h-full object-contain" />
-                    </div>
-                  </figure>
-                  <figure>
-                    <figcaption className="text-[11px] uppercase tracking-[0.14em] text-amber-400 font-semibold mb-2">You in this look</figcaption>
-                    <div className="rounded-2xl overflow-hidden bg-[#2a2b2f] aspect-[2/3] ring-2 ring-amber-400/40">
-                      <img src={resultUrl} alt={`You wearing ${outfit.clothing_type}`} className="w-full h-full object-contain" />
-                    </div>
-                  </figure>
-                </div>
-                <div className="grid sm:grid-cols-3 gap-3">
-                  <button onClick={download} className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 text-white shadow-lg hover:brightness-110 transition cursor-pointer">
-                    <Download className="w-4 h-4" /> Download
-                  </button>
-                  <button onClick={reset} className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold border border-gray-700 text-gray-200 hover:border-gray-500 transition cursor-pointer">
-                    <Camera className="w-4 h-4" /> Try another photo
-                  </button>
-                  <button onClick={close} className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold border border-gray-700 text-gray-200 hover:border-gray-500 transition cursor-pointer">
-                    Done
-                  </button>
-                </div>
-                <p className="text-[11px] text-gray-500">AI-generated preview. Fit and drape on your real body may differ slightly.</p>
-              </div>
+              <TryOnResultPanel
+                outfit={outfit}
+                personPhoto={personPhoto}
+                initialUrl={resultUrl}
+                onGenerated={url => { generatedRef.current.push(url); savedRef.current = false; }}
+                onSaved={() => { savedRef.current = true; }}
+                onDiscard={close}
+                onRetake={reset}
+              />
             )}
 
             <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} />
