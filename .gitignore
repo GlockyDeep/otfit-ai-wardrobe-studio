@@ -25,3 +25,6 @@ Thumbs.db
 
 # Generated model photos
 backend/generated_images/
+
+# Saved try-on gallery (user photos)
+backend/tryon_gallery/

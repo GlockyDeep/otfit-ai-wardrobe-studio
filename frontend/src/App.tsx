@@ -4,6 +4,7 @@ import { RecommendationForm } from './components/RecommendationForm';
 import { LoadingOverlay } from './components/LoadingOverlay';
 import { ResultsView } from './components/ResultsView';
 import { FavoritesDrawer } from './components/FavoritesDrawer';
+import { CommunityPage } from './components/CommunityPage';
 import type { RecommendationFormData, RecommendationResponse, OutfitDetail, FavoriteOutfit, ImageJobStatus } from './types';
 import { AlertCircle } from 'lucide-react';
 
@@ -29,6 +30,7 @@ export const App: React.FC = () => {
     }
   });
   const [isFavoritesOpen, setIsFavoritesOpen] = useState<boolean>(false);
+  const [view, setView] = useState<'studio' | 'community'>('studio');
 
   useEffect(() => {
     try {
@@ -171,7 +173,9 @@ export const App: React.FC = () => {
       <Header
         favoritesCount={favorites.length}
         onOpenFavorites={() => setIsFavoritesOpen(true)}
-        onHome={handleReset}
+        onHome={() => { setView('studio'); handleReset(); }}
+        onOpenCommunity={() => { setView(v => (v === 'community' ? 'studio' : 'community')); window.scrollTo({ top: 0 }); }}
+        communityActive={view === 'community'}
       />
 
       <main className="relative flex-1 pb-16">
@@ -187,7 +191,9 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {loading ? (
+        {view === 'community' ? (
+          <CommunityPage onBack={() => setView('studio')} />
+        ) : loading ? (
           <LoadingOverlay />
         ) : recommendation && currentFormData ? (
           <ResultsView
